@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model UserRole {
+  id     String @id @default(uuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role   @default(USER)
+
+  @@unique([userId, role])
+  @@map("user_roles")
+}
+
+model User {
+  id           String         @id @default(uuid())
+  name         String
+  email        String         @unique
+  password     String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  RefreshToken RefreshToken[]
+  roles        UserRole[]
+
+  @@map("users")
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("refresh_tokens")
+}
+
+enum BookingStatus {
+  PENDING // Ожидает обработки
+  CONFIRMED // Подтверждено-ожидайте звонка диспетчера
+}
+
+model City {
+  id             BigInt   @id @default(autoincrement())
+  name           String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  departureTrips Route[]  @relation("RouteDepartureCity")
+  arrivalTrips   Route[]  @relation("RouteArrivalCity")
+
+  @@map("cities")
+}
+
+model Schedule {
+  id             BigInt       @id @default(autoincrement())
+  route          Route        @relation(fields: [routeId], references: [id])
+  routeId        BigInt
+  daysOfWeek     DaysOfWeek[]
+  startTime      DateTime
+  endTime        DateTime?
+  seatsAvailable Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@map("schedules")
+}
+
+enum DaysOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+model Route {
+  id              BigInt     @id @default(autoincrement())
+  departureCity   City       @relation("RouteDepartureCity", fields: [departureCityId], references: [id])
+  departureCityId BigInt
+  arrivalCity     City       @relation("RouteArrivalCity", fields: [arrivalCityId], references: [id])
+  arrivalCityId   BigInt
+  schedules       Schedule[]
+  price           Decimal    @db.Money
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  bookings        Booking[]
+
+  @@unique([departureCityId, arrivalCityId])
+  @@map("routes")
+}
+
+model Booking {
+  id          BigInt        @id @default(autoincrement())
+  firstName   String
+  lastName    String
+  phoneNumber String
+  route       Route         @relation(fields: [routeId], references: [id])
+  routeId     BigInt
+  travelDate  DateTime // Желаемая дата поездки
+  seatsCount  Int
+  status      BookingStatus @default(PENDING)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@map("bookings")
+}

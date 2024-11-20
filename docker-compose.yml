@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  # Frontend (nginx)
+  tour-frontend:
+    container_name: tour-frontend
+    image: nginx:1.24.0-alpine
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./frontend/.nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - '80:80'
+    networks:
+      - webnet
+
+  # Backend (PostgreSQL)
+  tour-backend:
+    container_name: tour-backend
+    image: bitnami/postgresql:16.0.0
+    restart: always
+    env_file:
+      - ./backend/.env
+    volumes:
+      - backend:/bitnami/postgresql
+    ports:
+      - '${DB_PORT:-5431}:5432'
+    networks:
+      - webnet
+
+volumes:
+  backend:
+
+networks:
+  webnet:
+    driver: bridge
