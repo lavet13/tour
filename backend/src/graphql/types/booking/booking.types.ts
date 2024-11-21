@@ -52,9 +52,8 @@ export default gql`
     firstName: String!
     lastName: String!
     phoneNumber: String!
+    routeId: BigInt!
     travelDate: DateTime!
-    departureCity: BigInt!
-    arrivalCity: BigInt!
     seatsCount: Int!
   }
 
@@ -63,8 +62,7 @@ export default gql`
     firstName: String!
     lastName: String!
     phoneNumber: String!
-    departureCity: City
-    arrivalCity: City
+    route: Route
     travelDate: DateTime!
     seatsCount: Int!
     status: BookingStatus!

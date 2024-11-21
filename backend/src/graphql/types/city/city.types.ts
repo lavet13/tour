@@ -37,8 +37,8 @@ export default gql`
   type City {
     id: BigInt!
     name: String!
-    departureTrips: [Booking!]
-    arrivalTrips: [Booking!]
+    departureTrips: [Route!]!
+    arrivalTrips: [Route!]!
     createdAt: DateTime!
     updatedAt: DateTime!
   }

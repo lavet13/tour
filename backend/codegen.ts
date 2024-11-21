@@ -16,7 +16,10 @@ const config: CodegenConfig = {
   config: {
     mappers: {
       User: '../../../node_modules/.prisma/client#User as UserModel',
-      Booking: '../../../node_modules/.prisma/client#WbOrder as BookingModel',
+      Booking: '../../../node_modules/.prisma/client#Booking as BookingModel',
+      City: '../../../node_modules/.prisma/client#City as CityModel',
+      Route: '../../../node_modules/.prisma/client#Route as RouteModel',
+      Schedule: '../../../node_modules/.prisma/client#Schedule as ScheduleModel',
       Role: '../../../node_modules/.prisma/client#Role as RoleModel',
     },
     inputMaybeValue: 'undefined | T',

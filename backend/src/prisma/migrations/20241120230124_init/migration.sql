@@ -67,7 +67,7 @@ CREATE TABLE "routes" (
     "id" BIGSERIAL NOT NULL,
     "departureCityId" BIGINT NOT NULL,
     "arrivalCityId" BIGINT NOT NULL,
-    "price" MONEY NOT NULL,
+    "price" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

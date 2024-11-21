@@ -3,39 +3,37 @@ import prismaClient from '@/prisma';
 import { Booking } from '@prisma/client';
 
 export const createBookingsLoader = (prisma: typeof prismaClient) => {
-  return new DataLoader(async (cityIds: readonly bigint[]) => {
-    // console.log('Loading bookings for cityIds:', cityIds);
-
+  // return new DataLoader<bigint, Booking[]>(async (routeIds: readonly bigint[]) => {
+  //   const bookings = await prisma.booking.findMany({
+  //     where: {
+  //       routeId: { in: routeIds as bigint[] },
+  //     },
+  //   });
+  //
+  //   const bookingsByRouteId = routeIds.map((routeId) =>
+  //     bookings.filter((booking) => booking.routeId === routeId)
+  //   );
+  //
+  //   return bookingsByRouteId;
+  // });
+  return new DataLoader<bigint, Booking[]>(async (routeIds: readonly bigint[]) => {
+    // Fetch all bookings for the provided route IDs
     const bookings = await prisma.booking.findMany({
       where: {
-        OR: [
-          { departureCityId: { in: cityIds as bigint[] } },
-          { arrivalCityId: { in: cityIds as bigint[] } },
-        ],
+        routeId: { in: routeIds as bigint[] },
       },
     });
 
-    // console.log('Found bookings:', bookings.length);
-
-    const bookingsByCityId = new Map<
-      bigint,
-      { departureTrips: Booking[]; arrivalTrips: Booking[] }
-    >(cityIds.map(id => [id, { departureTrips: [], arrivalTrips: [] }]));
-
-    bookings.forEach(booking => {
-      if (bookingsByCityId.has(booking.departureCityId)) {
-        bookingsByCityId
-          .get(booking.departureCityId)!
-          .departureTrips.push(booking);
+    // Group bookings by routeId using a Map
+    const bookingsMap = new Map<bigint, Booking[]>();
+    for (const booking of bookings) {
+      if (!bookingsMap.has(booking.routeId)) {
+        bookingsMap.set(booking.routeId, []);
       }
-      if (bookingsByCityId.has(booking.arrivalCityId)) {
-        bookingsByCityId.get(booking.arrivalCityId)!.arrivalTrips.push(booking);
-      }
-    });
+      bookingsMap.get(booking.routeId)?.push(booking);
+    }
 
-    return cityIds.map(
-      id =>
-        bookingsByCityId.get(id) || { departureTrips: [], arrivalTrips: [] },
-    );
+    // Map routeIds to their corresponding bookings (or an empty array if no bookings exist)
+    return routeIds.map((routeId) => bookingsMap.get(routeId) || []);
   });
 };

@@ -1,4 +1,4 @@
-import { Resolvers, SearchTypeBookings } from '@/graphql/__generated__/types';
+import { Resolvers, SearchTypeRoutes } from '@/graphql/__generated__/types';
 import { Prisma, Role } from '@prisma/client';
 
 import {
@@ -12,10 +12,9 @@ import { hasRoles, isAuthenticated } from '@/graphql/composition/authorization';
 
 const resolvers: Resolvers = {
   Query: {
-    async bookings(_, args, ctx) {
+    async routes(_, args, ctx) {
       const query = args.input.query?.trim();
 
-      const status = args.input.status;
       enum PaginationDirection {
         NONE = 'NONE',
         FORWARD = 'FORWARD',
@@ -51,7 +50,7 @@ const resolvers: Resolvers = {
       if (direction !== PaginationDirection.NONE) {
         // checking if the cursor pointing to the wbOrder doesn't exist,
         // otherwise skip
-        const cursorOrder = await ctx.prisma.booking.findUnique({
+        const cursorOrder = await ctx.prisma.route.findUnique({
           where: { id: cursor?.id },
         });
 
@@ -67,9 +66,9 @@ const resolvers: Resolvers = {
             // console.log({ previousValidPost });
             // cursor = previousValidPost ? { id: previousValidPost.id } : undefined;
 
-            cursor = { id: -1 }; // we guarantee bookings are empty
+            cursor = { id: -1 }; // we guarantee routes are empty
           } else if (direction === PaginationDirection.BACKWARD) {
-            const nextValidOrder = await ctx.prisma.booking.findFirst({
+            const nextValidOrder = await ctx.prisma.route.findFirst({
               where: {
                 id: {
                   gt: args.input.before,
@@ -85,10 +84,10 @@ const resolvers: Resolvers = {
         }
       }
 
-      const searchType = Object.values(SearchTypeBookings);
-      const conditions: Prisma.BookingWhereInput[] = [];
+      const searchType = Object.values(SearchTypeRoutes);
+      const conditions: Prisma.RouteWhereInput[] = [];
 
-      if (searchType.includes(SearchTypeBookings.Id)) {
+      if (searchType.includes(SearchTypeRoutes.Id)) {
         // Number.isFinite isn't a solution, something
         let queryAsBigInt = undefined;
 
@@ -100,17 +99,14 @@ const resolvers: Resolvers = {
 
         conditions.push({ id: { equals: queryAsBigInt } });
       }
-      if (searchType.includes(SearchTypeBookings.Phone)) {
-        conditions.push({ phoneNumber: { contains: query } });
-      }
 
       const sorting = args.input.sorting;
       const orderBy = sorting[0]
         ? { [sorting[0].id]: sorting[0].desc ? 'desc' : 'asc' }
         : [];
 
-      // fetching bookings with extra one, so to determine if there's more to fetch
-      const bookings = await ctx.prisma.booking.findMany({
+      // fetching routes with extra one, so to determine if there's more to fetch
+      const routes = await ctx.prisma.route.findMany({
         take:
           direction === PaginationDirection.BACKWARD ? -(take + 1) : take + 1, // Fetch one extra wbOrder for determining `hasNextPage`
         cursor,
@@ -121,18 +117,16 @@ const resolvers: Resolvers = {
             query.length !== 0 && conditions.length > 0
               ? conditions
               : undefined,
-
-          status,
         },
       });
 
       // If no results are retrieved, it means we've reached the end of the
       // pagination or because we stumble upon invalid cursor, so on the
-      // client we just clearing `before` and `after` cursors to get first bookings
-      // forward pagination could have no bookings at all,
+      // client we just clearing `before` and `after` cursors to get first routes
+      // forward pagination could have no routes at all,
       // or because cursor is set to `{ id: -1 }`, for backward pagination
-      // the only thing would happen if only bookings are empty!
-      if (bookings.length === 0) {
+      // the only thing would happen if only routes are empty!
+      if (routes.length === 0) {
         return {
           edges: [],
           pageInfo: {
@@ -146,31 +140,31 @@ const resolvers: Resolvers = {
       // Fix: Properly handle edge slicing based on direction and take value
       const edges =
         direction === PaginationDirection.BACKWARD
-          ? bookings.slice(1).reverse().slice(0, take) // For backward pagination, remove first item and take requested amount
-          : bookings.slice(0, take); // For forward/none pagination, just take requested amount
+          ? routes.slice(1).reverse().slice(0, take) // For backward pagination, remove first item and take requested amount
+          : routes.slice(0, take); // For forward/none pagination, just take requested amount
 
-      const hasMore = bookings.length > take;
+      const hasMore = routes.length > take;
 
       const startCursor = edges.length === 0 ? null : edges[0]?.id;
       const endCursor = edges.length === 0 ? null : edges.at(-1)?.id;
 
-      // This is where the condition `edges.length < bookings.length` comes into
+      // This is where the condition `edges.length < routes.length` comes into
       // play. If the length of the `edges` array is less than the length
-      // of the `bookings` array, it means that the extra wbOrder was fetched and
+      // of the `routes` array, it means that the extra wbOrder was fetched and
       // excluded from the `edges` array. That implies that there are more
-      // bookings available to fetch in the current pagination direction.
+      // routes available to fetch in the current pagination direction.
       const hasNextPage =
         direction === PaginationDirection.BACKWARD ||
         (direction === PaginationDirection.FORWARD && hasMore) ||
         (direction === PaginationDirection.NONE &&
-          edges.length < bookings.length);
+          edges.length < routes.length);
       // /\
       // |
       // |
-      // NOTE: This condition `edges.length < bookings.length` is essentially
+      // NOTE: This condition `edges.length < routes.length` is essentially
       // checking the same thing as `hasMore`, which is whether there are more
-      // bookings available to fetch. Therefore, you can safely replace
-      // `edges.length < bookings.length` with hasMore in the condition for
+      // routes available to fetch. Therefore, you can safely replace
+      // `edges.length < routes.length` with hasMore in the condition for
       // determining hasNextPage. Both conditions are equivalent and will
       // produce the same result.
 
@@ -188,10 +182,10 @@ const resolvers: Resolvers = {
         },
       };
     },
-    async bookingById(_, args, ctx) {
+    async routeById(_, args, ctx) {
       const id = args.id;
 
-      const booking = await ctx.prisma.booking
+      const route = await ctx.prisma.route
         .findUnique({
           where: {
             id,
@@ -207,53 +201,71 @@ const resolvers: Resolvers = {
           throw new GraphQLError('Unknown error!');
         });
 
-      return booking;
+      return route;
     },
   },
   Mutation: {
-    async createBooking(_, args, ctx) {
-      const {
-        firstName,
-        lastName,
-        seatsCount,
-        travelDate,
-        phoneNumber,
-        routeId,
-      } = args.input;
+    async createRoute(_, args, ctx) {
+      const { arrivalCityId, departureCityId, price } = args.input;
       console.log({ input: args.input });
 
-      const booking = await ctx.prisma.booking.create({
+      const route = await ctx.prisma.route.create({
         data: {
-          firstName,
-          lastName,
-          seatsCount,
-          routeId,
-          travelDate,
-          phoneNumber,
+          price,
+          arrivalCityId,
+          departureCityId,
         },
       });
 
-      return booking;
+      return route;
+    },
+    async createSchedule(_, args, ctx) {
+      const { routeId, endTime, startTime, daysOfWeek, seatsAvailable } =
+        args.input;
+
+      const route = await ctx.prisma.route.findUnique({
+        where: {
+          id: routeId,
+        },
+      });
+
+      if (!route) {
+        throw new GraphQLError(`Route with ID ${routeId} not found.`);
+      }
+
+      const schedule = await ctx.prisma.schedule.create({
+        data: {
+          routeId,
+          daysOfWeek,
+          startTime,
+          endTime,
+          seatsAvailable,
+        },
+      });
+
+      return schedule;
     },
   },
-  Booking: {
-    route(parent, _, { loaders }) {
-      return loaders.routeLoader.load(parent.routeId);
+  Route: {
+    arrivalCity(parent, _, { loaders }) {
+      return loaders.cityLoader.load(parent.arrivalCityId);
     },
-  },
-  Subscription: {
-    createdBook: {
-      subscribe: (_, args, ctx) => ctx.pubSub.subscribe('createdBook'),
+    departureCity(parent, _, { loaders }) {
+      return loaders.cityLoader.load(parent.departureCityId);
     },
+    async bookings(parent, _, { loaders }) {
+      return loaders.bookingsLoader.load(parent.id);
+    },
+    async schedules(parent, _, { loaders }) {
+      return loaders.schedulesLoader.load(parent.id);
+    }
   },
 };
 
 const resolversComposition: ResolversComposerMapping<any> = {
-  'Query.bookings': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
-  'Query.bookingById': [
-    isAuthenticated(),
-    hasRoles([Role.MANAGER, Role.ADMIN]),
-  ],
+  'Query.routes': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
+  'Query.routeById': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
+  'Mutation.createSchedule': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
   // 'Subscription.newWbOrder': [
   //   isAuthenticated(),
   //   hasRoles([Role.MANAGER, Role.ADMIN]),

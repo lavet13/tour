@@ -96,7 +96,7 @@ model Route {
   arrivalCity     City       @relation("RouteArrivalCity", fields: [arrivalCityId], references: [id])
   arrivalCityId   BigInt
   schedules       Schedule[]
-  price           Decimal    @db.Money
+  price           Int
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
   bookings        Booking[]
