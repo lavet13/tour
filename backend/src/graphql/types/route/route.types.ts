@@ -62,10 +62,19 @@ export default gql`
     seatsAvailable: Int!
   }
 
+  type Region {
+    id: BigInt!
+    name: String!
+    routes: [Route!]!
+    createdAt: DateTime!
+    updatedAt: DateTime!
+  }
+
   type Route {
     id: BigInt!
     departureCity: City
     arrivalCity: City
+    region: Region
     price: Int!
     createdAt: DateTime!
     updatedAt: DateTime!
@@ -74,7 +83,7 @@ export default gql`
   }
 
   type Schedule {
-    route: Route!
+    route: Route
     daysOfWeek: [DaysOfWeek!]!
     startTime: DateTime!
     endTime: DateTime

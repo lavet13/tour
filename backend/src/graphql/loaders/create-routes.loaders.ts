@@ -3,39 +3,24 @@ import prismaClient from '@/prisma';
 import { Route } from '@prisma/client';
 
 export const createRoutesLoader = (prisma: typeof prismaClient) => {
-  return new DataLoader(async (cityIds: readonly bigint[]) => {
-    // console.log('Loading routes for cityIds:', cityIds);
-
+  return new DataLoader<bigint, Route[]>(async (regionIds: readonly bigint[]) => {
+    // Fetch all routes for the provided route IDs
     const routes = await prisma.route.findMany({
       where: {
-        OR: [
-          { departureCityId: { in: cityIds as bigint[] } },
-          { arrivalCityId: { in: cityIds as bigint[] } },
-        ],
+        regionId: { in: regionIds as bigint[] },
       },
     });
 
-    // console.log('Found routes:', routes.length);
-
-    const routesByCityId = new Map<
-      bigint,
-      { departureTrips: Route[]; arrivalTrips: Route[] }
-    >(cityIds.map(id => [id, { departureTrips: [], arrivalTrips: [] }]));
-
-    routes.forEach(route => {
-      if (routesByCityId.has(route.departureCityId)) {
-        routesByCityId
-          .get(route.departureCityId)!
-          .departureTrips.push(route);
+    // Group routes by regionId using a Map
+    const routesMap = new Map<bigint, Route[]>();
+    for (const route of routes) {
+      if (!routesMap.has(route.regionId!)) {
+        routesMap.set(route.regionId!, []);
       }
-      if (routesByCityId.has(route.arrivalCityId)) {
-        routesByCityId.get(route.arrivalCityId)!.arrivalTrips.push(route);
-      }
-    });
+      routesMap.get(route.regionId!)?.push(route);
+    }
 
-    return cityIds.map(
-      id =>
-        routesByCityId.get(id) || { departureTrips: [], arrivalTrips: [] },
-    );
+    // Map regionIds to their corresponding routes (or an empty array if none exist)
+    return regionIds.map((regionId) => routesMap.get(regionId) || []);
   });
 };

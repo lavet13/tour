@@ -193,14 +193,10 @@ const resolvers: Resolvers = {
   },
   City: {
     async arrivalTrips(parent, _, { loaders }) {
-      return loaders.routesLoader
-        .load(parent.id)
-        .then(data => data.arrivalTrips);
+      return loaders.arrivalTripsLoader.load(parent.id);
     },
     async departureTrips(parent, _, { loaders }) {
-      return loaders.routesLoader
-        .load(parent.id)
-        .then(data => data.departureTrips);
+      return loaders.departureTripsLoader.load(parent.id);
     },
   },
 };

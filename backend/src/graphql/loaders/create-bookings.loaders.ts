@@ -27,10 +27,10 @@ export const createBookingsLoader = (prisma: typeof prismaClient) => {
     // Group bookings by routeId using a Map
     const bookingsMap = new Map<bigint, Booking[]>();
     for (const booking of bookings) {
-      if (!bookingsMap.has(booking.routeId)) {
-        bookingsMap.set(booking.routeId, []);
+      if (!bookingsMap.has(booking.routeId!)) {
+        bookingsMap.set(booking.routeId!, []);
       }
-      bookingsMap.get(booking.routeId)?.push(booking);
+      bookingsMap.get(booking.routeId!)?.push(booking);
     }
 
     // Map routeIds to their corresponding bookings (or an empty array if no bookings exist)

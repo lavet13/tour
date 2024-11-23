@@ -19,6 +19,7 @@ const config: CodegenConfig = {
       Booking: '../../../node_modules/.prisma/client#Booking as BookingModel',
       City: '../../../node_modules/.prisma/client#City as CityModel',
       Route: '../../../node_modules/.prisma/client#Route as RouteModel',
+      Region: '../../../node_modules/.prisma/client#Region as RegionModel',
       Schedule: '../../../node_modules/.prisma/client#Schedule as ScheduleModel',
       Role: '../../../node_modules/.prisma/client#Role as RoleModel',
     },

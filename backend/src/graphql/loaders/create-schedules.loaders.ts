@@ -1,6 +1,6 @@
 import DataLoader from 'dataloader';
 import prismaClient from '@/prisma';
-import { Booking, Schedule } from '@prisma/client';
+import { Schedule } from '@prisma/client';
 
 export const createSchedulesLoader = (prisma: typeof prismaClient) => {
   // return new DataLoader<bigint, Booking[]>(async (routeIds: readonly bigint[]) => {
@@ -16,7 +16,7 @@ export const createSchedulesLoader = (prisma: typeof prismaClient) => {
   //
   //   return bookingsByRouteId;
   // });
-  return new DataLoader<bigint, Schedule[]>(async (routeIds: readonly bigint[]) => {
+  return new DataLoader(async (routeIds: readonly bigint[]) => {
     // Fetch all schedules for the provided route IDs
     const schedules = await prisma.schedule.findMany({
       where: {

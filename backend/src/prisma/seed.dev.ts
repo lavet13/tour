@@ -20,6 +20,7 @@ export default async function seed() {
   const deletedSchedules = prisma.schedule.deleteMany({});
   const deletedRoutes = prisma.route.deleteMany({});
   const deletedCities = prisma.city.deleteMany({});
+  const deletedRegions = prisma.region.deleteMany({});
 
   await prisma.$transaction([
     deletedUsers,
@@ -28,9 +29,15 @@ export default async function seed() {
     deletedSchedules,
     deletedRoutes,
     deletedCities,
+    deletedRegions,
   ]);
 
-  const cities = [
+  const regions = {
+    LDNR: await prisma.region.create({ data: { name: 'ЛДНР' } }),
+    COASTAL: await prisma.region.create({ data: { name: 'Азовское побережье' } }),
+  };
+
+  const ldnrCities = [
     'Горловка',
     'Енакиево',
     'Юнокоммунарск',
@@ -46,29 +53,45 @@ export default async function seed() {
     'Донецк',
   ];
 
-   // Добавление городов
+  // Добавление городов
   const cityIds: { [name: string]: bigint } = {};
-  for (const city of cities) {
-    const newCity = await prisma.city.create({ data: { name: city } });
+  for (const city of ldnrCities) {
+    const newCity = await prisma.city.create({
+      data: { name: city },
+    });
     cityIds[city] = newCity.id;
   }
 
   // Добавление Мариуполя и прибрежных городов
-  const mariupol = await prisma.city.create({ data: { name: 'Мариуполь' } });
-  const coastalCities = ['Урзуф', 'Юрьевка', 'Ялта (Азов)', 'Белосарайская коса', 'Мелекино', 'Мангуш'];
+  const mariupol = await prisma.city.create({
+    data: { name: 'Мариуполь' },
+  });
+
+  const coastalCities = [
+    'Урзуф',
+    'Юрьевка',
+    'Ялта (Азов)',
+    'Белосарайская коса',
+    'Мелекино',
+    'Мангуш',
+  ];
+
   const coastalCityIds: { [name: string]: bigint } = {};
   for (const city of coastalCities) {
-    const newCity = await prisma.city.create({ data: { name: city } });
+    const newCity = await prisma.city.create({
+      data: { name: city },
+    });
     coastalCityIds[city] = newCity.id;
   }
 
   // Создание маршрутов в Мариуполь
-  for (const city of cities) {
+  for (const city of ldnrCities) {
     const route = await prisma.route.create({
       data: {
         departureCityId: cityIds[city],
         arrivalCityId: mariupol.id,
         price: 150, // Укажите цену за маршрут
+        regionId: regions.LDNR.id,
       },
     });
 
@@ -104,6 +127,7 @@ export default async function seed() {
         departureCityId: mariupol.id,
         arrivalCityId: coastalCityIds[city],
         price: 100, // Укажите цену за маршрут
+        regionId: regions.COASTAL.id,
       },
     });
 

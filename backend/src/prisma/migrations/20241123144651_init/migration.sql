@@ -63,10 +63,21 @@ CREATE TABLE "schedules" (
 );
 
 -- CreateTable
+CREATE TABLE "regions" (
+    "id" BIGSERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "regions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "routes" (
     "id" BIGSERIAL NOT NULL,
     "departureCityId" BIGINT NOT NULL,
     "arrivalCityId" BIGINT NOT NULL,
+    "regionId" BIGINT NOT NULL,
     "price" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -100,6 +111,9 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 CREATE UNIQUE INDEX "refresh_tokens_token_key" ON "refresh_tokens"("token");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "regions_name_key" ON "regions"("name");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "routes_departureCityId_arrivalCityId_key" ON "routes"("departureCityId", "arrivalCityId");
 
 -- AddForeignKey
@@ -116,6 +130,9 @@ ALTER TABLE "routes" ADD CONSTRAINT "routes_departureCityId_fkey" FOREIGN KEY ("
 
 -- AddForeignKey
 ALTER TABLE "routes" ADD CONSTRAINT "routes_arrivalCityId_fkey" FOREIGN KEY ("arrivalCityId") REFERENCES "cities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "routes" ADD CONSTRAINT "routes_regionId_fkey" FOREIGN KEY ("regionId") REFERENCES "regions"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "bookings" ADD CONSTRAINT "bookings_routeId_fkey" FOREIGN KEY ("routeId") REFERENCES "routes"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

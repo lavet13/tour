@@ -247,23 +247,35 @@ const resolvers: Resolvers = {
     },
   },
   Route: {
+    region(parent, _, { loaders }) {
+      return loaders.regionLoader.load(parent.regionId);
+    },
     arrivalCity(parent, _, { loaders }) {
       return loaders.cityLoader.load(parent.arrivalCityId);
     },
     departureCity(parent, _, { loaders }) {
       return loaders.cityLoader.load(parent.departureCityId);
     },
-    async bookings(parent, _, { loaders }) {
+    bookings(parent, _, { loaders }) {
       return loaders.bookingsLoader.load(parent.id);
     },
-    async schedules(parent, _, { loaders }) {
+    schedules(parent, _, { loaders }) {
       return loaders.schedulesLoader.load(parent.id);
     }
+  },
+  Region: {
+    routes(parent, _, { loaders }) {
+      return loaders.routesLoader.load(parent.id);
+    },
+  },
+  Schedule: {
+    route(parent, _, { loaders }) {
+      return loaders.routeLoader.load(parent.routeId);
+    },
   },
 };
 
 const resolversComposition: ResolversComposerMapping<any> = {
-  'Query.routes': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
   'Query.routeById': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
   'Mutation.createSchedule': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
   // 'Subscription.newWbOrder': [

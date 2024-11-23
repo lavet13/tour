@@ -67,7 +67,7 @@ model City {
 
 model Schedule {
   id             BigInt       @id @default(autoincrement())
-  route          Route        @relation(fields: [routeId], references: [id])
+  route          Route        @relation(fields: [routeId], references: [id], onDelete: Cascade)
   routeId        BigInt
   daysOfWeek     DaysOfWeek[]
   startTime      DateTime
@@ -89,13 +89,25 @@ enum DaysOfWeek {
   SUNDAY
 }
 
+model Region {
+  id        BigInt   @id @default(autoincrement())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  routes    Route[]
+
+  @@map("regions")
+}
+
 model Route {
   id              BigInt     @id @default(autoincrement())
-  departureCity   City       @relation("RouteDepartureCity", fields: [departureCityId], references: [id])
-  departureCityId BigInt
-  arrivalCity     City       @relation("RouteArrivalCity", fields: [arrivalCityId], references: [id])
-  arrivalCityId   BigInt
+  departureCity   City?      @relation("RouteDepartureCity", fields: [departureCityId], references: [id])
+  departureCityId BigInt?
+  arrivalCity     City?      @relation("RouteArrivalCity", fields: [arrivalCityId], references: [id])
+  arrivalCityId   BigInt?
   schedules       Schedule[]
+  region          Region?    @relation(fields: [regionId], references: [id])
+  regionId        BigInt?
   price           Int
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
@@ -110,8 +122,8 @@ model Booking {
   firstName   String
   lastName    String
   phoneNumber String
-  route       Route         @relation(fields: [routeId], references: [id])
-  routeId     BigInt
+  route       Route?         @relation(fields: [routeId], references: [id])
+  routeId     BigInt?
   travelDate  DateTime // Желаемая дата поездки
   seatsCount  Int
   status      BookingStatus @default(PENDING)
