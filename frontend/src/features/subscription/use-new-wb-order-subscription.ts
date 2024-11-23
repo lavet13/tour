@@ -3,31 +3,24 @@ import { fetchEventSource } from '@microsoft/fetch-event-source';
 import { print } from 'graphql';
 import { graphql } from '@/gql';
 import {
-  NewWbOrderSubscriptionSubscription,
-  NewWbOrderSubscriptionDocument,
+  CreatedBookSubscriptionSubscription,
+  CreatedBookSubscriptionDocument,
 } from '@/gql/graphql';
 
 export const useNewWbOrderSubscription = () => {
-  const [newOrder, setNewOrder] = useState<NewWbOrderSubscriptionSubscription['newWbOrder']>();
+  const [createdBook, setCreatedBook] = useState<CreatedBookSubscriptionSubscription['createdBook']>();
   const [error, setError] = useState<Error | null>(null);
 
   graphql(`
-    subscription NewWbOrderSubscription {
-      newWbOrder {
+    subscription CreatedBookSubscription {
+      createdBook {
         id
-        name
-        phone
-        qrCode
-        qrCodeFile
-        orderCode
-        wbPhone
-        status
       }
     }
   `);
 
   useEffect(() => {
-    const subscriptionQuery = print(NewWbOrderSubscriptionDocument);
+    const subscriptionQuery = print(CreatedBookSubscriptionDocument);
     const url = new URL(`${import.meta.env.VITE_GRAPHQL_URI}`, window.location.origin);
     let ctrl: AbortController | null = null;
 
@@ -47,9 +40,9 @@ export const useNewWbOrderSubscription = () => {
         signal: ctrl.signal,
         onmessage(event) {
           if (event.event === 'next') {
-            const data = JSON.parse(event.data) as { data: NewWbOrderSubscriptionSubscription };
-            if (data.data && data.data.newWbOrder) {
-              setNewOrder(data.data.newWbOrder);
+            const data = JSON.parse(event.data) as { data: CreatedBookSubscriptionSubscription };
+            if (data.data && data.data.createdBook) {
+              setCreatedBook(data.data.createdBook);
             }
           }
         },
@@ -71,6 +64,6 @@ export const useNewWbOrderSubscription = () => {
     };
   }, []);
 
-  return { newOrder, error };
+  return { createdBook, error };
 };
 

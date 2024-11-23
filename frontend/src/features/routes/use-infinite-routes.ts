@@ -1,44 +1,49 @@
-import { SearchTypeWbOrders, WbOrdersQuery } from '@/gql/graphql';
+import { InfiniteRoutesQuery } from '@/gql/graphql';
 import { graphql } from '@/gql';
 import { client } from '@/graphql/graphql-request';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { InitialDataInfiniteOptions } from '@/types/initial-data-infinite-options';
 import { useNavigate } from 'react-router-dom';
 import { isGraphQLRequestError } from '@/types/is-graphql-request-error';
-import { OrderStatus } from '@/gql/graphql';
+import { SortingState } from '@tanstack/react-table';
 
 type TPageParam = {
   after: number | null;
 };
 
-type UseInfiniteWbOrdersProps = {
+type UseInfiniteRoutesProps = {
   take: number;
-  status?: OrderStatus | 'ALL';
   query: string;
-  searchType?: SearchTypeWbOrders | 'ALL';
-  options?: InitialDataInfiniteOptions<WbOrdersQuery, TPageParam>;
+  sorting: SortingState;
+  options?: InitialDataInfiniteOptions<InfiniteRoutesQuery, TPageParam>;
 };
 
-export const useInfiniteWbOrders = ({
+export const useInfiniteRoutes = ({
   query,
-  searchType = 'ALL',
   take = 30,
-  status = 'ALL',
+  sorting = [],
   options,
-}: UseInfiniteWbOrdersProps) => {
+}: UseInfiniteRoutesProps) => {
   const navigate = useNavigate();
 
-  const wbOrders = graphql(`
-    query WbOrders($input: WbOrdersInput!) {
-      wbOrders(input: $input) {
+  const routes = graphql(`
+    query InfiniteRoutes($input: RoutesInput!) {
+      routes(input: $input) {
         edges {
           id
-          name
-          phone
-          qrCode
-          orderCode
-          wbPhone
-          status
+          price
+          departureCity {
+            id
+            name
+          }
+          region {
+            id
+            name
+          }
+          arrivalCity {
+            id
+            name
+          }
           createdAt
           updatedAt
         }
@@ -55,20 +60,17 @@ export const useInfiniteWbOrders = ({
 
   return useInfiniteQuery({
     queryKey: [
-      (wbOrders.definitions[0] as any).name.value,
-      { input: { take, status, query, searchType } },
+      (routes.definitions[0] as any).name.value,
+      { input: { take, query, sorting } },
     ],
     queryFn: async ({ pageParam }) => {
       try {
-        return await client.request(wbOrders, {
+        return await client.request(routes, {
           input: {
             query,
-            ...(searchType === 'ALL'
-              ? { searchType: Object.values(SearchTypeWbOrders) }
-              : { searchType: [searchType] }),
             take,
             after: pageParam.after,
-            ...(status === 'ALL' ? {} : { status }),
+            sorting,
           },
         });
       } catch (error) {
@@ -83,13 +85,13 @@ export const useInfiniteWbOrders = ({
       }
     },
     getNextPageParam: lastPage => {
-      return lastPage.wbOrders.pageInfo.hasNextPage
-        ? { after: lastPage.wbOrders.pageInfo.endCursor }
+      return lastPage.routes.pageInfo.hasNextPage
+        ? { after: lastPage.routes.pageInfo.endCursor }
         : undefined;
     },
     initialPageParam: { after: null },
     meta: {
-      toastEnabled: false,
+      toastEnabled: true,
     },
     ...options,
   });

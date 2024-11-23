@@ -16,21 +16,57 @@ export type Scalars = {
   Float: { input: number; output: number; }
   /** The `BigInt` scalar type represents non-fractional signed whole numeric values. */
   BigInt: { input: any; output: any; }
-  /** Custom `Date` scalar type */
-  Date: { input: any; output: any; }
+  /** The `Byte` scalar type represents byte value as a Buffer */
+  Byte: { input: any; output: any; }
+  /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar. */
+  DateTime: { input: any; output: any; }
   File: { input: any; output: any; }
 };
+
+export type BookingInput = {
+  firstName: Scalars['String']['input'];
+  lastName: Scalars['String']['input'];
+  phoneNumber: Scalars['String']['input'];
+  routeId: Scalars['BigInt']['input'];
+  seatsCount: Scalars['Int']['input'];
+  travelDate: Scalars['DateTime']['input'];
+};
+
+export enum BookingStatus {
+  Confirmed = 'CONFIRMED',
+  Pending = 'PENDING'
+}
+
+export type BookingsInput = {
+  after?: InputMaybe<Scalars['BigInt']['input']>;
+  before?: InputMaybe<Scalars['BigInt']['input']>;
+  query: Scalars['String']['input'];
+  sorting: Array<SortingState>;
+  status?: InputMaybe<BookingStatus>;
+  take?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export type CitiesInput = {
+  after?: InputMaybe<Scalars['BigInt']['input']>;
+  before?: InputMaybe<Scalars['BigInt']['input']>;
+  query: Scalars['String']['input'];
+  take?: InputMaybe<Scalars['Int']['input']>;
+};
+
+export enum DaysOfWeek {
+  Friday = 'FRIDAY',
+  Monday = 'MONDAY',
+  Saturday = 'SATURDAY',
+  Sunday = 'SUNDAY',
+  Thursday = 'THURSDAY',
+  Tuesday = 'TUESDAY',
+  Wednesday = 'WEDNESDAY'
+}
 
 export type LoginInput = {
   login: Scalars['String']['input'];
   password: Scalars['String']['input'];
 };
-
-export enum OrderStatus {
-  Assembled = 'ASSEMBLED',
-  NotAssembled = 'NOT_ASSEMBLED',
-  Rejected = 'REJECTED'
-}
 
 export enum Role {
   Admin = 'ADMIN',
@@ -38,20 +74,46 @@ export enum Role {
   User = 'USER'
 }
 
-export enum SearchTypeWbOrders {
-  Id = 'ID',
-  Name = 'NAME',
-  Phone = 'PHONE',
-  WbPhone = 'WB_PHONE'
-}
+export type RouteInput = {
+  arrivalCityId: Scalars['BigInt']['input'];
+  departureCityId: Scalars['BigInt']['input'];
+  price: Scalars['Int']['input'];
+};
 
-export type SearchWbOrdersInput = {
+export type RoutesInput = {
   after?: InputMaybe<Scalars['BigInt']['input']>;
   before?: InputMaybe<Scalars['BigInt']['input']>;
   query: Scalars['String']['input'];
-  searchType: SearchTypeWbOrders;
+  sorting: Array<SortingState>;
   take?: InputMaybe<Scalars['Int']['input']>;
 };
+
+export type ScheduleInput = {
+  daysOfWeek: Scalars['BigInt']['input'];
+  endTime: Scalars['DateTime']['input'];
+  routeId: Scalars['BigInt']['input'];
+  seatsAvailable: Scalars['Int']['input'];
+  startTime: Scalars['DateTime']['input'];
+};
+
+export enum SearchTypeBookings {
+  FirstName = 'FIRST_NAME',
+  Id = 'ID',
+  LastName = 'LAST_NAME',
+  Phone = 'PHONE'
+}
+
+export enum SearchTypeCities {
+  Id = 'ID',
+  Name = 'NAME'
+}
+
+export enum SearchTypeRoutes {
+  FirstName = 'FIRST_NAME',
+  Id = 'ID',
+  LastName = 'LAST_NAME',
+  Phone = 'PHONE'
+}
 
 export type SignupInput = {
   email: Scalars['String']['input'];
@@ -59,33 +121,9 @@ export type SignupInput = {
   password: Scalars['String']['input'];
 };
 
-export type UpdateWbInput = {
-  createdAt: Scalars['Date']['input'];
-  id: Scalars['BigInt']['input'];
-  name: Scalars['String']['input'];
-  orderCode?: InputMaybe<Scalars['String']['input']>;
-  phone: Scalars['String']['input'];
-  qrCode?: InputMaybe<Scalars['String']['input']>;
-  status: OrderStatus;
-  updatedAt: Scalars['Date']['input'];
-  wbPhone?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type WbOrderInput = {
-  FLP: Scalars['String']['input'];
-  QR?: InputMaybe<Scalars['File']['input']>;
-  orderCode?: InputMaybe<Scalars['String']['input']>;
-  phone: Scalars['String']['input'];
-  wbPhone?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type WbOrdersInput = {
-  after?: InputMaybe<Scalars['BigInt']['input']>;
-  before?: InputMaybe<Scalars['BigInt']['input']>;
-  query: Scalars['String']['input'];
-  searchType: Array<SearchTypeWbOrders>;
-  status?: InputMaybe<OrderStatus>;
-  take?: InputMaybe<Scalars['Int']['input']>;
+export type SortingState = {
+  desc: Scalars['Boolean']['input'];
+  id: Scalars['String']['input'];
 };
 
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
@@ -117,38 +155,24 @@ export type RegisterMutationVariables = Exact<{
 
 export type RegisterMutation = { __typename?: 'Mutation', signup: { __typename?: 'AuthPayload', accessToken: string, refreshToken: string } };
 
-export type CreateWbOrderMutationVariables = Exact<{
-  input: WbOrderInput;
+export type InfiniteRoutesQueryVariables = Exact<{
+  input: RoutesInput;
 }>;
 
 
-export type CreateWbOrderMutation = { __typename?: 'Mutation', saveWbOrder: { __typename?: 'WbOrder', id: any, name: string, phone: string, orderCode?: string | null, qrCode?: string | null, qrCodeFile?: any | null, wbPhone?: string | null, status: OrderStatus } };
+export type InfiniteRoutesQuery = { __typename?: 'Query', routes: { __typename?: 'RoutesResponse', edges: Array<{ __typename?: 'Route', id: any, price: number, createdAt: any, updatedAt: any, departureCity?: { __typename?: 'City', id: any, name: string } | null, region?: { __typename?: 'Region', id: any, name: string } | null, arrivalCity?: { __typename?: 'City', id: any, name: string } | null }>, pageInfo: { __typename?: 'PageInfo', endCursor?: any | null, hasNextPage: boolean, startCursor?: any | null, hasPreviousPage: boolean } } };
 
-export type UpdateWbOrderMutationVariables = Exact<{
-  input: UpdateWbInput;
+export type RoutesQueryVariables = Exact<{
+  input: RoutesInput;
 }>;
 
 
-export type UpdateWbOrderMutation = { __typename?: 'Mutation', updateWbOrder: { __typename?: 'WbOrder', id: any, name: string, phone: string, qrCode?: string | null, orderCode?: string | null, wbPhone?: string | null, status: OrderStatus, createdAt: any, updatedAt: any } };
+export type RoutesQuery = { __typename?: 'Query', routes: { __typename?: 'RoutesResponse', edges: Array<{ __typename?: 'Route', id: any }>, pageInfo: { __typename?: 'PageInfo', endCursor?: any | null, hasNextPage: boolean, startCursor?: any | null, hasPreviousPage: boolean } } };
 
-export type WbOrderByIdQueryVariables = Exact<{
-  id: Scalars['BigInt']['input'];
-}>;
+export type CreatedBookSubscriptionSubscriptionVariables = Exact<{ [key: string]: never; }>;
 
 
-export type WbOrderByIdQuery = { __typename?: 'Query', wbOrderById?: { __typename?: 'WbOrder', id: any, name: string, phone: string, qrCode?: string | null, orderCode?: string | null, wbPhone?: string | null, status: OrderStatus, createdAt: any, updatedAt: any } | null };
-
-export type WbOrdersQueryVariables = Exact<{
-  input: WbOrdersInput;
-}>;
-
-
-export type WbOrdersQuery = { __typename?: 'Query', wbOrders: { __typename?: 'WbOrdersResponse', edges: Array<{ __typename?: 'WbOrder', id: any, name: string, phone: string, qrCode?: string | null, orderCode?: string | null, wbPhone?: string | null, status: OrderStatus, createdAt: any, updatedAt: any }>, pageInfo: { __typename?: 'PageInfo', endCursor?: any | null, hasNextPage: boolean, startCursor?: any | null, hasPreviousPage: boolean } } };
-
-export type NewWbOrderSubscriptionSubscriptionVariables = Exact<{ [key: string]: never; }>;
-
-
-export type NewWbOrderSubscriptionSubscription = { __typename?: 'Subscription', newWbOrder: { __typename?: 'WbOrder', id: any, name: string, phone: string, qrCode?: string | null, qrCodeFile?: any | null, orderCode?: string | null, wbPhone?: string | null, status: OrderStatus } };
+export type CreatedBookSubscriptionSubscription = { __typename?: 'Subscription', createdBook: { __typename?: 'Booking', id: any } };
 
 
 export const MeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"roles"}}]}}]}}]} as unknown as DocumentNode<MeQuery, MeQueryVariables>;
@@ -156,8 +180,6 @@ export const LoginDocument = {"kind":"Document","definitions":[{"kind":"Operatio
 export const LogoutDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Logout"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"logout"}}]}}]} as unknown as DocumentNode<LogoutMutation, LogoutMutationVariables>;
 export const RefreshTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RefreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"refreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}}]}}]}}]} as unknown as DocumentNode<RefreshTokenMutation, RefreshTokenMutationVariables>;
 export const RegisterDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Register"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"signupInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SignupInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"signup"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"signupInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"signupInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}}]}}]}}]} as unknown as DocumentNode<RegisterMutation, RegisterMutationVariables>;
-export const CreateWbOrderDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateWbOrder"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"WbOrderInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"saveWbOrder"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"orderCode"}},{"kind":"Field","name":{"kind":"Name","value":"qrCode"}},{"kind":"Field","name":{"kind":"Name","value":"qrCodeFile"}},{"kind":"Field","name":{"kind":"Name","value":"wbPhone"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<CreateWbOrderMutation, CreateWbOrderMutationVariables>;
-export const UpdateWbOrderDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateWbOrder"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateWbInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateWbOrder"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"qrCode"}},{"kind":"Field","name":{"kind":"Name","value":"orderCode"}},{"kind":"Field","name":{"kind":"Name","value":"wbPhone"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<UpdateWbOrderMutation, UpdateWbOrderMutationVariables>;
-export const WbOrderByIdDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"WbOrderById"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"BigInt"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"wbOrderById"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"qrCode"}},{"kind":"Field","name":{"kind":"Name","value":"orderCode"}},{"kind":"Field","name":{"kind":"Name","value":"wbPhone"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<WbOrderByIdQuery, WbOrderByIdQueryVariables>;
-export const WbOrdersDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"WbOrders"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"WbOrdersInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"wbOrders"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"qrCode"}},{"kind":"Field","name":{"kind":"Name","value":"orderCode"}},{"kind":"Field","name":{"kind":"Name","value":"wbPhone"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"endCursor"}},{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"startCursor"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}}]}}]}}]}}]} as unknown as DocumentNode<WbOrdersQuery, WbOrdersQueryVariables>;
-export const NewWbOrderSubscriptionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"subscription","name":{"kind":"Name","value":"NewWbOrderSubscription"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"newWbOrder"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"phone"}},{"kind":"Field","name":{"kind":"Name","value":"qrCode"}},{"kind":"Field","name":{"kind":"Name","value":"qrCodeFile"}},{"kind":"Field","name":{"kind":"Name","value":"orderCode"}},{"kind":"Field","name":{"kind":"Name","value":"wbPhone"}},{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<NewWbOrderSubscriptionSubscription, NewWbOrderSubscriptionSubscriptionVariables>;
+export const InfiniteRoutesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"InfiniteRoutes"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RoutesInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"routes"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"departureCity"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"region"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"arrivalCity"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"endCursor"}},{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"startCursor"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}}]}}]}}]}}]} as unknown as DocumentNode<InfiniteRoutesQuery, InfiniteRoutesQueryVariables>;
+export const RoutesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Routes"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"RoutesInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"routes"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"edges"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}},{"kind":"Field","name":{"kind":"Name","value":"pageInfo"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"endCursor"}},{"kind":"Field","name":{"kind":"Name","value":"hasNextPage"}},{"kind":"Field","name":{"kind":"Name","value":"startCursor"}},{"kind":"Field","name":{"kind":"Name","value":"hasPreviousPage"}}]}}]}}]}}]} as unknown as DocumentNode<RoutesQuery, RoutesQueryVariables>;
+export const CreatedBookSubscriptionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"subscription","name":{"kind":"Name","value":"CreatedBookSubscription"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createdBook"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<CreatedBookSubscriptionSubscription, CreatedBookSubscriptionSubscriptionVariables>;

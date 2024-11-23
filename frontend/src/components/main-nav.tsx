@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { FC, forwardRef, ReactNode, useCallback } from 'react';
+import { FC, forwardRef, ReactNode, useCallback, useMemo } from 'react';
 import { Link, LinkProps } from 'react-router-dom';
 import {
   NavLink as RouterLink,
@@ -15,6 +15,7 @@ import {
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
+  NavigationMenuViewport,
 } from '@/components/ui/navigation-menu';
 import {
   HoverCard,
@@ -31,6 +32,7 @@ import {
   NavigationMenuTrigger as RadixNavigationMenuTrigger,
 } from '@radix-ui/react-navigation-menu';
 import { Slottable } from '@radix-ui/react-slot';
+import { useInfiniteRoutes } from '@/features/routes';
 
 type NavLinkProps = Omit<RouterLinkProps, 'className'> & {
   children: ReactNode;
@@ -94,6 +96,37 @@ export const NavLink: FC<NavLinkProps> = ({
 };
 
 const MainNav: FC = () => {
+  const {
+    status,
+    fetchStatus,
+    data,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+    isFetching,
+    isPending,
+  } = useInfiniteRoutes({
+    sorting: [],
+    take: 30,
+    query: '',
+    options: {
+      retry: false,
+    },
+  });
+
+  const flatData = useMemo(
+    () => data?.pages.flatMap(page => page.routes.edges) ?? [],
+    [data],
+  );
+
+  const LDNR = useMemo(() => flatData.filter(data => data.region?.name === 'ЛДНР'), [flatData])
+
+  console.log({ LDNR, isFetching });
+
+  if(isPending) {
+    return <NavSkeleton />
+  }
+
   return (
     <div className='hidden md:flex'>
       <Link
@@ -111,20 +144,20 @@ const MainNav: FC = () => {
             <NavigationMenuTrigger>Рейсы ЛДНР</NavigationMenuTrigger>
             <NavigationMenuContent>
               <RadixNavigationMenuSub className='flex'>
-                <ScrollArea className='h-96 border-r'>
-                  <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 p-2 overflow-hidden'>
-                    {cities.map(city => (
+                <ScrollArea className={`${LDNR.length === 0 ? 'w-32' : 'h-96'} border-r`}>
+                  <NavigationMenuList className={`${LDNR.length === 0 ? 'w-full' : 'w-fit'}space-x-0 items-start flex-col mr-2 p-2 overflow-hidden`}>
+                    {LDNR.length !== 0 && LDNR.map(route => (
                       <NavigationMenuItem
                         className='flex w-full'
-                        key={city}
-                        value={city.toLowerCase()}
+                        key={route.id}
+                        value={route.departureCity?.name.toLowerCase()}
                       >
                         <RadixNavigationMenuTrigger asChild>
                           <Button
                             className='flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0'
                             variant='ghost'
                           >
-                            Из {city}
+                            Из {route.departureCity?.name}
                             <ChevronDown className='h-4 w-4 transition-transform duration-200 group-data-[state=open]:-rotate-90' />
                           </Button>
                         </RadixNavigationMenuTrigger>
@@ -132,7 +165,7 @@ const MainNav: FC = () => {
                           <ScrollArea className='h-96'>
                             <div className='flex flex-col p-4 pb-2'>
                               <h4 className='font-medium mb-2'>
-                                Маршруты из {city}:
+                                Маршруты из {route.departureCity?.name}:
                               </h4>
                               <Separator className='mb-4' />
                               <div className='grid gap-2'>
@@ -140,7 +173,8 @@ const MainNav: FC = () => {
                                   const isAvailable =
                                     dest.available ||
                                     (dest.availableFrom &&
-                                      new Date(dest.availableFrom) <= new Date());
+                                      new Date(dest.availableFrom) <=
+                                        new Date());
 
                                   return (
                                     <Button
@@ -166,11 +200,14 @@ const MainNav: FC = () => {
                         </NavigationMenuContent>
                       </NavigationMenuItem>
                     ))}
+                    {LDNR.length === 0 && <NavigationMenuItem className="self-center">
+                      Нет данных
+                    </NavigationMenuItem>}
                   </NavigationMenuList>
                 </ScrollArea>
 
                 <RadixNavigationMenuViewport
-                  className='overflow-hidden transform origin-right-center relative top-0 right-0'
+                  className='overflow-hidden transform origin-right-center relative top-0 right-0 w-full overflow-hidden rounded-md bg-popover text-popover-foreground shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-90 transition-[width,_height]'
                   style={{
                     width: 'var(--radix-navigation-menu-viewport-width)',
                     height: 'var(--radix-navigation-menu-viewport-height)',
@@ -188,6 +225,7 @@ const MainNav: FC = () => {
             </NavigationMenuLink>
           </NavigationMenuItem>
         </NavigationMenuList>
+        <NavigationMenuViewport />
       </NavigationMenu>
     </div>
   );
@@ -198,6 +236,75 @@ interface ListItemProps extends Omit<LinkProps, 'title'> {
   className?: string;
   children?: React.ReactNode;
 }
+
+const NavSkeleton = () => {
+  // Create an array of 8 items for skeleton loading
+  const skeletonItems = Array(8).fill(null);
+
+  return (
+    <div className="hidden md:flex">
+      {/* Logo skeleton */}
+      <div className="mr-2 flex items-center space-x-2 lg:mr-3 xl:mr-6">
+        <div className="h-6 w-6 animate-pulse rounded-md bg-muted" />
+        <div className="hidden xl:block h-4 w-24 animate-pulse rounded-md bg-muted" />
+      </div>
+
+      <NavigationMenu>
+        <NavigationMenuList>
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>
+              <div className="h-4 w-20 animate-pulse rounded-md bg-muted" />
+            </NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <RadixNavigationMenuSub className="flex">
+                <ScrollArea className="h-96 border-r">
+                  <NavigationMenuList className="space-x-0 items-start flex-col w-fit mr-1 p-2">
+                    {skeletonItems.map((_, index) => (
+                      <NavigationMenuItem key={index} className="flex w-full">
+                        <div className="flex-1 p-2">
+                          <div className="h-8 w-32 animate-pulse rounded-md bg-muted" />
+                        </div>
+                      </NavigationMenuItem>
+                    ))}
+                  </NavigationMenuList>
+                </ScrollArea>
+
+                <RadixNavigationMenuViewport
+                  className="overflow-hidden transform origin-right-center relative top-0 right-0"
+                  style={{
+                    width: 'var(--radix-navigation-menu-viewport-width)',
+                    height: 'var(--radix-navigation-menu-viewport-height)',
+                  }}
+                >
+                  <ScrollArea className="h-96">
+                    <div className="flex flex-col p-4 pb-2">
+                      <div className="h-5 w-40 animate-pulse rounded-md bg-muted mb-2" />
+                      <Separator className="mb-4" />
+                      <div className="grid gap-2">
+                        {Array(7).fill(null).map((_, index) => (
+                          <div
+                            key={index}
+                            className="h-9 w-full animate-pulse rounded-md bg-muted"
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </ScrollArea>
+                </RadixNavigationMenuViewport>
+              </RadixNavigationMenuSub>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+
+          <NavigationMenuItem>
+            <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
+          </NavigationMenuItem>
+        </NavigationMenuList>
+
+        <NavigationMenuViewport />
+      </NavigationMenu>
+    </div>
+  );
+};
 
 const ListItem = forwardRef<HTMLAnchorElement, ListItemProps>(
   ({ className, title, children, ...props }, ref) => {

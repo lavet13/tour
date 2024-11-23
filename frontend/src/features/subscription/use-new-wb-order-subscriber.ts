@@ -1,11 +1,11 @@
 import { graphql } from '@/gql';
-import { NewWbOrderSubscriptionDocument, NewWbOrderSubscriptionSubscription } from '@/gql/graphql';
+import { CreatedBookSubscriptionDocument, CreatedBookSubscriptionSubscription } from '@/gql/graphql';
 import { print } from 'graphql';
 import { client } from '@/graphql/graphql-sse';
 import { useEffect, useState } from 'react';
 
 export function useNewWbOrderSubscriber() {
-  const [newOrder, setNewOrder] = useState<NewWbOrderSubscriptionSubscription['newWbOrder']>();
+  const [createdBook, setCreatedBook] = useState<CreatedBookSubscriptionSubscription['newWbOrder']>();
   const [error, setError] = useState<Error | null>(null);
 
   graphql(`
@@ -17,18 +17,18 @@ export function useNewWbOrderSubscriber() {
   `);
 
   useEffect(() => {
-    const subscriptionQuery = print(NewWbOrderSubscriptionDocument);
+    const subscriptionQuery = print(CreatedBookSubscriptionDocument);
 
     console.log({ subscriptionQuery });
 
-    const unsubscribe = client.subscribe<NewWbOrderSubscriptionSubscription>(
+    const unsubscribe = client.subscribe<CreatedBookSubscriptionSubscription>(
       {
         query: subscriptionQuery,
       },
       {
         next: data => {
           if(data.data) {
-            setNewOrder(data.data.newWbOrder);
+            setCreatedBook(data.data.createdBook);
           }
         },
         error: (err) => {
@@ -46,5 +46,5 @@ export function useNewWbOrderSubscriber() {
     };
   }, []);
 
-  return { newOrder, error };
+  return { createdBook, error };
 }

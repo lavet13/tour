@@ -1,18 +1,18 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { graphql } from '@/gql';
-import { WbOrdersQuery } from '@/gql/graphql';
+import { RoutesQuery } from '@/gql/graphql';
 import { InitialDataOptions } from '@/types/initial-data-options';
 import { client } from '@/graphql/graphql-request';
 
-type UseWbOrdersProps = {
+type UseRoutesProps = {
   take?: number;
   before?: number | null;
   after?: number | null;
 };
 
-export const useWbOrders = (
-  { take, after, before }: UseWbOrdersProps,
-  options?: InitialDataOptions<WbOrdersQuery>
+export const useRoutes = (
+  { take, after, before }: UseRoutesProps,
+  options?: InitialDataOptions<RoutesQuery>
 ) => {
   const input: Record<string, any> = {};
   import.meta.env.DEV && console.log({ before, after });
@@ -28,19 +28,11 @@ export const useWbOrders = (
   }
   import.meta.env.DEV && console.log({ input });
 
-  const wbOrders = graphql(`
-    query WbOrders($input: WbOrdersInput!) {
-      wbOrders(input: $input) {
+  const routes = graphql(`
+    query Routes($input: RoutesInput!) {
+      routes(input: $input) {
         edges {
           id
-          name
-          phone
-          qrCode
-          orderCode
-          wbPhone
-          status
-          createdAt
-          updatedAt
         }
         pageInfo {
           endCursor
@@ -54,10 +46,10 @@ export const useWbOrders = (
   `);
 
   return useQuery({
-    queryKey: [(wbOrders.definitions[0] as any).name.value, { input }],
+    queryKey: [(routes.definitions[0] as any).name.value, { input }],
     queryFn: async () => {
       // await new Promise(resolve => setTimeout(() => resolve(0), 10000000));
-      return await client.request(wbOrders, { input });
+      return await client.request(routes, { input });
     },
     placeholderData: keepPreviousData,
     ...options,

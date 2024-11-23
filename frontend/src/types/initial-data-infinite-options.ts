@@ -2,5 +2,5 @@ import { UndefinedInitialDataInfiniteOptions, InfiniteData, QueryKey } from "@ta
 
 export type InitialDataInfiniteOptions<TQueryFnData, TPageParam> = Omit<
   UndefinedInitialDataInfiniteOptions<TQueryFnData, Error, InfiniteData<TQueryFnData, TPageParam>, QueryKey, TPageParam>,
-  'queryKey' | 'queryFn'
+  'queryKey' | 'queryFn' | 'initialPageParam' | 'getNextPageParam'
 >;
