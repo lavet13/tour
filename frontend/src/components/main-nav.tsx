@@ -10,6 +10,7 @@ import AnimatedGradientText from './ui/animated-gradient-text';
 import {
   NavigationMenu,
   NavigationMenuContent,
+  NavigationMenuIndicator,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
@@ -33,37 +34,14 @@ import {
 } from '@radix-ui/react-navigation-menu';
 import { Slottable } from '@radix-ui/react-slot';
 import { useInfiniteRoutes } from '@/features/routes';
+import { useRoutesByRegion } from '@/features/routes/use-routes-by-region';
+import { RoutesByRegionQuery } from '@/gql/graphql';
+import { useRegionByName } from '@/features/region/use-region-by-name';
 
 type NavLinkProps = Omit<RouterLinkProps, 'className'> & {
   children: ReactNode;
   className?: string;
 };
-
-const cities = [
-  'Горловка',
-  'Енакиево',
-  'Юнокомунарск',
-  'Ждановка',
-  'Кировское',
-  'Кр. Луч',
-  'Снежное',
-  'Шахтерск',
-  'Зугрэс',
-  'Торез',
-  'Харцызск',
-  'Макеевка',
-  'Донецк',
-];
-
-const destinations = [
-  { name: 'Мариуполь', available: true },
-  { name: 'Урзуф', availableFrom: '2025-05-01' },
-  { name: 'Юрьевка', availableFrom: '2025-05-01' },
-  { name: 'Ялта (азов)', availableFrom: '2025-05-01' },
-  { name: 'Белосарайская коса', availableFrom: '2025-05-01' },
-  { name: 'Мелекино', availableFrom: '2025-05-01' },
-  { name: 'Мангуш', availableFrom: '2025-05-01' },
-];
 
 export const NavLink: FC<NavLinkProps> = ({
   to,
@@ -96,36 +74,33 @@ export const NavLink: FC<NavLinkProps> = ({
 };
 
 const MainNav: FC = () => {
+  const { data: ldnrRegion } = useRegionByName('ЛДНР',);
+  const { data: coastalRegion } = useRegionByName('Азовское побережье');
+
   const {
-    status,
-    fetchStatus,
-    data,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-    isFetching,
-    isPending,
-  } = useInfiniteRoutes({
-    sorting: [],
-    take: 30,
-    query: '',
-    options: {
-      retry: false,
-    },
+    data: ldnrData,
+    isFetching: ldnrIsFetching,
+    isPending: ldnrIsPending,
+  } = useRoutesByRegion(ldnrRegion?.regionByName?.id, {
+    enabled: !!ldnrRegion,
   });
 
-  const flatData = useMemo(
-    () => data?.pages.flatMap(page => page.routes.edges) ?? [],
-    [data],
-  );
+  const {
+    data: coastalData,
+    isFetching: coastalIsFetching,
+    isPending: coastalIsPending,
+  } = useRoutesByRegion(coastalRegion?.regionByName?.id, {
+    enabled: !!coastalRegion,
+  });
 
-  const LDNR = useMemo(() => flatData.filter(data => data.region?.name === 'ЛДНР'), [flatData])
+  const ldnrRoutes = ldnrData?.routesByRegion ?? [];
+  const coastalRoutes = coastalData?.routesByRegion ?? [];
 
-  console.log({ LDNR, isFetching });
-
-  if(isPending) {
-    return <NavSkeleton />
+  if (ldnrIsPending || coastalIsPending) {
+    return <NavSkeleton />;
   }
+
+  console.log({ ldnrRoutes, coastalIsFetching });
 
   return (
     <div className='hidden md:flex'>
@@ -141,80 +116,13 @@ const MainNav: FC = () => {
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
-            <NavigationMenuTrigger>Рейсы ЛДНР</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <RadixNavigationMenuSub className='flex'>
-                <ScrollArea className={`${LDNR.length === 0 ? 'w-32' : 'h-96'} border-r`}>
-                  <NavigationMenuList className={`${LDNR.length === 0 ? 'w-full' : 'w-fit'}space-x-0 items-start flex-col mr-2 p-2 overflow-hidden`}>
-                    {LDNR.length !== 0 && LDNR.map(route => (
-                      <NavigationMenuItem
-                        className='flex w-full'
-                        key={route.id}
-                        value={route.departureCity?.name.toLowerCase()}
-                      >
-                        <RadixNavigationMenuTrigger asChild>
-                          <Button
-                            className='flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0'
-                            variant='ghost'
-                          >
-                            Из {route.departureCity?.name}
-                            <ChevronDown className='h-4 w-4 transition-transform duration-200 group-data-[state=open]:-rotate-90' />
-                          </Button>
-                        </RadixNavigationMenuTrigger>
-                        <NavigationMenuContent>
-                          <ScrollArea className='h-96'>
-                            <div className='flex flex-col p-4 pb-2'>
-                              <h4 className='font-medium mb-2'>
-                                Маршруты из {route.departureCity?.name}:
-                              </h4>
-                              <Separator className='mb-4' />
-                              <div className='grid gap-2'>
-                                {destinations.map(dest => {
-                                  const isAvailable =
-                                    dest.available ||
-                                    (dest.availableFrom &&
-                                      new Date(dest.availableFrom) <=
-                                        new Date());
-
-                                  return (
-                                    <Button
-                                      key={dest.name}
-                                      variant='ghost'
-                                      className={cn(
-                                        'w-full justify-between',
-                                        !isAvailable && 'opacity-50',
-                                      )}
-                                    >
-                                      {dest.name}
-                                      {dest.availableFrom && (
-                                        <span className='text-xs text-muted-foreground'>
-                                          с 01.05.2025
-                                        </span>
-                                      )}
-                                    </Button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          </ScrollArea>
-                        </NavigationMenuContent>
-                      </NavigationMenuItem>
-                    ))}
-                    {LDNR.length === 0 && <NavigationMenuItem className="self-center">
-                      Нет данных
-                    </NavigationMenuItem>}
-                  </NavigationMenuList>
-                </ScrollArea>
-
-                <RadixNavigationMenuViewport
-                  className='overflow-hidden transform origin-right-center relative top-0 right-0 w-full overflow-hidden rounded-md bg-popover text-popover-foreground shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-90 transition-[width,_height]'
-                  style={{
-                    width: 'var(--radix-navigation-menu-viewport-width)',
-                    height: 'var(--radix-navigation-menu-viewport-height)',
-                  }}
-                />
-              </RadixNavigationMenuSub>
-            </NavigationMenuContent>
+            <NavigationRoutes title='ЛДНР' routes={ldnrRoutes} />
+          </NavigationMenuItem>
+          <NavigationMenuItem>
+            <NavigationRoutes
+              title='Азовское побережье'
+              routes={coastalRoutes}
+            />
           </NavigationMenuItem>
 
           <NavigationMenuItem>
@@ -225,7 +133,10 @@ const MainNav: FC = () => {
             </NavigationMenuLink>
           </NavigationMenuItem>
         </NavigationMenuList>
-        <NavigationMenuViewport />
+
+        <div className="perspective-[2000px] absolute left-0 top-full flex w-full justify-center">
+          <RadixNavigationMenuViewport className="origin-top-center relative mt-1.5 h-[var(--radix-navigation-menu-viewport-height)] w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-90 md:w-[var(--radix-navigation-menu-viewport-width)] transition-[width,_height]" />
+        </div>
       </NavigationMenu>
     </div>
   );
@@ -242,27 +153,27 @@ const NavSkeleton = () => {
   const skeletonItems = Array(8).fill(null);
 
   return (
-    <div className="hidden md:flex">
+    <div className='hidden md:flex'>
       {/* Logo skeleton */}
-      <div className="mr-2 flex items-center space-x-2 lg:mr-3 xl:mr-6">
-        <div className="h-6 w-6 animate-pulse rounded-md bg-muted" />
-        <div className="hidden xl:block h-4 w-24 animate-pulse rounded-md bg-muted" />
+      <div className='mr-2 flex items-center space-x-2 lg:mr-3 xl:mr-6'>
+        <div className='h-6 w-6 animate-pulse rounded-md bg-muted' />
+        <div className='hidden xl:block h-4 w-24 animate-pulse rounded-md bg-muted' />
       </div>
 
       <NavigationMenu>
         <NavigationMenuList>
           <NavigationMenuItem>
             <NavigationMenuTrigger>
-              <div className="h-4 w-20 animate-pulse rounded-md bg-muted" />
+              <div className='h-4 w-20 animate-pulse rounded-md bg-muted' />
             </NavigationMenuTrigger>
             <NavigationMenuContent>
-              <RadixNavigationMenuSub className="flex">
-                <ScrollArea className="h-96 border-r">
-                  <NavigationMenuList className="space-x-0 items-start flex-col w-fit mr-1 p-2">
+              <RadixNavigationMenuSub className='flex'>
+                <ScrollArea className='h-96 border-r'>
+                  <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 p-2'>
                     {skeletonItems.map((_, index) => (
-                      <NavigationMenuItem key={index} className="flex w-full">
-                        <div className="flex-1 p-2">
-                          <div className="h-8 w-32 animate-pulse rounded-md bg-muted" />
+                      <NavigationMenuItem key={index} className='flex w-full'>
+                        <div className='flex-1 p-2'>
+                          <div className='h-8 w-32 animate-pulse rounded-md bg-muted' />
                         </div>
                       </NavigationMenuItem>
                     ))}
@@ -270,23 +181,25 @@ const NavSkeleton = () => {
                 </ScrollArea>
 
                 <RadixNavigationMenuViewport
-                  className="overflow-hidden transform origin-right-center relative top-0 right-0"
+                  className='overflow-hidden transform origin-right-center relative top-0 right-0'
                   style={{
                     width: 'var(--radix-navigation-menu-viewport-width)',
                     height: 'var(--radix-navigation-menu-viewport-height)',
                   }}
                 >
-                  <ScrollArea className="h-96">
-                    <div className="flex flex-col p-4 pb-2">
-                      <div className="h-5 w-40 animate-pulse rounded-md bg-muted mb-2" />
-                      <Separator className="mb-4" />
-                      <div className="grid gap-2">
-                        {Array(7).fill(null).map((_, index) => (
-                          <div
-                            key={index}
-                            className="h-9 w-full animate-pulse rounded-md bg-muted"
-                          />
-                        ))}
+                  <ScrollArea className='h-96'>
+                    <div className='flex flex-col p-4 pb-2'>
+                      <div className='h-5 w-40 animate-pulse rounded-md bg-muted mb-2' />
+                      <Separator className='mb-4' />
+                      <div className='grid gap-2'>
+                        {Array(7)
+                          .fill(null)
+                          .map((_, index) => (
+                            <div
+                              key={index}
+                              className='h-9 w-full animate-pulse rounded-md bg-muted'
+                            />
+                          ))}
                       </div>
                     </div>
                   </ScrollArea>
@@ -296,7 +209,7 @@ const NavSkeleton = () => {
           </NavigationMenuItem>
 
           <NavigationMenuItem>
-            <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
+            <div className='h-9 w-24 animate-pulse rounded-md bg-muted' />
           </NavigationMenuItem>
         </NavigationMenuList>
 
@@ -333,5 +246,108 @@ const ListItem = forwardRef<HTMLAnchorElement, ListItemProps>(
     );
   },
 );
+
+type Route = RoutesByRegionQuery['routesByRegion'][number];
+interface NavigationRoutesProps {
+  routes: Route[];
+  title: string;
+}
+
+const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
+  return (
+    <>
+      <NavigationMenuTrigger>Рейсы {title}</NavigationMenuTrigger>
+      <NavigationMenuContent>
+        <RadixNavigationMenuSub className={`flex min-w-[700px]`}>
+          <ScrollArea
+            className={`${routes.length === 0 ? 'w-32' : 'h-96'} border-r`}
+          >
+            <NavigationMenuList
+              className={`${routes.length === 0 ? 'w-full' : 'w-fit'} space-x-0 items-start flex-col mr-2 p-2 overflow-hidden`}
+            >
+              {routes.length !== 0 &&
+                routes.map(route => (
+                  <NavigationMenuItem
+                    className='flex w-full'
+                    key={route.id}
+                    value={route.name}
+                  >
+                    <RadixNavigationMenuTrigger asChild>
+                      <Button
+                        className='flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto'
+                        variant='ghost'
+                      >
+                        Из {route.name}
+                        <ChevronDown className='h-4 w-4 transition-transform duration-200 group-data-[state=open]:-rotate-90' />
+                      </Button>
+                    </RadixNavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ScrollArea className='h-96 min-w-[300px]'>
+                        <div className='flex flex-col p-4 pb-2'>
+                          <h4 className='font-medium mb-2'>
+                            Маршруты из {route.name}:
+                          </h4>
+                          <Separator className='mb-4' />
+                          <div className='grid gap-2'>
+                            {route.departureTrips.map(trip => {
+                              const isAvailable = trip.departureDate
+                                ? trip.departureDate <= new Date()
+                                : null;
+                              const formattedDate = trip.departureDate
+                                ? new Date(
+                                    trip.departureDate,
+                                  ).toLocaleDateString('ru-RU')
+                                : null;
+
+                              return (
+                                <Button
+                                  asChild
+                                  key={trip.id}
+                                  variant='ghost'
+                                  className={cn(
+                                    'w-full justify-between',
+                                    isAvailable !== null &&
+                                      !isAvailable &&
+                                      'opacity-50',
+                                  )}
+                                >
+                                  <Link to='/'>
+                                    {trip.arrivalCity?.name}
+                                    {!isAvailable && formattedDate && (
+                                      <span className='text-xs text-muted-foreground'>
+                                        {`от ${formattedDate}`}
+                                      </span>
+                                    )}
+                                  </Link>
+                                </Button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </ScrollArea>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                ))}
+
+              {routes.length === 0 && (
+                <NavigationMenuItem className='self-center'>
+                  <span className="text-sm text-muted-foreground">Нет данных</span>
+                </NavigationMenuItem>
+              )}
+            </NavigationMenuList>
+          </ScrollArea>
+
+          <RadixNavigationMenuViewport
+            className='overflow-hidden transform origin-top-center relative top-0 right-0 w-full overflow-hidden rounded-md bg-popover text-popover-foreground data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-105 transition-[width,_height]'
+            style={{
+              width: 'var(--radix-navigation-menu-viewport-width)',
+              height: 'var(--radix-navigation-menu-viewport-height)',
+            }}
+          />
+        </RadixNavigationMenuSub>
+      </NavigationMenuContent>
+    </>
+  );
+};
 
 export default MainNav;
