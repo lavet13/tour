@@ -9,6 +9,7 @@ import { GraphQLError } from 'graphql';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { applyConstraints } from '@/helpers/apply-constraints';
 import { hasRoles, isAuthenticated } from '@/graphql/composition/authorization';
+import { inspect } from 'util';
 
 const resolvers: Resolvers = {
   Query: {
@@ -194,7 +195,7 @@ const resolvers: Resolvers = {
         .catch((err: unknown) => {
           if (err instanceof PrismaClientKnownRequestError) {
             if (err.code === 'P2025') {
-              throw new GraphQLError(`OrderWb with ID \`${id}\` not found.`);
+              throw new GraphQLError(`Route with ID \`${id}\` not found.`);
             }
           }
           console.log({ err });
@@ -202,6 +203,64 @@ const resolvers: Resolvers = {
         });
 
       return route;
+    },
+    async routesByRegion(_, { regionId }, { prisma }) {
+      const cities = await prisma.city.findMany({
+        where: {
+          departureTrips: {
+            some: { regionId }, // Filter by regionId
+          },
+        },
+        include: {
+          departureTrips: {
+            where: { regionId }, // Ensure we only include trips for the specified region
+            include: {
+              arrivalCity: true, // Include arrival city data
+            },
+          },
+        },
+      });
+
+      // Transform the results to include isAvailable
+      const citiesWithAvailability = cities.map(city => ({
+        ...city,
+        departureTrips: city.departureTrips.map(trip => ({
+          ...trip,
+          // Changed the order of comparison
+          isAvailable: true,
+        })),
+      }));
+
+      // console.log(
+      //   inspect(citiesWithAvailability, {
+      //     showHidden: false,
+      //     depth: null,
+      //     colors: true,
+      //   }),
+      // );
+
+      return citiesWithAvailability;
+    },
+    async regionByName(_, args, ctx) {
+      const name = args.regionName;
+
+      const region = await ctx.prisma.region
+        .findUnique({
+          where: {
+            name,
+          },
+        })
+        .catch((err: unknown) => {
+          if (err instanceof PrismaClientKnownRequestError) {
+            if (err.code === 'P2025') {
+              throw new GraphQLError(`Region with name \`${name}\` not found.`);
+            }
+          }
+          console.log({ err });
+          throw new GraphQLError('Unknown error!');
+        });
+
+      return region;
     },
   },
   Mutation: {
@@ -261,7 +320,7 @@ const resolvers: Resolvers = {
     },
     schedules(parent, _, { loaders }) {
       return loaders.schedulesLoader.load(parent.id);
-    }
+    },
   },
   Region: {
     routes(parent, _, { loaders }) {
@@ -277,7 +336,10 @@ const resolvers: Resolvers = {
 
 const resolversComposition: ResolversComposerMapping<any> = {
   'Query.routeById': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
-  'Mutation.createSchedule': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
+  'Mutation.createSchedule': [
+    isAuthenticated(),
+    hasRoles([Role.MANAGER, Role.ADMIN]),
+  ],
   // 'Subscription.newWbOrder': [
   //   isAuthenticated(),
   //   hasRoles([Role.MANAGER, Role.ADMIN]),

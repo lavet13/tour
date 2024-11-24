@@ -4,6 +4,8 @@ export default gql`
   type Query {
     routes(input: RoutesInput!): RoutesResponse!
     routeById(id: BigInt!): Route
+    routesByRegion(regionId: BigInt!): [City!]!
+    regionByName(regionName: String!): Region
   }
 
   type Mutation {
@@ -57,8 +59,8 @@ export default gql`
   input ScheduleInput {
     routeId: BigInt!
     daysOfWeek: BigInt!
-    startTime: DateTime!
-    endTime: DateTime!
+    startTime: Date!
+    endTime: Date!
     seatsAvailable: Int!
   }
 
@@ -66,8 +68,8 @@ export default gql`
     id: BigInt!
     name: String!
     routes: [Route!]!
-    createdAt: DateTime!
-    updatedAt: DateTime!
+    createdAt: Date!
+    updatedAt: Date!
   }
 
   type Route {
@@ -76,8 +78,10 @@ export default gql`
     arrivalCity: City
     region: Region
     price: Int!
-    createdAt: DateTime!
-    updatedAt: DateTime!
+    createdAt: Date!
+    updatedAt: Date!
+    departureDate: Date
+    isAvailable: Boolean
     bookings: [Booking!]!
     schedules: [Schedule!]!
   }
@@ -85,11 +89,11 @@ export default gql`
   type Schedule {
     route: Route
     daysOfWeek: [DaysOfWeek!]!
-    startTime: DateTime!
-    endTime: DateTime
+    startTime: Date!
+    endTime: Date
     seatsAvailable: Int!
-    createdAt: DateTime!
-    updatedAt: DateTime!
+    createdAt: Date!
+    updatedAt: Date!
   }
 
   enum DaysOfWeek {

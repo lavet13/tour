@@ -39,7 +39,7 @@ export default gql`
     name: String!
     departureTrips: [Route!]!
     arrivalTrips: [Route!]!
-    createdAt: DateTime!
-    updatedAt: DateTime!
+    createdAt: Date!
+    updatedAt: Date!
   }
 `;

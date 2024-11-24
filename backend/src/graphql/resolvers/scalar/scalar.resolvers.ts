@@ -1,8 +1,9 @@
 import { Resolvers } from '@/graphql/__generated__/types';
-import { BigIntResolver, DateTimeResolver, ByteResolver } from 'graphql-scalars';
+import { BigIntResolver, ByteResolver } from 'graphql-scalars';
+import { DateResolver } from '@/graphql/scalars/date.scalars';
 
 const resolvers: Resolvers = {
-  DateTime: DateTimeResolver,
+  Date: DateResolver,
   BigInt: BigIntResolver,
   Byte: ByteResolver,
 };

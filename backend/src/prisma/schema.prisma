@@ -109,6 +109,7 @@ model Route {
   region          Region?    @relation(fields: [regionId], references: [id])
   regionId        BigInt?
   price           Int
+  departureDate   DateTime?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
   bookings        Booking[]
@@ -122,7 +123,7 @@ model Booking {
   firstName   String
   lastName    String
   phoneNumber String
-  route       Route?         @relation(fields: [routeId], references: [id])
+  route       Route?        @relation(fields: [routeId], references: [id])
   routeId     BigInt?
   travelDate  DateTime // Желаемая дата поездки
   seatsCount  Int

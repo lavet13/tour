@@ -53,7 +53,7 @@ export default gql`
     lastName: String!
     phoneNumber: String!
     routeId: BigInt!
-    travelDate: DateTime!
+    travelDate: Date!
     seatsCount: Int!
   }
 
@@ -63,11 +63,11 @@ export default gql`
     lastName: String!
     phoneNumber: String!
     route: Route
-    travelDate: DateTime!
+    travelDate: Date!
     seatsCount: Int!
     status: BookingStatus!
-    createdAt: DateTime!
-    updatedAt: DateTime!
+    createdAt: Date!
+    updatedAt: Date!
   }
 
   enum BookingStatus {
