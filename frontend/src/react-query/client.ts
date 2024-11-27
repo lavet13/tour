@@ -1,5 +1,5 @@
 import { QueryCache, QueryClient } from '@tanstack/react-query';
-import { isGraphQLRequestError } from '@/types/is-graphql-request-error';
+import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { toast } from 'sonner';
 
 export const client = new QueryClient({

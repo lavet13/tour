@@ -4,7 +4,7 @@ import Footer from '@/pages/layout/__footer';
 import { Outlet, useLocation } from 'react-router-dom';
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { ErrorBoundary } from 'react-error-boundary';
-import { isGraphQLRequestError } from '@/types/is-graphql-request-error';
+import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { OctagonAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';

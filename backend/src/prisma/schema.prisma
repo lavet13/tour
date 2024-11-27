@@ -101,10 +101,10 @@ model Region {
 
 model Route {
   id              BigInt     @id @default(autoincrement())
-  departureCity   City?      @relation("RouteDepartureCity", fields: [departureCityId], references: [id])
-  departureCityId BigInt?
-  arrivalCity     City?      @relation("RouteArrivalCity", fields: [arrivalCityId], references: [id])
-  arrivalCityId   BigInt?
+  departureCity   City       @relation("RouteDepartureCity", fields: [departureCityId], references: [id])
+  departureCityId BigInt
+  arrivalCity     City       @relation("RouteArrivalCity", fields: [arrivalCityId], references: [id])
+  arrivalCityId   BigInt
   schedules       Schedule[]
   region          Region?    @relation(fields: [regionId], references: [id])
   regionId        BigInt?

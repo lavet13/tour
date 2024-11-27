@@ -26,8 +26,8 @@ import {
   InputOTPGroup,
   InputOTPSlot,
 } from '@/components/ui/input-otp';
-import { useNewWbOrderSubscriber } from '@/hooks/use-new-wb-order-subscriber';
-import { isGraphQLRequestError } from '@/types/is-graphql-request-error';
+import { useNewWbOrderSubscriber } from '@/features/subscription/use-new-wb-order-subscriber';
+import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import CircularProgress from '@/components/circular-progress';
 import { cn } from '@/lib/utils';
 import { BorderBeam } from '@/components/ui/border-beam';

@@ -53,6 +53,8 @@ export default gql`
     lastName: String!
     phoneNumber: String!
     routeId: BigInt!
+    departureCityId: BigInt!
+    arrivalCityId: BigInt!
     travelDate: Date!
     seatsCount: Int!
   }

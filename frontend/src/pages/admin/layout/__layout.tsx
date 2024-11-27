@@ -1,6 +1,6 @@
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
-import { isGraphQLRequestError } from '@/types/is-graphql-request-error';
+import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { OctagonAlert } from 'lucide-react';
 import { FC, useEffect, useRef } from 'react';

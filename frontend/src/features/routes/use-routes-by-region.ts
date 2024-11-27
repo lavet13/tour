@@ -1,7 +1,7 @@
 import { graphql } from '@/gql';
 import { RoutesByRegionQuery } from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
-import { InitialDataOptions } from '@/types/initial-data-options';
+import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
 
 export const useRoutesByRegion = (
@@ -16,11 +16,15 @@ export const useRoutesByRegion = (
         departureTrips {
           id
           price
+          departureCity {
+            id
+          }
           arrivalCity {
             id
             name
           }
           departureDate
+          isAvailable
         }
       }
     }

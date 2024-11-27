@@ -3,6 +3,8 @@ import gql from 'graphql-tag';
 export default gql`
   type Query {
     cities(input: CitiesInput!): CitiesResponse!
+    departureCities: [City!]!
+    arrivalCities(departureCityId: BigInt): [City!]!
   }
 
   type Mutation {

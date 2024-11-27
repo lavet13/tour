@@ -6,6 +6,7 @@ export default gql`
     routeById(id: BigInt!): Route
     routesByRegion(regionId: BigInt!): [City!]!
     regionByName(regionName: String!): Region
+    regionForRoute(departureCityId: BigInt!, arrivalCityId: BigInt!): Region
   }
 
   type Mutation {

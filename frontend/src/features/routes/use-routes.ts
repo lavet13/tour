@@ -1,7 +1,7 @@
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { graphql } from '@/gql';
 import { RoutesQuery } from '@/gql/graphql';
-import { InitialDataOptions } from '@/types/initial-data-options';
+import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { client } from '@/graphql/graphql-request';
 
 type UseRoutesProps = {

@@ -73,25 +73,39 @@ export const NavLink: FC<NavLinkProps> = ({
   );
 };
 
+function onNavChange() {
+  setTimeout(() => {
+    const triggers = document.querySelectorAll(
+      '.submenu-trigger[data-state="open"]',
+    );
+    if (triggers.length === 0) return;
+
+    const firstTrigger = triggers[0] as HTMLElement;
+
+    document.documentElement.style.setProperty(
+      '--menu-left-position',
+      `${firstTrigger.offsetLeft}px`,
+    );
+  });
+}
+
 const MainNav: FC = () => {
-  const { data: ldnrRegion } = useRegionByName('ЛДНР',);
+  const { data: ldnrRegion } = useRegionByName('ЛДНР');
   const { data: coastalRegion } = useRegionByName('Азовское побережье');
 
-  const {
-    data: ldnrData,
-    isFetching: ldnrIsFetching,
-    isPending: ldnrIsPending,
-  } = useRoutesByRegion(ldnrRegion?.regionByName?.id, {
-    enabled: !!ldnrRegion,
-  });
+  const { data: ldnrData, isPending: ldnrIsPending } = useRoutesByRegion(
+    ldnrRegion?.regionByName?.id,
+    {
+      enabled: !!ldnrRegion,
+    },
+  );
 
-  const {
-    data: coastalData,
-    isFetching: coastalIsFetching,
-    isPending: coastalIsPending,
-  } = useRoutesByRegion(coastalRegion?.regionByName?.id, {
-    enabled: !!coastalRegion,
-  });
+  const { data: coastalData, isPending: coastalIsPending } = useRoutesByRegion(
+    coastalRegion?.regionByName?.id,
+    {
+      enabled: !!coastalRegion,
+    },
+  );
 
   const ldnrRoutes = ldnrData?.routesByRegion ?? [];
   const coastalRoutes = coastalData?.routesByRegion ?? [];
@@ -100,7 +114,7 @@ const MainNav: FC = () => {
     return <NavSkeleton />;
   }
 
-  console.log({ ldnrRoutes, coastalIsFetching });
+  console.log({ ldnrRoutes });
 
   return (
     <div className='hidden md:flex'>
@@ -113,7 +127,7 @@ const MainNav: FC = () => {
         <span className='hidden font-bold xl:inline-block'>Донбасс-Тур</span>
       </Link>
 
-      <NavigationMenu>
+      <NavigationMenu onValueChange={onNavChange}>
         <NavigationMenuList>
           <NavigationMenuItem>
             <NavigationRoutes title='ЛДНР' routes={ldnrRoutes} />
@@ -125,18 +139,16 @@ const MainNav: FC = () => {
             />
           </NavigationMenuItem>
 
-          <NavigationMenuItem>
-            <NavigationMenuLink asChild>
-              <Link className={navigationMenuTriggerStyle()} to='/'>
-                Documentation
-              </Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
+          {/* <NavigationMenuItem> */}
+          {/*   <NavigationMenuLink asChild> */}
+          {/*     <Link className={navigationMenuTriggerStyle()} to='/'> */}
+          {/*       Documentation */}
+          {/*     </Link> */}
+          {/*   </NavigationMenuLink> */}
+          {/* </NavigationMenuItem> */}
         </NavigationMenuList>
 
-        <div className="perspective-[2000px] absolute left-0 top-full flex w-full justify-center">
-          <RadixNavigationMenuViewport className="origin-top-center relative mt-1.5 h-[var(--radix-navigation-menu-viewport-height)] w-full overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-90 md:w-[var(--radix-navigation-menu-viewport-width)] transition-[width,_height]" />
-        </div>
+        <NavigationMenuViewport />
       </NavigationMenu>
     </div>
   );
@@ -256,9 +268,11 @@ interface NavigationRoutesProps {
 const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
   return (
     <>
-      <NavigationMenuTrigger>Рейсы {title}</NavigationMenuTrigger>
+      <NavigationMenuTrigger className='submenu-trigger'>
+        Рейсы {title}
+      </NavigationMenuTrigger>
       <NavigationMenuContent>
-        <RadixNavigationMenuSub className={`flex min-w-[700px]`}>
+        <RadixNavigationMenuSub className={`flex`}>
           <ScrollArea
             className={`${routes.length === 0 ? 'w-32' : 'h-96'} border-r`}
           >
@@ -290,9 +304,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                           <Separator className='mb-4' />
                           <div className='grid gap-2'>
                             {route.departureTrips.map(trip => {
-                              const isAvailable = trip.departureDate
-                                ? trip.departureDate <= new Date()
-                                : null;
+                              const isAvailable = trip.isAvailable;
                               const formattedDate = trip.departureDate
                                 ? new Date(
                                     trip.departureDate,
@@ -311,7 +323,9 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                                       'opacity-50',
                                   )}
                                 >
-                                  <Link to='/'>
+                                  <Link
+                                    to={`booking-bus?departureCityId=${trip.departureCity?.id}&arrivalCityId=${trip.arrivalCity?.id}`}
+                                  >
                                     {trip.arrivalCity?.name}
                                     {!isAvailable && formattedDate && (
                                       <span className='text-xs text-muted-foreground'>
@@ -331,14 +345,16 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
 
               {routes.length === 0 && (
                 <NavigationMenuItem className='self-center'>
-                  <span className="text-sm text-muted-foreground">Нет данных</span>
+                  <span className='text-sm text-muted-foreground'>
+                    Нет данных
+                  </span>
                 </NavigationMenuItem>
               )}
             </NavigationMenuList>
           </ScrollArea>
 
           <RadixNavigationMenuViewport
-            className='overflow-hidden transform origin-top-center relative top-0 right-0 w-full overflow-hidden rounded-md bg-popover text-popover-foreground data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-105 transition-[width,_height]'
+            className='overflow-hidden transform origin-top-center relative top-0 left-0 w-full overflow-hidden rounded-md bg-popover text-popover-foreground data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-105'
             style={{
               width: 'var(--radix-navigation-menu-viewport-width)',
               height: 'var(--radix-navigation-menu-viewport-height)',

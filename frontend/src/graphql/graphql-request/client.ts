@@ -9,7 +9,7 @@ import {
 type GraphQLClientRequestHeaders = RawRequestOptions['requestHeaders'];
 import { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { RefreshTokenMutation } from '@/gql/graphql';
-import { isGraphQLRequestError } from '@/types/is-graphql-request-error';
+import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { requestMiddlewareUploadFiles } from './request-middleware-upload-files';
 
 class AuthenticatedGraphQLClient extends GraphQLClient {

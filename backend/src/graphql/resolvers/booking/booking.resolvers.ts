@@ -213,23 +213,28 @@ const resolvers: Resolvers = {
   Mutation: {
     async createBooking(_, args, ctx) {
       const {
-        firstName,
-        lastName,
-        seatsCount,
-        travelDate,
-        phoneNumber,
         routeId,
+        departureCityId,
+        arrivalCityId,
+        ...rest
       } = args.input;
-      console.log({ input: args.input });
+
+      const route = await ctx.prisma.route.findFirst({
+        where: {
+          id: routeId,
+          departureCityId,
+          arrivalCityId,
+        },
+      });
+
+      if (!route) {
+        throw new GraphQLError('Неверный маршрут, указанный для бронирования.');
+      }
 
       const booking = await ctx.prisma.booking.create({
         data: {
-          firstName,
-          lastName,
-          seatsCount,
           routeId,
-          travelDate,
-          phoneNumber,
+          ...rest
         },
       });
 

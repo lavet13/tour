@@ -1,7 +1,7 @@
 import { graphql } from '@/gql';
 import { RegionByNameQuery } from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
-import { InitialDataOptions } from '@/types/initial-data-options';
+import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
 
 export const useRegionByName = (

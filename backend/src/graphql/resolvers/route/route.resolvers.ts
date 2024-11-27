@@ -262,6 +262,21 @@ const resolvers: Resolvers = {
 
       return region;
     },
+    async regionForRoute(_, { departureCityId, arrivalCityId }, { prisma }) {
+      const route = await prisma.route.findFirst({
+        where: {
+          departureCityId,
+          arrivalCityId,
+        },
+        select: {
+          region: true,
+        },
+      });
+
+      console.log({ route });
+
+      return route?.region ?? null;
+    }
   },
   Mutation: {
     async createRoute(_, args, ctx) {

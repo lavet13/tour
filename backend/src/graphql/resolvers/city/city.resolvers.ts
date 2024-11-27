@@ -1,5 +1,9 @@
-import { Resolvers, SearchTypeBookings, SearchTypeCities } from '@/graphql/__generated__/types';
-import { Prisma, Role } from '@prisma/client';
+import {
+  Resolvers,
+  SearchTypeBookings,
+  SearchTypeCities,
+} from '@/graphql/__generated__/types';
+import { City, Prisma, Role } from '@prisma/client';
 
 import {
   ResolversComposerMapping,
@@ -178,6 +182,45 @@ const resolvers: Resolvers = {
           hasPreviousPage,
         },
       };
+    },
+    async arrivalCities(_, { departureCityId }, { prisma }) {
+      if (departureCityId === null) {
+        return [];
+      }
+
+      const routes = await prisma.route.findMany({
+        where: {
+          departureCityId,
+        },
+        select: {
+          arrivalCity: true,
+        },
+        distinct: ['arrivalCityId'],
+      });
+
+      return routes.map(route => route.arrivalCity);
+    },
+    async departureCities(_, __, { prisma }) {
+      const currentDate = new Date();
+
+      const cities = await prisma.city.findMany({
+        where: {
+          departureTrips: {
+            some: {
+              OR: [
+                { departureDate: null }, // Include trips where departureDate is null
+                { departureDate: { gte: currentDate } }, // Or trips with future departure dates
+              ],
+            },
+          },
+        },
+        distinct: ['id'],
+        include: {
+          departureTrips: true,
+        },
+      });
+
+      return cities;
     },
   },
   Mutation: {

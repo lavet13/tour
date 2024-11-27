@@ -4,8 +4,8 @@ import { graphql } from '@/gql';
 import { MeQuery } from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
 import { client as queryClient } from '@/react-query';
-import { InitialDataOptions } from '@/types/initial-data-options';
-import { isGraphQLRequestError } from '@/types/is-graphql-request-error';
+import { InitialDataOptions } from '@/react-query/types/initial-data-options';
+import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 
 export const useGetMe = (options?: InitialDataOptions<MeQuery>) => {
   const navigate = useNavigate();

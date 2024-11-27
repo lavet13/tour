@@ -2,9 +2,9 @@ import { InfiniteRoutesQuery } from '@/gql/graphql';
 import { graphql } from '@/gql';
 import { client } from '@/graphql/graphql-request';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { InitialDataInfiniteOptions } from '@/types/initial-data-infinite-options';
+import { InitialDataInfiniteOptions } from '@/react-query/types/initial-data-infinite-options';
 import { useNavigate } from 'react-router-dom';
-import { isGraphQLRequestError } from '@/types/is-graphql-request-error';
+import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { SortingState } from '@tanstack/react-table';
 
 type TPageParam = {
