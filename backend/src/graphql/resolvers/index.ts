@@ -4,6 +4,7 @@ import wbOrderResolvers from '@/graphql/resolvers/booking/booking.resolvers';
 import scalarResolvers from '@/graphql/resolvers/scalar/scalar.resolvers';
 import cityResolvers from '@/graphql/resolvers/city/city.resolvers';
 import routeResolvers from '@/graphql/resolvers/route/route.resolvers';
+import regionResolvers from '@/graphql/resolvers/region/region.resolvers';
 
 export default mergeResolvers([
   userResolvers,
@@ -11,4 +12,5 @@ export default mergeResolvers([
   scalarResolvers,
   cityResolvers,
   routeResolvers,
+  regionResolvers,
 ]);

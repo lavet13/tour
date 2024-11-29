@@ -1,21 +1,24 @@
 import { graphql } from '@/gql';
-import { RoutesByRegionQuery } from '@/gql/graphql';
+import { GetRoutesByRegionQuery } from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
 import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
 
 export const useRoutesByRegion = (
   regionId: String,
-  options?: InitialDataOptions<RoutesByRegionQuery>,
+  options?: InitialDataOptions<GetRoutesByRegionQuery>,
 ) => {
   const routesByRegion = graphql(`
-    query RoutesByRegion($regionId: BigInt!) {
+    query GetRoutesByRegion($regionId: BigInt!) {
       routesByRegion(regionId: $regionId) {
         id
         name
         departureTrips {
           id
           price
+          region {
+            id
+          }
           departureCity {
             id
           }
@@ -24,13 +27,12 @@ export const useRoutesByRegion = (
             name
           }
           departureDate
-          isAvailable
         }
       }
     }
   `);
 
-  return useQuery<RoutesByRegionQuery>({
+  return useQuery<GetRoutesByRegionQuery>({
     queryKey: [(routesByRegion.definitions[0] as any).name.value, { regionId }],
     queryFn: async () => {
       return await client.request(routesByRegion, { regionId });

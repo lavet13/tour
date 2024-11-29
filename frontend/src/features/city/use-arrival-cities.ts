@@ -9,7 +9,7 @@ export const useArrivalCities = (
   options?: InitialDataOptions<GetArrivalCitiesQuery>
 ) => {
   const arrivalCities = graphql(`
-    query GetArrivalCities($departureCityId: BigInt!) {
+    query GetArrivalCities($departureCityId: BigInt) {
       arrivalCities(departureCityId: $departureCityId) {
         id
         name

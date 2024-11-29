@@ -2,26 +2,22 @@ import gql from 'graphql-tag';
 
 export default gql`
   type Query {
-    cities(input: CitiesInput!): CitiesResponse!
-    departureCities(regionId: BigInt): [City!]!
-    arrivalCities(departureCityId: BigInt): [City!]!
+    regions: [Region!]!
+    regionByName(regionName: String!): Region
+    regionForRoute(departureCityId: BigInt, arrivalCityId: BigInt): Region
   }
 
-  type Mutation {
-    createCity(name: String!): City!
-  }
-
-  input CitiesInput {
+  input RegionsInput {
     take: Int
     after: BigInt
     before: BigInt
 
     query: String!
+    sorting: [SortingState!]!
   }
 
-  enum SearchTypeCities {
+  enum SearchTypeRegions {
     ID
-    NAME
   }
 
   type PageInfo {
@@ -31,17 +27,17 @@ export default gql`
     hasPreviousPage: Boolean!
   }
 
-  type CitiesResponse {
-    edges: [City!]!
+  type RegionsResponse {
+    edges: [Region!]!
     pageInfo: PageInfo!
   }
 
-  type City {
+  type Region {
     id: BigInt!
     name: String!
-    departureTrips: [Route!]!
-    arrivalTrips: [Route!]!
+    routes: [Route!]!
     createdAt: Date!
     updatedAt: Date!
   }
 `;
+

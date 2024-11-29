@@ -200,17 +200,14 @@ const resolvers: Resolvers = {
 
       return routes.map(route => route.arrivalCity);
     },
-    async departureCities(_, __, { prisma }) {
-      const currentDate = new Date();
-
+    async departureCities(_, { regionId }, { prisma }) {
       const cities = await prisma.city.findMany({
         where: {
           departureTrips: {
             some: {
-              OR: [
-                { departureDate: null }, // Include trips where departureDate is null
-                { departureDate: { gte: currentDate } }, // Or trips with future departure dates
-              ],
+              region: {
+                id: regionId ?? undefined,
+              },
             },
           },
         },

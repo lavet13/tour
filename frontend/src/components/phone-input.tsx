@@ -63,7 +63,10 @@ PhoneInput.displayName = 'PhoneInput';
 const InputComponent = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, ...props }, ref) => (
     <Input
-      className={cn('rounded-e-lg rounded-s-none focus-visible:z-10', className)}
+      className={cn(
+        'rounded-e-lg rounded-s-none focus-visible:z-10',
+        className,
+      )}
       {...props}
       ref={ref}
     />
@@ -99,7 +102,10 @@ const CountrySelect = ({
         <Button
           type='button'
           variant={'outline'}
-          className={'flex gap-1 rounded-e-none rounded-s-lg px-3 ring-offset-background transform-gpu transition-all ease-out focus-visible:z-10'}
+          className={cn(
+            'flex gap-1 rounded-e-none rounded-s-lg px-3 ring-offset-background transform-gpu transition-all ease-out',
+            'focus:z-10 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+          )}
           disabled={disabled}
         >
           <FlagComponent country={value} countryName={value} />
@@ -111,7 +117,7 @@ const CountrySelect = ({
           />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className='w-[300px] p-0'>
+      <PopoverContent align='start' className='w-[300px] p-0'>
         <Command>
           <CommandList>
             <ScrollArea className='h-72'>
@@ -153,11 +159,20 @@ const CountrySelect = ({
   );
 };
 
-const FlagComponent = ({ className, country, countryName }: RPNInput.FlagProps & {className?: string; }) => {
+const FlagComponent = ({
+  className,
+  country,
+  countryName,
+}: RPNInput.FlagProps & { className?: string }) => {
   const Flag = flags[country];
 
   return (
-    <span className={cn('bg-foreground/20 flex items-center justify-center overflow-hidden rounded-sm h-4 w-6 [&_svg]:h-4 [&_svg]:w-6', className)}>
+    <span
+      className={cn(
+        'bg-foreground/20 flex items-center justify-center overflow-hidden rounded-sm h-4 w-6 [&_svg]:h-4 [&_svg]:w-6',
+        className,
+      )}
+    >
       {Flag && <Flag title={countryName} />}
     </span>
   );

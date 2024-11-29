@@ -19,11 +19,13 @@ const documents = {
     "\n    mutation Logout {\n      logout\n    }\n  ": types.LogoutDocument,
     "\n    mutation RefreshToken {\n      refreshToken {\n        accessToken\n        refreshToken\n      }\n    }\n  ": types.RefreshTokenDocument,
     "\n    mutation Register($signupInput: SignupInput!) {\n      signup(signupInput: $signupInput) {\n        accessToken\n        refreshToken\n      }\n    }\n  ": types.RegisterDocument,
-    "\n    query GetArrivalCities($departureCityId: BigInt!) {\n      arrivalCities(departureCityId: $departureCityId) {\n        id\n        name\n      }\n    }\n  ": types.GetArrivalCitiesDocument,
-    "\n    query GetDepartureCities {\n      departureCities {\n        id\n        name\n      }\n    }\n  ": types.GetDepartureCitiesDocument,
+    "\n    query GetArrivalCities($departureCityId: BigInt) {\n      arrivalCities(departureCityId: $departureCityId) {\n        id\n        name\n      }\n    }\n  ": types.GetArrivalCitiesDocument,
+    "\n    query GetDepartureCities($regionId: BigInt) {\n      departureCities(regionId: $regionId) {\n        id\n        name\n      }\n    }\n  ": types.GetDepartureCitiesDocument,
     "\n    query RegionByName($regionName: String!) {\n      regionByName(regionName: $regionName) {\n        id\n        name\n      }\n    }\n  ": types.RegionByNameDocument,
+    "\n    query GetRegionForRoute($departureCityId: BigInt, $arrivalCityId: BigInt) {\n      regionForRoute(departureCityId: $departureCityId, arrivalCityId: $arrivalCityId) {\n        id\n        name\n      }\n    }\n  ": types.GetRegionForRouteDocument,
+    "\n    query Regions {\n      regions {\n        id\n        name\n      }\n    }\n  ": types.RegionsDocument,
     "\n    query InfiniteRoutes($input: RoutesInput!) {\n      routes(input: $input) {\n        edges {\n          id\n          price\n          departureCity {\n            id\n            name\n          }\n          region {\n            id\n            name\n          }\n          arrivalCity {\n            id\n            name\n          }\n          createdAt\n          updatedAt\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  ": types.InfiniteRoutesDocument,
-    "\n    query RoutesByRegion($regionId: BigInt!) {\n      routesByRegion(regionId: $regionId) {\n        id\n        name\n        departureTrips {\n          id\n          price\n          departureCity {\n            id\n          }\n          arrivalCity {\n            id\n            name\n          }\n          departureDate\n          isAvailable\n        }\n      }\n    }\n  ": types.RoutesByRegionDocument,
+    "\n    query GetRoutesByRegion($regionId: BigInt!) {\n      routesByRegion(regionId: $regionId) {\n        id\n        name\n        departureTrips {\n          id\n          price\n          region {\n            id\n          }\n          departureCity {\n            id\n          }\n          arrivalCity {\n            id\n            name\n          }\n          departureDate\n        }\n      }\n    }\n  ": types.GetRoutesByRegionDocument,
     "\n    query Routes($input: RoutesInput!) {\n      routes(input: $input) {\n        edges {\n          id\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  ": types.RoutesDocument,
     "\n    subscription CreatedBookSubscription {\n      createdBook {\n        id\n      }\n    }\n  ": types.CreatedBookSubscriptionDocument,
     "\n        mutation RefreshToken {\n          refreshToken {\n            accessToken\n            refreshToken\n          }\n        }\n      ": types.RefreshTokenDocument,
@@ -66,11 +68,11 @@ export function graphql(source: "\n    mutation Register($signupInput: SignupInp
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    query GetArrivalCities($departureCityId: BigInt!) {\n      arrivalCities(departureCityId: $departureCityId) {\n        id\n        name\n      }\n    }\n  "): (typeof documents)["\n    query GetArrivalCities($departureCityId: BigInt!) {\n      arrivalCities(departureCityId: $departureCityId) {\n        id\n        name\n      }\n    }\n  "];
+export function graphql(source: "\n    query GetArrivalCities($departureCityId: BigInt) {\n      arrivalCities(departureCityId: $departureCityId) {\n        id\n        name\n      }\n    }\n  "): (typeof documents)["\n    query GetArrivalCities($departureCityId: BigInt) {\n      arrivalCities(departureCityId: $departureCityId) {\n        id\n        name\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    query GetDepartureCities {\n      departureCities {\n        id\n        name\n      }\n    }\n  "): (typeof documents)["\n    query GetDepartureCities {\n      departureCities {\n        id\n        name\n      }\n    }\n  "];
+export function graphql(source: "\n    query GetDepartureCities($regionId: BigInt) {\n      departureCities(regionId: $regionId) {\n        id\n        name\n      }\n    }\n  "): (typeof documents)["\n    query GetDepartureCities($regionId: BigInt) {\n      departureCities(regionId: $regionId) {\n        id\n        name\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -78,11 +80,19 @@ export function graphql(source: "\n    query RegionByName($regionName: String!) 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n    query GetRegionForRoute($departureCityId: BigInt, $arrivalCityId: BigInt) {\n      regionForRoute(departureCityId: $departureCityId, arrivalCityId: $arrivalCityId) {\n        id\n        name\n      }\n    }\n  "): (typeof documents)["\n    query GetRegionForRoute($departureCityId: BigInt, $arrivalCityId: BigInt) {\n      regionForRoute(departureCityId: $departureCityId, arrivalCityId: $arrivalCityId) {\n        id\n        name\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    query Regions {\n      regions {\n        id\n        name\n      }\n    }\n  "): (typeof documents)["\n    query Regions {\n      regions {\n        id\n        name\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n    query InfiniteRoutes($input: RoutesInput!) {\n      routes(input: $input) {\n        edges {\n          id\n          price\n          departureCity {\n            id\n            name\n          }\n          region {\n            id\n            name\n          }\n          arrivalCity {\n            id\n            name\n          }\n          createdAt\n          updatedAt\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  "): (typeof documents)["\n    query InfiniteRoutes($input: RoutesInput!) {\n      routes(input: $input) {\n        edges {\n          id\n          price\n          departureCity {\n            id\n            name\n          }\n          region {\n            id\n            name\n          }\n          arrivalCity {\n            id\n            name\n          }\n          createdAt\n          updatedAt\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    query RoutesByRegion($regionId: BigInt!) {\n      routesByRegion(regionId: $regionId) {\n        id\n        name\n        departureTrips {\n          id\n          price\n          departureCity {\n            id\n          }\n          arrivalCity {\n            id\n            name\n          }\n          departureDate\n          isAvailable\n        }\n      }\n    }\n  "): (typeof documents)["\n    query RoutesByRegion($regionId: BigInt!) {\n      routesByRegion(regionId: $regionId) {\n        id\n        name\n        departureTrips {\n          id\n          price\n          departureCity {\n            id\n          }\n          arrivalCity {\n            id\n            name\n          }\n          departureDate\n          isAvailable\n        }\n      }\n    }\n  "];
+export function graphql(source: "\n    query GetRoutesByRegion($regionId: BigInt!) {\n      routesByRegion(regionId: $regionId) {\n        id\n        name\n        departureTrips {\n          id\n          price\n          region {\n            id\n          }\n          departureCity {\n            id\n          }\n          arrivalCity {\n            id\n            name\n          }\n          departureDate\n        }\n      }\n    }\n  "): (typeof documents)["\n    query GetRoutesByRegion($regionId: BigInt!) {\n      routesByRegion(regionId: $regionId) {\n        id\n        name\n        departureTrips {\n          id\n          price\n          region {\n            id\n          }\n          departureCity {\n            id\n          }\n          arrivalCity {\n            id\n            name\n          }\n          departureDate\n        }\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

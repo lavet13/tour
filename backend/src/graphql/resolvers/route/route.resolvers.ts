@@ -208,7 +208,9 @@ const resolvers: Resolvers = {
       const cities = await prisma.city.findMany({
         where: {
           departureTrips: {
-            some: { regionId }, // Filter by regionId
+            some: {
+              regionId,
+            },
           },
         },
         include: {
@@ -221,62 +223,8 @@ const resolvers: Resolvers = {
         },
       });
 
-      // Transform the results to include isAvailable
-      const citiesWithAvailability = cities.map(city => ({
-        ...city,
-        departureTrips: city.departureTrips.map(trip => ({
-          ...trip,
-          // Changed the order of comparison
-          isAvailable: true,
-        })),
-      }));
-
-      // console.log(
-      //   inspect(citiesWithAvailability, {
-      //     showHidden: false,
-      //     depth: null,
-      //     colors: true,
-      //   }),
-      // );
-
-      return citiesWithAvailability;
+      return cities;
     },
-    async regionByName(_, args, ctx) {
-      const name = args.regionName;
-
-      const region = await ctx.prisma.region
-        .findUnique({
-          where: {
-            name,
-          },
-        })
-        .catch((err: unknown) => {
-          if (err instanceof PrismaClientKnownRequestError) {
-            if (err.code === 'P2025') {
-              throw new GraphQLError(`Region with name \`${name}\` not found.`);
-            }
-          }
-          console.log({ err });
-          throw new GraphQLError('Unknown error!');
-        });
-
-      return region;
-    },
-    async regionForRoute(_, { departureCityId, arrivalCityId }, { prisma }) {
-      const route = await prisma.route.findFirst({
-        where: {
-          departureCityId,
-          arrivalCityId,
-        },
-        select: {
-          region: true,
-        },
-      });
-
-      console.log({ route });
-
-      return route?.region ?? null;
-    }
   },
   Mutation: {
     async createRoute(_, args, ctx) {
@@ -335,11 +283,6 @@ const resolvers: Resolvers = {
     },
     schedules(parent, _, { loaders }) {
       return loaders.schedulesLoader.load(parent.id);
-    },
-  },
-  Region: {
-    routes(parent, _, { loaders }) {
-      return loaders.routesLoader.load(parent.id);
     },
   },
   Schedule: {

@@ -5,8 +5,6 @@ export default gql`
     routes(input: RoutesInput!): RoutesResponse!
     routeById(id: BigInt!): Route
     routesByRegion(regionId: BigInt!): [City!]!
-    regionByName(regionName: String!): Region
-    regionForRoute(departureCityId: BigInt!, arrivalCityId: BigInt!): Region
   }
 
   type Mutation {
@@ -63,14 +61,6 @@ export default gql`
     startTime: Date!
     endTime: Date!
     seatsAvailable: Int!
-  }
-
-  type Region {
-    id: BigInt!
-    name: String!
-    routes: [Route!]!
-    createdAt: Date!
-    updatedAt: Date!
   }
 
   type Route {

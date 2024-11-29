@@ -1,5 +1,6 @@
 import DataLoader from 'dataloader';
 import prismaClient from '@/prisma';
+import { Route } from '@prisma/client';
 
 export const createDepartureTripsLoader = (prisma: typeof prismaClient) => {
   return new DataLoader(async (cityIds: readonly bigint[]) => {
@@ -9,19 +10,11 @@ export const createDepartureTripsLoader = (prisma: typeof prismaClient) => {
       },
     });
 
-    // Transform routes to include isAvailable
-    const transformedRoutes = routes.map(route => ({
-      ...route,
-      isAvailable: route.departureDate
-        ? new Date(route.departureDate) >= new Date()
-        : null,
-    }));
-
-    const routesByCityId = new Map<bigint, (typeof transformedRoutes)[0][]>(
+    const routesByCityId = new Map<bigint, Route[]>(
       cityIds.map(id => [id, []]),
     );
 
-    transformedRoutes.forEach(route => {
+    routes.forEach(route => {
       if (routesByCityId.has(route.departureCityId!)) {
         routesByCityId.get(route.departureCityId!)!.push(route);
       }

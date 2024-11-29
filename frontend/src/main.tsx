@@ -6,6 +6,7 @@ import { ReactQueryProvider } from '@/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { CookiesProvider } from 'react-cookie';
+import { TooltipProvider } from '@/components/ui/tooltip.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -13,7 +14,9 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <ReactQueryProvider>
           <Toaster />
-          <App />
+          <TooltipProvider>
+            <App />
+          </TooltipProvider>
         </ReactQueryProvider>
       </BrowserRouter>
     </CookiesProvider>

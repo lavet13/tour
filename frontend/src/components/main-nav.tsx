@@ -1,5 +1,12 @@
 import { cn } from '@/lib/utils';
-import { FC, forwardRef, ReactNode, useCallback, useMemo } from 'react';
+import {
+  FC,
+  forwardRef,
+  ReactNode,
+  useCallback,
+  useMemo,
+  useState,
+} from 'react';
 import { Link, LinkProps } from 'react-router-dom';
 import {
   NavLink as RouterLink,
@@ -35,8 +42,15 @@ import {
 import { Slottable } from '@radix-ui/react-slot';
 import { useInfiniteRoutes } from '@/features/routes';
 import { useRoutesByRegion } from '@/features/routes/use-routes-by-region';
-import { RoutesByRegionQuery } from '@/gql/graphql';
+import { GetRoutesByRegionQuery } from '@/gql/graphql';
 import { useRegionByName } from '@/features/region/use-region-by-name';
+import { navigationMenuStateAtom } from '@/lib/atoms/navigation-menu';
+import { useAtom } from 'jotai';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 type NavLinkProps = Omit<RouterLinkProps, 'className'> & {
   children: ReactNode;
@@ -90,6 +104,7 @@ function onNavChange() {
 }
 
 const MainNav: FC = () => {
+  const [open, setOpen] = useAtom(navigationMenuStateAtom);
   const { data: ldnrRegion } = useRegionByName('ЛДНР');
   const { data: coastalRegion } = useRegionByName('Азовское побережье');
 
@@ -127,7 +142,14 @@ const MainNav: FC = () => {
         <span className='hidden font-bold xl:inline-block'>Донбасс-Тур</span>
       </Link>
 
-      <NavigationMenu onValueChange={onNavChange}>
+      <NavigationMenu
+        value={open}
+        onValueChange={value => {
+          console.log({ value });
+          setOpen(value);
+          onNavChange();
+        }}
+      >
         <NavigationMenuList>
           <NavigationMenuItem>
             <NavigationRoutes title='ЛДНР' routes={ldnrRoutes} />
@@ -259,13 +281,15 @@ const ListItem = forwardRef<HTMLAnchorElement, ListItemProps>(
   },
 );
 
-type Route = RoutesByRegionQuery['routesByRegion'][number];
+type Route = GetRoutesByRegionQuery['routesByRegion'][number];
 interface NavigationRoutesProps {
   routes: Route[];
   title: string;
 }
 
 const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
+  const [, setOpen] = useAtom(navigationMenuStateAtom);
+
   return (
     <>
       <NavigationMenuTrigger className='submenu-trigger'>
@@ -304,37 +328,57 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                           <Separator className='mb-4' />
                           <div className='grid gap-2'>
                             {route.departureTrips.map(trip => {
-                              const isAvailable = trip.isAvailable;
+                              const isAvailable = trip.departureDate
+                                ? trip.departureDate <= new Date()
+                                : true;
                               const formattedDate = trip.departureDate
                                 ? new Date(
                                     trip.departureDate,
                                   ).toLocaleDateString('ru-RU')
                                 : null;
 
-                              return (
+                              let content: ReactNode = null;
+
+                              content = isAvailable ? (
                                 <Button
-                                  asChild
+                                  asChild={isAvailable}
                                   key={trip.id}
                                   variant='ghost'
-                                  className={cn(
-                                    'w-full justify-between',
-                                    isAvailable !== null &&
-                                      !isAvailable &&
-                                      'opacity-50',
-                                  )}
+                                  className={cn('w-full justify-between')}
+                                  onClick={() => setOpen('')}
                                 >
                                   <Link
-                                    to={`booking-bus?departureCityId=${trip.departureCity?.id}&arrivalCityId=${trip.arrivalCity?.id}`}
+                                    to={`booking-bus?regionId=${trip.region?.id}&departureCityId=${trip.departureCity?.id}&arrivalCityId=${trip.arrivalCity?.id}`}
                                   >
                                     {trip.arrivalCity?.name}
-                                    {!isAvailable && formattedDate && (
-                                      <span className='text-xs text-muted-foreground'>
-                                        {`от ${formattedDate}`}
-                                      </span>
-                                    )}
                                   </Link>
                                 </Button>
+                              ) : (
+                                <Tooltip key={trip.id} delayDuration={300}>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      asChild={isAvailable}
+                                      variant='ghost'
+                                      className={cn(
+                                        'w-full justify-between',
+                                        !isAvailable && 'opacity-50',
+                                      )}
+                                    >
+                                      {trip.arrivalCity?.name}
+                                      {!isAvailable && formattedDate && (
+                                        <span className='text-xs text-muted-foreground'>
+                                          {`от ${formattedDate}`}
+                                        </span>
+                                      )}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent side='bottom'>
+                                    Будет доступно с {formattedDate}
+                                  </TooltipContent>
+                                </Tooltip>
                               );
+
+                              return content;
                             })}
                           </div>
                         </div>

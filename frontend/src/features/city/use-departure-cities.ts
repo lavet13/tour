@@ -5,11 +5,12 @@ import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
 
 export const useDepartureCities = (
+  regionId?: string,
   options?: InitialDataOptions<GetDepartureCitiesQuery>
 ) => {
   const departureCities = graphql(`
-    query GetDepartureCities {
-      departureCities {
+    query GetDepartureCities($regionId: BigInt) {
+      departureCities(regionId: $regionId) {
         id
         name
       }
@@ -17,9 +18,9 @@ export const useDepartureCities = (
   `);
 
   return useQuery({
-    queryKey: [(departureCities.definitions[0] as any).name.value],
+    queryKey: [(departureCities.definitions[0] as any).name.value, { regionId }],
     queryFn: async () => {
-      return await client.request(departureCities);
+      return await client.request(departureCities, { regionId });
     },
     meta: {
       toastEnabled: true,
