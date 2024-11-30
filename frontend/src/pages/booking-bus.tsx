@@ -13,6 +13,7 @@ import ru from 'react-phone-number-input/locale/ru.json';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   SubmitHandler,
+  useController,
   useForm,
   useFormContext,
   useFormState,
@@ -84,6 +85,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Textarea } from '@/components/ui/textarea';
 import { useCreateBooking } from '@/features/booking/use-create-booking';
 import { BookingInput } from '@/gql/graphql';
+import ExpandableTextarea from '@/components/expandable-textarea';
 
 const FormSchema = z.object({
   firstName: z
@@ -102,7 +104,7 @@ const FormSchema = z.object({
     ),
   seatsCount: z
     .number({ invalid_type_error: 'Должно быть числом!' })
-    .refine(value => value > 0, { message: 'Укажите кол-во мест' }),
+    .refine(value => value > 0, { message: 'Укажите количество мест!' }),
   travelDate: z.custom<Date | undefined>(
     value => {
       // If the value is undefined, return false
@@ -533,7 +535,7 @@ const BookingBusPage: FC = () => {
                     <FormItem className='sm:col-span-2'>
                       <FormLabel>Комментарий(необязательно)</FormLabel>
                       <FormControl>
-                        <Textarea
+                        <ExpandableTextarea
                           placeholder='Можете написать что-нибудь...'
                           value={value ?? ''}
                           {...field}
@@ -735,6 +737,7 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
 );
 
 interface CounterProps {
+  name: string;
   value?: any;
   onValueChange?: (value: any) => void;
   onBlur?: () => void;
@@ -742,13 +745,13 @@ interface CounterProps {
 }
 
 const Counter = forwardRef<HTMLButtonElement, CounterProps>(
-  ({ value: valueProp, onValueChange }, ref) => {
+  ({ name, value: valueProp, onValueChange }, ref) => {
     const [value, setValue] = useControllableState({
       prop: valueProp,
       onChange: onValueChange,
     });
 
-    const { error } = useFormField();
+    const { fieldState: { error } } = useController({ name });
 
     return (
       <div
