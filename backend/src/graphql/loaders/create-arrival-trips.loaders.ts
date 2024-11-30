@@ -3,14 +3,14 @@ import prismaClient from '@/prisma';
 import { Route } from '@prisma/client';
 
 export const createArrivalTripsLoader = (prisma: typeof prismaClient) => {
-  return new DataLoader(async (cityIds: readonly bigint[]) => {
+  return new DataLoader(async (cityIds: readonly string[]) => {
     const routes = await prisma.route.findMany({
       where: {
-        arrivalCityId: { in: cityIds as bigint[] },
+        arrivalCityId: { in: cityIds as string[] },
       },
     });
 
-    const routesByCityId = new Map<bigint, Route[]>(
+    const routesByCityId = new Map<string, Route[]>(
       cityIds.map(id => [id, []]),
     );
 

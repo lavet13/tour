@@ -4,13 +4,13 @@ export default gql`
   type Query {
     regions: [Region!]!
     regionByName(regionName: String!): Region
-    regionForRoute(departureCityId: BigInt, arrivalCityId: BigInt): Region
+    regionForRoute(departureCityId: ID, arrivalCityId: ID): Region
   }
 
   input RegionsInput {
     take: Int
-    after: BigInt
-    before: BigInt
+    after: ID
+    before: ID
 
     query: String!
     sorting: [SortingState!]!
@@ -21,8 +21,8 @@ export default gql`
   }
 
   type PageInfo {
-    startCursor: BigInt
-    endCursor: BigInt
+    startCursor: ID
+    endCursor: ID
     hasNextPage: Boolean!
     hasPreviousPage: Boolean!
   }
@@ -33,7 +33,7 @@ export default gql`
   }
 
   type Region {
-    id: BigInt!
+    id: ID!
     name: String!
     routes: [Route!]!
     createdAt: Date!

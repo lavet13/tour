@@ -11,7 +11,7 @@ datasource db {
 }
 
 model UserRole {
-  id     String @id @default(uuid())
+  id     String @id @default(cuid())
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   role   Role   @default(USER)
@@ -21,7 +21,7 @@ model UserRole {
 }
 
 model User {
-  id           String         @id @default(uuid())
+  id           String         @id @default(cuid())
   name         String
   email        String         @unique
   password     String
@@ -40,7 +40,7 @@ enum Role {
 }
 
 model RefreshToken {
-  id        String   @id @default(uuid())
+  id        String   @id @default(cuid())
   token     String   @unique
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -55,7 +55,7 @@ enum BookingStatus {
 }
 
 model City {
-  id             BigInt   @id @default(autoincrement())
+  id             String   @id @default(cuid())
   name           String
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -66,9 +66,9 @@ model City {
 }
 
 model Schedule {
-  id             BigInt       @id @default(autoincrement())
+  id             String       @id @default(cuid())
   route          Route        @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  routeId        BigInt
+  routeId        String
   daysOfWeek     DaysOfWeek[]
   startTime      DateTime
   endTime        DateTime?
@@ -90,7 +90,7 @@ enum DaysOfWeek {
 }
 
 model Region {
-  id        BigInt   @id @default(autoincrement())
+  id        String   @id @default(cuid())
   name      String   @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -100,14 +100,14 @@ model Region {
 }
 
 model Route {
-  id              BigInt     @id @default(autoincrement())
+  id              String     @id @default(cuid())
   departureCity   City       @relation("RouteDepartureCity", fields: [departureCityId], references: [id])
-  departureCityId BigInt
+  departureCityId String
   arrivalCity     City       @relation("RouteArrivalCity", fields: [arrivalCityId], references: [id])
-  arrivalCityId   BigInt
+  arrivalCityId   String
   schedules       Schedule[]
   region          Region?    @relation(fields: [regionId], references: [id])
-  regionId        BigInt?
+  regionId        String?
   price           Int
   departureDate   DateTime?
   createdAt       DateTime   @default(now())
@@ -119,13 +119,14 @@ model Route {
 }
 
 model Booking {
-  id          BigInt        @id @default(autoincrement())
+  id          String        @id @default(cuid())
   firstName   String
   lastName    String
   phoneNumber String
+  commentary  String?
   route       Route?        @relation(fields: [routeId], references: [id])
-  routeId     BigInt?
-  travelDate  DateTime // Желаемая дата поездки
+  routeId     String?
+  travelDate  DateTime
   seatsCount  Int
   status      BookingStatus @default(PENDING)
   createdAt   DateTime      @default(now())

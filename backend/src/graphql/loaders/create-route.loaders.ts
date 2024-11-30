@@ -2,9 +2,9 @@ import DataLoader from 'dataloader';
 import prismaClient from '@/prisma';
 
 export const createRouteLoader = (prisma: typeof prismaClient) => {
-  return new DataLoader(async (routeIds: readonly (bigint | null)[]) => {
+  return new DataLoader(async (routeIds: readonly (string | null)[]) => {
     // Filter out null IDs and query only for valid IDs
-    const nonNullRouteIds = routeIds.filter((id): id is bigint => id !== null);
+    const nonNullRouteIds = routeIds.filter((id): id is string => id !== null);
 
     // Fetch routes from the database
     const routes = await prisma.route.findMany({

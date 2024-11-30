@@ -89,16 +89,7 @@ const resolvers: Resolvers = {
       const conditions: Prisma.BookingWhereInput[] = [];
 
       if (searchType.includes(SearchTypeBookings.Id)) {
-        // Number.isFinite isn't a solution, something
-        let queryAsBigInt = undefined;
-
-        try {
-          queryAsBigInt = query && BigInt(query) ? BigInt(query) : undefined;
-        } catch (err) {
-          queryAsBigInt = undefined;
-        }
-
-        conditions.push({ id: { equals: queryAsBigInt } });
+        conditions.push({ id: { equals: query } });
       }
       if (searchType.includes(SearchTypeBookings.Phone)) {
         conditions.push({ phoneNumber: { contains: query } });
@@ -213,7 +204,6 @@ const resolvers: Resolvers = {
   Mutation: {
     async createBooking(_, args, ctx) {
       const {
-        routeId,
         departureCityId,
         arrivalCityId,
         ...rest
@@ -221,19 +211,18 @@ const resolvers: Resolvers = {
 
       const route = await ctx.prisma.route.findFirst({
         where: {
-          id: routeId,
           departureCityId,
           arrivalCityId,
         },
       });
 
       if (!route) {
-        throw new GraphQLError('Неверный маршрут, указанный для бронирования.');
+        throw new GraphQLError('Неверный/Несуществующий маршрут, указанный для бронирования.');
       }
 
       const booking = await ctx.prisma.booking.create({
         data: {
-          routeId,
+          routeId: route.id,
           ...rest
         },
       });

@@ -3,8 +3,8 @@ import gql from 'graphql-tag';
 export default gql`
   type Query {
     routes(input: RoutesInput!): RoutesResponse!
-    routeById(id: BigInt!): Route
-    routesByRegion(regionId: BigInt!): [City!]!
+    routeById(id: ID!): Route
+    routesByRegion(regionId: ID!): [City!]!
   }
 
   type Mutation {
@@ -23,8 +23,8 @@ export default gql`
 
   input RoutesInput {
     take: Int
-    after: BigInt
-    before: BigInt
+    after: ID
+    before: ID
 
     query: String!
     sorting: [SortingState!]!
@@ -38,8 +38,8 @@ export default gql`
   }
 
   type PageInfo {
-    startCursor: BigInt
-    endCursor: BigInt
+    startCursor: ID
+    endCursor: ID
     hasNextPage: Boolean!
     hasPreviousPage: Boolean!
   }
@@ -50,21 +50,21 @@ export default gql`
   }
 
   input RouteInput {
-    departureCityId: BigInt!
-    arrivalCityId: BigInt!
+    departureCityId: ID!
+    arrivalCityId: ID!
     price: Int!
   }
 
   input ScheduleInput {
-    routeId: BigInt!
-    daysOfWeek: BigInt!
+    routeId: ID!
+    daysOfWeek: ID!
     startTime: Date!
     endTime: Date!
     seatsAvailable: Int!
   }
 
   type Route {
-    id: BigInt!
+    id: ID!
     departureCity: City
     arrivalCity: City
     region: Region

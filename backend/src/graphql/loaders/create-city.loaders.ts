@@ -2,10 +2,10 @@ import DataLoader from 'dataloader';
 import prismaClient from '@/prisma';
 
 export const createCityLoader = (prisma: typeof prismaClient) => {
-  return new DataLoader(async (cityIds: readonly (bigint | null)[]) => {
+  return new DataLoader(async (cityIds: readonly (string | null)[]) => {
     const cities = await prisma.city.findMany({
       where: {
-        id: { in: cityIds.filter(Boolean) as bigint[] },
+        id: { in: cityIds.filter(Boolean) as string[] },
       },
     });
 

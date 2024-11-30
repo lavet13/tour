@@ -1,11 +1,11 @@
 import { Resolvers } from '@/graphql/__generated__/types';
-import { BigIntResolver, ByteResolver } from 'graphql-scalars';
+import { ByteResolver, CuidResolver } from 'graphql-scalars';
 import { DateResolver } from '@/graphql/scalars/date.scalars';
 
 const resolvers: Resolvers = {
   Date: DateResolver,
-  BigInt: BigIntResolver,
   Byte: ByteResolver,
+  Cuid: CuidResolver,
 };
 
 export default resolvers;

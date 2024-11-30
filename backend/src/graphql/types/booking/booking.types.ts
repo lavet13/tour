@@ -3,7 +3,7 @@ import gql from 'graphql-tag';
 export default gql`
   type Query {
     bookings(input: BookingsInput!): BookingsResponse!
-    bookingById(id: BigInt!): Booking
+    bookingById(id: ID!): Booking
   }
 
   type Mutation {
@@ -21,8 +21,8 @@ export default gql`
 
   input BookingsInput {
     take: Int
-    after: BigInt
-    before: BigInt
+    after: ID
+    before: ID
     status: BookingStatus
 
     query: String!
@@ -37,8 +37,8 @@ export default gql`
   }
 
   type PageInfo {
-    startCursor: BigInt
-    endCursor: BigInt
+    startCursor: ID
+    endCursor: ID
     hasNextPage: Boolean!
     hasPreviousPage: Boolean!
   }
@@ -52,21 +52,22 @@ export default gql`
     firstName: String!
     lastName: String!
     phoneNumber: String!
-    routeId: BigInt!
-    departureCityId: BigInt!
-    arrivalCityId: BigInt!
+    departureCityId: ID!
+    arrivalCityId: ID!
     travelDate: Date!
     seatsCount: Int!
+    commentary: String
   }
 
   type Booking {
-    id: BigInt!
+    id: ID!
     firstName: String!
     lastName: String!
     phoneNumber: String!
     route: Route
     travelDate: Date!
     seatsCount: Int!
+    commentary: String
     status: BookingStatus!
     createdAt: Date!
     updatedAt: Date!

@@ -3,16 +3,16 @@ import prismaClient from '@/prisma';
 import { Route } from '@prisma/client';
 
 export const createRoutesLoader = (prisma: typeof prismaClient) => {
-  return new DataLoader<bigint, Route[]>(async (regionIds: readonly bigint[]) => {
+  return new DataLoader<string, Route[]>(async (regionIds: readonly string[]) => {
     // Fetch all routes for the provided route IDs
     const routes = await prisma.route.findMany({
       where: {
-        regionId: { in: regionIds as bigint[] },
+        regionId: { in: regionIds as string[] },
       },
     });
 
     // Group routes by regionId using a Map
-    const routesMap = new Map<bigint, Route[]>();
+    const routesMap = new Map<string, Route[]>();
     for (const route of routes) {
       if (!routesMap.has(route.regionId!)) {
         routesMap.set(route.regionId!, []);

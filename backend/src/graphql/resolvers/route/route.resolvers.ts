@@ -89,16 +89,7 @@ const resolvers: Resolvers = {
       const conditions: Prisma.RouteWhereInput[] = [];
 
       if (searchType.includes(SearchTypeRoutes.Id)) {
-        // Number.isFinite isn't a solution, something
-        let queryAsBigInt = undefined;
-
-        try {
-          queryAsBigInt = query && BigInt(query) ? BigInt(query) : undefined;
-        } catch (err) {
-          queryAsBigInt = undefined;
-        }
-
-        conditions.push({ id: { equals: queryAsBigInt } });
+        conditions.push({ id: { equals: query } });
       }
 
       const sorting = args.input.sorting;

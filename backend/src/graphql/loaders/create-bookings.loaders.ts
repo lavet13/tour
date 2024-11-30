@@ -3,10 +3,10 @@ import prismaClient from '@/prisma';
 import { Booking } from '@prisma/client';
 
 export const createBookingsLoader = (prisma: typeof prismaClient) => {
-  // return new DataLoader<bigint, Booking[]>(async (routeIds: readonly bigint[]) => {
+  // return new DataLoader<string, Booking[]>(async (routeIds: readonly string[]) => {
   //   const bookings = await prisma.booking.findMany({
   //     where: {
-  //       routeId: { in: routeIds as bigint[] },
+  //       routeId: { in: routeIds as string[] },
   //     },
   //   });
   //
@@ -16,16 +16,16 @@ export const createBookingsLoader = (prisma: typeof prismaClient) => {
   //
   //   return bookingsByRouteId;
   // });
-  return new DataLoader<bigint, Booking[]>(async (routeIds: readonly bigint[]) => {
+  return new DataLoader<string, Booking[]>(async (routeIds: readonly string[]) => {
     // Fetch all bookings for the provided route IDs
     const bookings = await prisma.booking.findMany({
       where: {
-        routeId: { in: routeIds as bigint[] },
+        routeId: { in: routeIds as string[] },
       },
     });
 
     // Group bookings by routeId using a Map
-    const bookingsMap = new Map<bigint, Booking[]>();
+    const bookingsMap = new Map<string, Booking[]>();
     for (const booking of bookings) {
       if (!bookingsMap.has(booking.routeId!)) {
         bookingsMap.set(booking.routeId!, []);

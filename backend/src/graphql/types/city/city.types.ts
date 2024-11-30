@@ -3,8 +3,8 @@ import gql from 'graphql-tag';
 export default gql`
   type Query {
     cities(input: CitiesInput!): CitiesResponse!
-    departureCities(regionId: BigInt): [City!]!
-    arrivalCities(departureCityId: BigInt): [City!]!
+    departureCities(regionId: ID): [City!]!
+    arrivalCities(departureCityId: ID): [City!]!
   }
 
   type Mutation {
@@ -13,8 +13,8 @@ export default gql`
 
   input CitiesInput {
     take: Int
-    after: BigInt
-    before: BigInt
+    after: ID
+    before: ID
 
     query: String!
   }
@@ -25,8 +25,8 @@ export default gql`
   }
 
   type PageInfo {
-    startCursor: BigInt
-    endCursor: BigInt
+    startCursor: ID
+    endCursor: ID
     hasNextPage: Boolean!
     hasPreviousPage: Boolean!
   }
@@ -37,7 +37,7 @@ export default gql`
   }
 
   type City {
-    id: BigInt!
+    id: ID!
     name: String!
     departureTrips: [Route!]!
     arrivalTrips: [Route!]!

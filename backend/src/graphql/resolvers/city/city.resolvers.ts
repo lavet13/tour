@@ -92,16 +92,7 @@ const resolvers: Resolvers = {
       const conditions: Prisma.CityWhereInput[] = [];
 
       if (searchType.includes(SearchTypeCities.Id)) {
-        // Number.isFinite isn't a solution, something
-        let queryAsBigInt = undefined;
-
-        try {
-          queryAsBigInt = query && BigInt(query) ? BigInt(query) : undefined;
-        } catch (err) {
-          queryAsBigInt = undefined;
-        }
-
-        conditions.push({ id: { equals: queryAsBigInt } });
+        conditions.push({ id: { equals: query } });
       }
       if (searchType.includes(SearchTypeCities.Name)) {
         conditions.push({ name: { contains: query } });
