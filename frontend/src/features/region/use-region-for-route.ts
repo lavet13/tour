@@ -10,7 +10,7 @@ export const useRegionForRoute = (
   options?: InitialDataOptions<GetRegionForRouteQuery>
 ) => {
   const regionForRoute = graphql(`
-    query GetRegionForRoute($departureCityId: BigInt, $arrivalCityId: BigInt) {
+    query GetRegionForRoute($departureCityId: ID, $arrivalCityId: ID) {
       regionForRoute(departureCityId: $departureCityId, arrivalCityId: $arrivalCityId) {
         id
         name

@@ -39,8 +39,6 @@ import {
   NavigationMenuViewport as RadixNavigationMenuViewport,
   NavigationMenuTrigger as RadixNavigationMenuTrigger,
 } from '@radix-ui/react-navigation-menu';
-import { Slottable } from '@radix-ui/react-slot';
-import { useInfiniteRoutes } from '@/features/routes';
 import { useRoutesByRegion } from '@/features/routes/use-routes-by-region';
 import { GetRoutesByRegionQuery } from '@/gql/graphql';
 import { useRegionByName } from '@/features/region/use-region-by-name';
@@ -108,24 +106,30 @@ const MainNav: FC = () => {
   const { data: ldnrRegion } = useRegionByName('ЛДНР');
   const { data: coastalRegion } = useRegionByName('Азовское побережье');
 
-  const { data: ldnrData, isPending: ldnrIsPending } = useRoutesByRegion(
-    ldnrRegion?.regionByName?.id,
-    {
-      enabled: !!ldnrRegion,
-    },
-  );
+  const {
+    data: ldnrData,
+    isPending: ldnrIsPending,
+    fetchStatus: ldnrFetchStatus,
+  } = useRoutesByRegion(ldnrRegion?.regionByName?.id as string, {
+    enabled: !!ldnrRegion,
+  });
 
-  const { data: coastalData, isPending: coastalIsPending } = useRoutesByRegion(
-    coastalRegion?.regionByName?.id,
-    {
-      enabled: !!coastalRegion,
-    },
-  );
+  const {
+    data: coastalData,
+    isPending: coastalIsPending,
+    fetchStatus: coastalFetchStatus,
+  } = useRoutesByRegion(coastalRegion?.regionByName?.id as string, {
+    enabled: !!coastalRegion,
+  });
+
+  const coastalIsLoading =
+    coastalFetchStatus === 'fetching' && coastalIsPending;
+  const ldnrIsLoading = ldnrFetchStatus === 'fetching' && ldnrIsPending;
 
   const ldnrRoutes = ldnrData?.routesByRegion ?? [];
   const coastalRoutes = coastalData?.routesByRegion ?? [];
 
-  if (ldnrIsPending || coastalIsPending) {
+  if (ldnrIsLoading || coastalIsLoading) {
     return <NavSkeleton />;
   }
 
@@ -296,23 +300,31 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
         Рейсы {title}
       </NavigationMenuTrigger>
       <NavigationMenuContent>
-        <RadixNavigationMenuSub className={`flex`}>
+        <RadixNavigationMenuSub className='flex'>
           <ScrollArea
-            className={`${routes.length === 0 ? 'w-32' : 'h-96'} border-r`}
+            className={cn(
+              routes.length === 0 && 'w-32',
+              routes.length < 9 ? 'h-fit' : 'h-96',
+            )}
           >
             <NavigationMenuList
-              className={`${routes.length === 0 ? 'w-full' : 'w-fit'} space-x-0 items-start flex-col mr-2 p-2 overflow-hidden`}
+              className={cn(
+                routes.length === 0 ? 'w-full' : 'w-fit',
+                'space-x-0 items-start flex-col mr-2 p-2 overflow-hidden',
+              )}
             >
               {routes.length !== 0 &&
                 routes.map(route => (
                   <NavigationMenuItem
-                    className='flex w-full'
+                    className={cn('flex w-full')}
                     key={route.id}
                     value={route.name}
                   >
                     <RadixNavigationMenuTrigger asChild>
                       <Button
-                        className='flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto'
+                        className={cn(
+                          'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto',
+                        )}
                         variant='ghost'
                       >
                         Из {route.name}
@@ -348,13 +360,13 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                                   onClick={() => setOpen('')}
                                 >
                                   <Link
-                                    to={`booking-bus?regionId=${trip.region?.id}&departureCityId=${trip.departureCity?.id}&arrivalCityId=${trip.arrivalCity?.id}`}
+                                    to={`booking-bus?departureCityId=${route.id}&arrivalCityId=${trip.arrivalCity?.id}`}
                                   >
                                     {trip.arrivalCity?.name}
                                   </Link>
                                 </Button>
                               ) : (
-                                <Tooltip key={trip.id} delayDuration={300}>
+                                <Tooltip key={trip.id} delayDuration={200}>
                                   <TooltipTrigger asChild>
                                     <Button
                                       asChild={isAvailable}
@@ -372,7 +384,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                                       )}
                                     </Button>
                                   </TooltipTrigger>
-                                  <TooltipContent side='bottom'>
+                                  <TooltipContent>
                                     Будет доступно с {formattedDate}
                                   </TooltipContent>
                                 </Tooltip>

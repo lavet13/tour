@@ -5,23 +5,17 @@ import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
 
 export const useRoutesByRegion = (
-  regionId: String,
+  regionId: string,
   options?: InitialDataOptions<GetRoutesByRegionQuery>,
 ) => {
   const routesByRegion = graphql(`
-    query GetRoutesByRegion($regionId: BigInt!) {
+    query GetRoutesByRegion($regionId: ID!) {
       routesByRegion(regionId: $regionId) {
         id
         name
         departureTrips {
           id
           price
-          region {
-            id
-          }
-          departureCity {
-            id
-          }
           arrivalCity {
             id
             name

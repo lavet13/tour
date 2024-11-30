@@ -53,6 +53,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import {
+  ArrowDown,
   ArrowRightIcon,
   CalendarIcon,
   Check,
@@ -80,6 +81,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ru as fnsRU } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
+import { Textarea } from '@/components/ui/textarea';
+import { useCreateBooking } from '@/features/booking/use-create-booking';
+import { BookingInput } from '@/gql/graphql';
 
 const FormSchema = z.object({
   firstName: z
@@ -99,33 +103,33 @@ const FormSchema = z.object({
   seatsCount: z
     .number({ invalid_type_error: 'Должно быть числом!' })
     .refine(value => value > 0, { message: 'Укажите кол-во мест' }),
-  travelDate: z
-    .date({
-      required_error: 'Желаемая дата поездки обязательна!',
-      invalid_type_error: 'Должно быть датой!',
-    })
-    .refine(
-      date => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0); // Reset time to start of day
-        date.setHours(0, 0, 0, 0); // Reset time for comparison
-
-        return date >= today;
-      },
-      {
-        message: 'Выберите сегодняшнюю или будущую дату!',
-      },
-    ),
+  travelDate: z.custom<Date | undefined>(
+    value => {
+      // If the value is undefined, return false
+      if (value === undefined) return false;
+      // Ensure it's a valid Date object
+      if (!(value instanceof Date)) return false;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      value.setHours(0, 0, 0, 0);
+      // Validate that the date is today or in the future
+      return value >= today;
+    },
+    {
+      message: 'Выберите сегодняшнюю или будущую дату!',
+    },
+  ),
+  commentary: z.string().nullish(),
   arrivalCityId: z
-    .number({
-      invalid_type_error: 'ID Должно быть числом!',
+    .string({
+      invalid_type_error: 'Выберите город прибытия!',
     })
-    .refine(value => value > 0, { message: 'Выберите город прибытия!' }),
+    .cuid2({ message: 'Неверный формат!' }),
   departureCityId: z
-    .number({
-      invalid_type_error: 'ID Должно быть числом!',
+    .string({
+      invalid_type_error: 'Выберите город отправления!',
     })
-    .refine(value => value > 0, { message: 'Выберите город отправления!' }),
+    .cuid2({ message: 'Неверный формат!' }),
 });
 
 type DefaultValues = z.infer<typeof FormSchema>;
@@ -135,9 +139,10 @@ const defaultValues: DefaultValues = {
   lastName: '',
   phoneNumber: '',
   seatsCount: 0,
-  travelDate: new Date(),
-  arrivalCityId: 0,
-  departureCityId: 0,
+  travelDate: undefined,
+  commentary: null,
+  arrivalCityId: '',
+  departureCityId: '',
 };
 
 const BookingBusPage: FC = () => {
@@ -174,11 +179,7 @@ const BookingBusPage: FC = () => {
 
   const form = useForm<DefaultValues>({
     resolver: zodResolver(FormSchema),
-    defaultValues: {
-      ...defaultValues,
-      departureCityId: Number(departureCityId),
-      arrivalCityId: Number(arrivalCityId),
-    },
+    defaultValues,
     mode: 'onChange',
   });
 
@@ -194,12 +195,19 @@ const BookingBusPage: FC = () => {
   });
 
   useEffect(() => {
-    form.setValue('departureCityId', Number(departureCityId));
-    form.setValue('arrivalCityId', Number(arrivalCityId));
+    form.setValue('departureCityId', departureCityId);
+    form.setValue('arrivalCityId', arrivalCityId);
   }, [departureCityId, arrivalCityId]);
 
+  const { mutateAsync: createBooking } = useCreateBooking();
   const onSubmit: SubmitHandler<DefaultValues> = async data => {
     try {
+      const payload: BookingInput = {
+        ...data,
+        travelDate: data.travelDate as Date,
+      };
+      await createBooking({ input: payload });
+
       form.reset();
       setSearchParams(p => {
         const keys = [...p.entries()].map(([key]) => key);
@@ -225,6 +233,8 @@ const BookingBusPage: FC = () => {
     }
   };
 
+  const isMobile = useMediaQuery('(max-width: 400px)');
+
   return (
     <div className='container mt-5 mb-10'>
       <Form {...form}>
@@ -232,50 +242,58 @@ const BookingBusPage: FC = () => {
           onSubmit={form.handleSubmit(onSubmit)}
           className='w-full sm:max-w-screen-sm space-y-6 mx-auto'
         >
-          <div className='relative overflow-hidden w-full h-full border rounded-xl p-6'>
-            <div className='flex flex-col space-y-1.5 mb-6'>
-              <div className='flex flex-col sm:flex-row items-center gap-y-1 gap-x-2 font-semibold tracking-tight text-xl'>
-                <span>Бронирование рейса</span>
-                <div className='flex items-center gap-2 flex-1'>
-                  <Separator
-                    className='hidden sm:block h-7'
-                    orientation={'vertical'}
-                  />
-                  <span>
+          <div className='relative overflow-hidden w-full h-full border rounded-xl'>
+            <div className='flex flex-col space-y-3 sm:space-y-3.5 mb-4 p-6 pb-0'>
+              <div className='flex flex-col sm:flex-row items-center gap-y-3 sm:gap-y-1 gap-x-2 font-semibold tracking-tight text-xl'>
+                <span className='leading-6 text-center'>
+                  Бронирование рейса
+                </span>
+                <div
+                  className={cn(
+                    'flex items-center gap-2 flex-1 h-5',
+                    isMobile && 'flex-col gap-0',
+                  )}
+                >
+                  <Separator orientation={'vertical'} />
+                  <span className='leading-5 text-center'>
                     {departureIsPending ? (
                       <Skeleton className='h-6 w-24' />
                     ) : (
                       departureCities.find(
-                        city => city.id === values.departureCityId,
+                        city => city.id === departureCityId,
                       )?.name ?? (
-                        <span className='text-sm opacity-50 uppercase'>
-                          город отправления
+                        <span className='text-sm text-muted-foreground'>
+                          Город отправления
                         </span>
                       )
                     )}
                   </span>
-                  <ArrowRightIcon className='size-4' />
-                  <span>
+                  {isMobile ? (
+                    <ArrowDown className='size-4 mt-1.5' />
+                  ) : (
+                    <ArrowRightIcon className='size-4' />
+                  )}
+                  <span className='leading-5 text-center'>
                     {arrivalIsLoading ? (
                       <Skeleton className='h-6 w-24' />
                     ) : (
                       arrivalCities.find(
-                        city => city.id === values.arrivalCityId,
+                        city => city.id === arrivalCityId,
                       )?.name ?? (
-                        <span className='text-sm opacity-50 uppercase'>
-                          город прибытия
+                        <span className='text-sm text-muted-foreground text-center'>
+                          Город прибытия
                         </span>
                       )
                     )}
                   </span>
                 </div>
               </div>
-              <p className='text-center sm:text-start text-sm text-muted-foreground'>
-                Введите информацию для оформления бронирования.
-              </p>
             </div>
 
-            <div className='space-y-4'>
+            <div className='px-6 p-4 space-y-4 border-y'>
+              <p className='text-center sm:text-start text-sm text-muted-foreground'>
+                Выберите пункт отправления и назначения
+              </p>
               <div className='sm:grid sm:grid-cols-[repeat(auto-fill,_minmax(17rem,_1fr))] space-y-3 sm:space-y-0 sm:gap-y-4 sm:gap-x-2'>
                 <FormField
                   control={form.control}
@@ -289,7 +307,7 @@ const BookingBusPage: FC = () => {
                           items={departureCities}
                           onValueChange={value => {
                             onChange(value);
-                            form.setValue('arrivalCityId', 0, {
+                            form.setValue('arrivalCityId', '', {
                               shouldValidate: false,
                             });
                             setSearchParams(params => {
@@ -337,7 +355,14 @@ const BookingBusPage: FC = () => {
                     );
                   }}
                 />
+              </div>
+            </div>
 
+            <div className='px-6 p-4 space-y-4 border-b'>
+              <p className='text-center sm:text-start text-sm text-muted-foreground'>
+                Введите информацию для оформления бронирования.
+              </p>
+              <div className='sm:grid sm:grid-cols-[repeat(auto-fill,_minmax(17rem,_1fr))] space-y-5 sm:space-y-0 sm:gap-y-4 sm:gap-x-2'>
                 <FormField
                   control={form.control}
                   name='lastName'
@@ -433,44 +458,58 @@ const BookingBusPage: FC = () => {
                 <FormField
                   control={form.control}
                   name='travelDate'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Желаемая дата поездки</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              ref={field.ref}
-                              variant='outline'
-                              className={cn(
-                                'transfor-gpu transition-all ease-out',
-                                'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-                                'w-[280px] justify-start text-left font-normal',
-                                !field.value && 'text-muted-foreground',
-                              )}
-                            >
-                              <CalendarIcon className='mr-2 size-4' />
-                              {field.value ? (
-                                format(field.value, 'PPP', { locale: fnsRU })
-                              ) : (
-                                <span>Выберите дату поездки</span>
-                              )}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className='w-auto p-0'>
-                          <Calendar
-                            locale={fnsRU}
-                            mode='single'
-                            selected={field.value}
-                            onSelect={date => field.onChange(date)}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                  render={({ field }) => {
+                    const { error } = useFormField();
+                    return (
+                      <FormItem>
+                        <FormLabel>Желаемая дата поездки</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                ref={field.ref}
+                                variant='outline'
+                                className={cn(
+                                  'flex w-full',
+                                  'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+                                  'justify-start text-left font-normal',
+                                  !field.value && 'text-muted-foreground',
+                                )}
+                              >
+                                <CalendarIcon className='mr-2 size-4' />
+                                {field.value ? (
+                                  <span
+                                    className={cn(
+                                      'font-semibold',
+                                      error && 'text-muted-foreground',
+                                    )}
+                                  >
+                                    {format(field.value, 'PPP', {
+                                      locale: fnsRU,
+                                    })}
+                                  </span>
+                                ) : (
+                                  <span className='whitespace-pre leading-3 text-center'>
+                                    Выберите дату поездки
+                                  </span>
+                                )}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className='w-auto p-0'>
+                            <Calendar
+                              locale={fnsRU}
+                              mode='single'
+                              selected={field.value}
+                              onSelect={date => field.onChange(date)}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
 
                 <FormField
@@ -486,9 +525,28 @@ const BookingBusPage: FC = () => {
                     );
                   }}
                 />
+
+                <FormField
+                  control={form.control}
+                  name='commentary'
+                  render={({ field: { value, ...field } }) => (
+                    <FormItem className='sm:col-span-2'>
+                      <FormLabel>Комментарий(необязательно)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder='Можете написать что-нибудь...'
+                          value={value ?? ''}
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
               </div>
+            </div>
+            <div className='p-4 px-6 space-y-4'>
               <div className='sm:grid sm:grid-cols-[repeat(auto-fill,_minmax(17rem,_1fr))] gap-1 gap-y-2'>
-                <FormButton
+                <Button
                   disabled={isSubmitting}
                   className={`w-full sm:w-auto col-start-1 col-end-2`}
                   type='submit'
@@ -499,9 +557,9 @@ const BookingBusPage: FC = () => {
                       Пожалуйста подождите
                     </>
                   ) : (
-                    'Зарегестрировать'
+                    'Забронировать'
                   )}
-                </FormButton>
+                </Button>
               </div>
             </div>
             <BorderBeam className='border rounded-xl' />
@@ -538,8 +596,6 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
       onChange: onValueChange,
     });
 
-    const { error } = useFormField();
-
     const [open, setOpen] = useState(false);
 
     const handleItemSelect = (item: any) => {
@@ -560,7 +616,6 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
                   disabled={isLoading || disabled}
                   className={cn(
                     'flex w-full justify-between',
-                    'transfor-gpu transition-all ease-out',
                     'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
                     !value && 'text-muted-foreground',
                   )}
@@ -590,7 +645,7 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
                   <CommandGroup>
                     <ScrollArea
                       className={cn(
-                        items.length >= 7 && 'h-[calc(14rem)] pr-2.5',
+                        items.length >= 7 && 'h-[calc(14rem)] -mr-px pr-3',
                       )}
                     >
                       {items.map(item => (
@@ -623,7 +678,6 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
                 disabled={isLoading || disabled}
                 className={cn(
                   'flex w-full justify-between',
-                  'transform-gpu transition-all ease-out',
                   'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
                   !value && 'text-muted-foreground',
                 )}
@@ -651,7 +705,7 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
                   <CommandGroup>
                     <ScrollArea
                       className={cn(
-                        items.length >= 7 && 'h-[calc(14rem)] pr-2.5',
+                        items.length >= 7 && 'h-[calc(14rem)] -mr-px pr-3',
                       )}
                     >
                       {items.map(item => (
@@ -708,7 +762,6 @@ const Counter = forwardRef<HTMLButtonElement, CounterProps>(
           size='icon'
           className={cn(
             'h-8 w-8 shrink-0 rounded-full',
-            'transfor-gpu transition-all ease-out',
             'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
           )}
           type='button'
@@ -743,7 +796,6 @@ const Counter = forwardRef<HTMLButtonElement, CounterProps>(
             size='icon'
             className={cn(
               'h-8 w-8 shrink-0 rounded-full',
-              'transfor-gpu transition-all ease-out',
               'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
             )}
             type='button'

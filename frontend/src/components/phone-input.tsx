@@ -103,7 +103,7 @@ const CountrySelect = ({
           type='button'
           variant={'outline'}
           className={cn(
-            'flex gap-1 rounded-e-none rounded-s-lg px-3 ring-offset-background transform-gpu transition-all ease-out',
+            'flex gap-1 rounded-e-none rounded-s-lg px-3 ring-offset-background',
             'focus:z-10 ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
           )}
           disabled={disabled}
