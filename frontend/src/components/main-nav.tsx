@@ -149,29 +149,39 @@ const MainNav: FC = () => {
       <NavigationMenu
         value={open}
         onValueChange={value => {
-          console.log({ value });
           setOpen(value);
           onNavChange();
         }}
       >
         <NavigationMenuList>
           <NavigationMenuItem>
-            <NavigationRoutes title='ЛДНР' routes={ldnrRoutes} />
-          </NavigationMenuItem>
-          <NavigationMenuItem>
-            <NavigationRoutes
-              title='Азовское побережье'
-              routes={coastalRoutes}
-            />
-          </NavigationMenuItem>
+            <NavigationMenuTrigger className={'bg-background/20'}>Рейсы</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <RadixNavigationMenuSub className='flex'>
+                <ScrollArea className='h-fit'>
+                  <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 p-2'>
+                    <NavigationMenuItem>
+                      <NavigationRoutes title='ЛДНР' routes={ldnrRoutes} />
+                    </NavigationMenuItem>
+                    <NavigationMenuItem>
+                      <NavigationRoutes
+                        title='Азовское побережье'
+                        routes={coastalRoutes}
+                      />
+                    </NavigationMenuItem>
+                  </NavigationMenuList>
+                </ScrollArea>
 
-          {/* <NavigationMenuItem> */}
-          {/*   <NavigationMenuLink asChild> */}
-          {/*     <Link className={navigationMenuTriggerStyle()} to='/'> */}
-          {/*       Documentation */}
-          {/*     </Link> */}
-          {/*   </NavigationMenuLink> */}
-          {/* </NavigationMenuItem> */}
+                <RadixNavigationMenuViewport
+                  className='overflow-hidden transform origin-right-center relative top-0 right-0'
+                  style={{
+                    width: 'var(--radix-navigation-menu-viewport-width)',
+                    height: 'var(--radix-navigation-menu-viewport-height)',
+                  }}
+                />
+              </RadixNavigationMenuSub>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
         </NavigationMenuList>
 
         <NavigationMenuViewport />
@@ -296,15 +306,27 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
 
   return (
     <>
-      <NavigationMenuTrigger className='submenu-trigger'>
-        Рейсы {title}
-      </NavigationMenuTrigger>
+      <RadixNavigationMenuTrigger
+        className='submenu-trigger bg-background/20'
+        asChild
+      >
+        <Button
+          className={cn(
+            'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto',
+          )}
+          variant='ghost'
+          size={'sm'}
+        >
+          Рейсы {title}
+          <ChevronDown className='transition-transform duration-200 group-data-[state=open]:-rotate-90' />
+        </Button>
+      </RadixNavigationMenuTrigger>
       <NavigationMenuContent>
         <RadixNavigationMenuSub className='flex'>
           <ScrollArea
             className={cn(
               routes.length === 0 && 'w-32',
-              routes.length < 9 ? 'h-fit' : 'h-96',
+              routes.length < 9 ? 'h-fit' : 'h-[22rem]',
             )}
           >
             <NavigationMenuList
@@ -326,13 +348,18 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                           'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto',
                         )}
                         variant='ghost'
+                        size='sm'
                       >
                         Из {route.name}
                         <ChevronDown className='h-4 w-4 transition-transform duration-200 group-data-[state=open]:-rotate-90' />
                       </Button>
                     </RadixNavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <ScrollArea className='h-96 min-w-[300px]'>
+                      <ScrollArea
+                        className={cn(
+                          'h-fit min-w-[230px] min-[860px]:min-w-[300px]',
+                        )}
+                      >
                         <div className='flex flex-col p-4 pb-2'>
                           <h4 className='font-medium mb-2'>
                             Маршруты из {route.name}:
@@ -351,6 +378,10 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
 
                               let content: ReactNode = null;
 
+                              const handleClick = useCallback(() => {
+                                window.scrollTo({ top: 0 });
+                              }, []);
+
                               content = isAvailable ? (
                                 <Button
                                   asChild={isAvailable}
@@ -360,6 +391,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                                   onClick={() => setOpen('')}
                                 >
                                   <Link
+                                    onClick={handleClick}
                                     to={`booking-bus?departureCityId=${route.id}&arrivalCityId=${trip.arrivalCity?.id}`}
                                   >
                                     {trip.arrivalCity?.name}

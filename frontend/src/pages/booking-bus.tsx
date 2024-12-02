@@ -91,11 +91,11 @@ const FormSchema = z.object({
   firstName: z
     .string()
     .trim()
-    .min(1, { message: 'Имя обязательно к заполнению!' }),
+    .min(3, { message: 'Имя обязательно к заполнению!' }),
   lastName: z
     .string()
     .trim()
-    .min(1, { message: 'Фамилия обязательно к заполнению!' }),
+    .min(4, { message: 'Фамилия обязательно к заполнению!' }),
   phoneNumber: z
     .string({ required_error: 'Телефон обязателен к заполнению!' })
     .refine(
@@ -105,33 +105,39 @@ const FormSchema = z.object({
   seatsCount: z
     .number({ invalid_type_error: 'Должно быть числом!' })
     .refine(value => value > 0, { message: 'Укажите количество мест!' }),
-  travelDate: z.custom<Date | undefined>(
-    value => {
-      // If the value is undefined, return false
-      if (value === undefined) return false;
-      // Ensure it's a valid Date object
-      if (!(value instanceof Date)) return false;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      value.setHours(0, 0, 0, 0);
-      // Validate that the date is today or in the future
-      return value >= today;
-    },
-    {
-      message: 'Выберите сегодняшнюю или будущую дату!',
-    },
-  ),
+  travelDate: z
+    .date({
+      required_error: 'Дата поездки обязательна!',
+      invalid_type_error: 'Выберите корректную дату!',
+    })
+    .refine(
+      date => {
+        // Ensure date is a valid Date object
+        if (!(date instanceof Date) || isNaN(date.getTime())) {
+          return false;
+        }
+
+        // Reset time to start of the day for consistent comparison
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        date.setHours(0, 0, 0, 0);
+
+        // Validate that the date is today or in the future
+        return date >= today;
+      },
+      { message: 'Выберите сегодняшнюю или будущую дату!' },
+    ),
   commentary: z.string().nullish(),
   arrivalCityId: z
     .string({
       invalid_type_error: 'Выберите город прибытия!',
     })
-    .cuid2({ message: 'Неверный формат!' }),
+    .cuid2({ message: 'Выберите город прибытия!' }),
   departureCityId: z
     .string({
       invalid_type_error: 'Выберите город отправления!',
     })
-    .cuid2({ message: 'Неверный формат!' }),
+    .cuid2({ message: 'Выберите город отправления!' }),
 });
 
 type DefaultValues = z.infer<typeof FormSchema>;
@@ -141,7 +147,7 @@ const defaultValues: DefaultValues = {
   lastName: '',
   phoneNumber: '',
   seatsCount: 0,
-  travelDate: undefined,
+  travelDate: null,
   commentary: null,
   arrivalCityId: '',
   departureCityId: '',
@@ -196,10 +202,63 @@ const BookingBusPage: FC = () => {
     values,
   });
 
+  // New effect to handle URL parameter changes
   useEffect(() => {
-    form.setValue('departureCityId', departureCityId);
-    form.setValue('arrivalCityId', arrivalCityId);
-  }, [departureCityId, arrivalCityId]);
+    // Reset form if departure city is cleared
+    if (!departureCityId) {
+      form.setValue('departureCityId', '', { shouldValidate: false });
+      form.setValue('arrivalCityId', '', { shouldValidate: false });
+      return;
+    }
+
+    // Validate and set departure city if exists in the list
+    const validDepartureCity = departureCities.find(
+      city => city.id === departureCityId,
+    );
+    if (validDepartureCity) {
+      form.setValue('departureCityId', validDepartureCity.id, {
+        shouldValidate: true,
+      });
+
+      // If arrival city is present, validate it
+      if (arrivalCityId) {
+        const validArrivalCity = arrivalCities.find(
+          city => city.id === arrivalCityId,
+        );
+
+        if (validArrivalCity) {
+          form.setValue('arrivalCityId', validArrivalCity.id, {
+            shouldValidate: true,
+          });
+        } else {
+          // Clear invalid arrival city
+          form.setValue('arrivalCityId', '', { shouldValidate: false });
+          setSearchParams(params => {
+            const query = new URLSearchParams(params.toString());
+            query.delete('arrivalCityId');
+            return query;
+          });
+        }
+      }
+    } else {
+      // Clear invalid departure city and related arrival city
+      form.setValue('departureCityId', '', { shouldValidate: false });
+      form.setValue('arrivalCityId', '', { shouldValidate: false });
+      setSearchParams(params => {
+        const query = new URLSearchParams(params.toString());
+        query.delete('departureCityId');
+        query.delete('arrivalCityId');
+        return query;
+      });
+    }
+  }, [
+    departureCityId,
+    arrivalCityId,
+    departureCities,
+    arrivalCities,
+    form,
+    setSearchParams,
+  ]);
 
   const { mutateAsync: createBooking } = useCreateBooking();
   const onSubmit: SubmitHandler<DefaultValues> = async data => {
@@ -228,9 +287,13 @@ const BookingBusPage: FC = () => {
       if (isGraphQLRequestError(error)) {
         toast.error(error.response.errors[0].message, {
           position: 'bottom-center',
+          richColors: true,
         });
       } else if (error instanceof Error) {
-        toast.error(error.message, { position: 'bottom-center' });
+        toast.error(error.message, {
+          position: 'bottom-center',
+          richColors: true,
+        });
       }
     }
   };
@@ -261,9 +324,8 @@ const BookingBusPage: FC = () => {
                     {departureIsPending ? (
                       <Skeleton className='h-6 w-24' />
                     ) : (
-                      departureCities.find(
-                        city => city.id === departureCityId,
-                      )?.name ?? (
+                      departureCities.find(city => city.id === departureCityId)
+                        ?.name ?? (
                         <span className='text-sm text-muted-foreground'>
                           Город отправления
                         </span>
@@ -273,15 +335,14 @@ const BookingBusPage: FC = () => {
                   {isMobile ? (
                     <ArrowDown className='size-4 mt-1.5' />
                   ) : (
-                    <ArrowRightIcon className='size-4' />
+                    <ArrowRightIcon className='size-4 self-end' />
                   )}
                   <span className='leading-5 text-center'>
                     {arrivalIsLoading ? (
                       <Skeleton className='h-6 w-24' />
                     ) : (
-                      arrivalCities.find(
-                        city => city.id === arrivalCityId,
-                      )?.name ?? (
+                      arrivalCities.find(city => city.id === arrivalCityId)
+                        ?.name ?? (
                         <span className='text-sm text-muted-foreground text-center'>
                           Город прибытия
                         </span>
@@ -460,54 +521,11 @@ const BookingBusPage: FC = () => {
                 <FormField
                   control={form.control}
                   name='travelDate'
-                  render={({ field }) => {
-                    const { error } = useFormField();
+                  render={({ field: { onChange, ...field } }) => {
                     return (
                       <FormItem>
                         <FormLabel>Желаемая дата поездки</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                ref={field.ref}
-                                variant='outline'
-                                className={cn(
-                                  'flex w-full',
-                                  'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-                                  'justify-start text-left font-normal',
-                                  !field.value && 'text-muted-foreground',
-                                )}
-                              >
-                                <CalendarIcon className='mr-2 size-4' />
-                                {field.value ? (
-                                  <span
-                                    className={cn(
-                                      'font-semibold',
-                                      error && 'text-muted-foreground',
-                                    )}
-                                  >
-                                    {format(field.value, 'PPP', {
-                                      locale: fnsRU,
-                                    })}
-                                  </span>
-                                ) : (
-                                  <span className='whitespace-pre leading-3 text-center'>
-                                    Выберите дату поездки
-                                  </span>
-                                )}
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className='w-auto p-0'>
-                            <Calendar
-                              locale={fnsRU}
-                              mode='single'
-                              selected={field.value}
-                              onSelect={date => field.onChange(date)}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
+                        <DatePicker onValueChange={onChange} {...field} />
                         <FormMessage />
                       </FormItem>
                     );
@@ -577,7 +595,6 @@ interface ComboBoxProps {
   onValueChange?: (value: any) => void;
   isLoading?: boolean;
   items: any[];
-  onBlur?: () => void;
   disabled?: boolean;
 }
 
@@ -740,7 +757,6 @@ interface CounterProps {
   name: string;
   value?: any;
   onValueChange?: (value: any) => void;
-  onBlur?: () => void;
   disabled?: boolean;
 }
 
@@ -751,7 +767,9 @@ const Counter = forwardRef<HTMLButtonElement, CounterProps>(
       onChange: onValueChange,
     });
 
-    const { fieldState: { error } } = useController({ name });
+    const {
+      fieldState: { error },
+    } = useController({ name });
 
     return (
       <div
@@ -810,6 +828,73 @@ const Counter = forwardRef<HTMLButtonElement, CounterProps>(
           </Button>
         </FormControl>
       </div>
+    );
+  },
+);
+
+type DatePickerProps = {
+  name: string;
+  value?: any;
+  onValueChange?: (value: any) => void;
+  disabled?: boolean;
+};
+
+const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
+  ({ value: valueProp, onValueChange, name, disabled }, ref) => {
+    const [value, setValue] = useControllableState({
+      prop: valueProp,
+      onChange: onValueChange,
+    });
+
+    const {
+      fieldState: { error },
+    } = useController({ name });
+
+    return (
+      <Popover>
+        <PopoverTrigger asChild>
+          <FormControl>
+            <Button
+              ref={ref}
+              variant='outline'
+              className={cn(
+                'flex w-full',
+                'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+                'justify-start text-left font-normal',
+                !value && 'text-muted-foreground',
+              )}
+              disabled={disabled}
+            >
+              <CalendarIcon className='mr-2 size-4' />
+              {value ? (
+                <span
+                  className={cn(
+                    'font-semibold',
+                    error && 'text-muted-foreground',
+                  )}
+                >
+                  {format(value, 'PPP', {
+                    locale: fnsRU,
+                  })}
+                </span>
+              ) : (
+                <span className='whitespace-pre leading-3 text-center'>
+                  Выберите дату поездки
+                </span>
+              )}
+            </Button>
+          </FormControl>
+        </PopoverTrigger>
+        <PopoverContent className='w-auto p-0'>
+          <Calendar
+            locale={fnsRU}
+            mode='single'
+            selected={value}
+            onSelect={date => setValue(date)}
+            initialFocus
+          />
+        </PopoverContent>
+      </Popover>
     );
   },
 );

@@ -72,7 +72,6 @@ export default gql`
     createdAt: Date!
     updatedAt: Date!
     departureDate: Date
-    isAvailable: Boolean
     bookings: [Booking!]!
     schedules: [Schedule!]!
   }

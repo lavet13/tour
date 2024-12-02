@@ -9,7 +9,6 @@ import { GraphQLError } from 'graphql';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { applyConstraints } from '@/helpers/apply-constraints';
 import { hasRoles, isAuthenticated } from '@/graphql/composition/authorization';
-import { inspect } from 'util';
 
 const resolvers: Resolvers = {
   Query: {
@@ -201,14 +200,14 @@ const resolvers: Resolvers = {
           departureTrips: {
             some: {
               regionId,
+              isActive: true,
             },
           },
         },
         include: {
           departureTrips: {
-            where: { regionId }, // Ensure we only include trips for the specified region
             include: {
-              arrivalCity: true, // Include arrival city data
+              arrivalCity: true,
             },
           },
         },

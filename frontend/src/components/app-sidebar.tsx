@@ -1,6 +1,6 @@
 import { forwardRef, ReactNode } from "react"
 import {
-    Home,
+  Home,
   Settings2,
   Store,
 } from "lucide-react"

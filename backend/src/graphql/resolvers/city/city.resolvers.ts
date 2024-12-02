@@ -13,6 +13,7 @@ import { GraphQLError } from 'graphql';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { applyConstraints } from '@/helpers/apply-constraints';
 import { hasRoles, isAuthenticated } from '@/graphql/composition/authorization';
+import { inspect } from 'util';
 
 const resolvers: Resolvers = {
   Query: {
@@ -182,6 +183,10 @@ const resolvers: Resolvers = {
       const routes = await prisma.route.findMany({
         where: {
           departureCityId,
+          OR: [
+            { departureDate: null },
+            { departureDate: { lte: new Date() } }
+          ],
         },
         select: {
           arrivalCity: true,
@@ -199,14 +204,20 @@ const resolvers: Resolvers = {
               region: {
                 id: regionId ?? undefined,
               },
+              OR: [
+                {
+                  departureDate: null,
+                },
+                { departureDate: { lte: new Date() } },
+              ],
+              isActive: true,
             },
           },
         },
         distinct: ['id'],
-        include: {
-          departureTrips: true,
-        },
       });
+
+      console.log(inspect(cities, { depth: Infinity, colors: true }));
 
       return cities;
     },
