@@ -1,12 +1,8 @@
-import { forwardRef, ReactNode } from "react"
-import {
-  Home,
-  Settings2,
-  Store,
-} from "lucide-react"
+import { forwardRef } from 'react';
+import { Bus, Home, Settings2, Tickets } from 'lucide-react';
 
-import { NavMain } from "@/components/nav-main"
-import { NavUser } from "@/components/nav-user"
+import { NavMain } from '@/components/nav-main';
+import { NavUser } from '@/components/nav-user';
 import {
   Sidebar,
   SidebarContent,
@@ -15,75 +11,80 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { Link, To, useLocation, useMatch, useResolvedPath } from "react-router-dom"
-import { cn } from "@/lib/utils"
+  SidebarSeparator,
+  SidebarTrigger,
+  useSidebar,
+} from '@/components/ui/sidebar';
+import { Link, useLocation, useResolvedPath } from 'react-router-dom';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 const data = {
   user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
+    name: 'shadcn',
+    email: 'm@example.com',
+    avatar: '/avatars/shadcn.jpg',
   },
   navMain: [
     {
-      title: "Маркетплейсы",
-      icon: Store,
+      title: 'Перевозки',
+      icon: Bus,
       url: '#',
       isActive: true,
       items: [
         {
-          title: "Wildberries",
-          url: "wb-orders",
+          icon: Tickets,
+          title: 'Бронирования',
+          url: 'bookings',
         },
       ],
     },
   ],
-}
+};
 
-interface RouterLinkProps {
-  children: ReactNode;
-  to: To;
-  className?: string;
-}
+const RouterLink = forwardRef<
+  HTMLAnchorElement,
+  React.ComponentProps<typeof Link>
+>(({ children, to, className }, ref) => {
+  const { pathname: toPathname } = useResolvedPath(to);
+  const { pathname: locationPathname } = useLocation();
 
-const RouterLink = forwardRef<HTMLAnchorElement, RouterLinkProps>(
-  ({ children, to, className }, ref) => {
-    const { pathname: toPathname } = useResolvedPath(to);
-    const { pathname: locationPathname } = useLocation();
+  const selected = locationPathname.startsWith(toPathname);
+  const { toggleSidebar } = useSidebar();
+  const isMobile = useMediaQuery('(max-width: 768px)');
 
-    const selected = locationPathname.startsWith(toPathname);
-
-    return (
-      <Link
-        to={to}
-        ref={ref}
-        className={cn(className)}
-        role='tab'
-        {...(selected ? { 'aria-current': 'page' } : {})}
-        data-active={selected}
-      >
-        {children}
-      </Link>
-    );
-  },
-);
+  return (
+    <Link
+      to={to}
+      ref={ref}
+      className={cn(className)}
+      role='tab'
+      onClick={() => { window.scrollTo({ top: 0 }); isMobile && toggleSidebar(); }}
+      {...(selected ? { 'aria-current': 'page' } : {})}
+      data-active={selected}
+    >
+      {children}
+    </Link>
+  );
+});
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
-    <Sidebar variant="inset" collapsible="offcanvas" {...props}>
+    <Sidebar variant='floating' collapsible='offcanvas' {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton tooltip="Главная" asChild>
-              <RouterLink to="home">
+            <SidebarMenuButton asChild>
+              <RouterLink to='home'>
                 <Home />
-                <span>Главная</span>
+                Главная
               </RouterLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+      <SidebarSeparator />
       <SidebarContent>
         <NavMain items={data.navMain} />
       </SidebarContent>
@@ -91,5 +92,5 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavUser user={data.user} />
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

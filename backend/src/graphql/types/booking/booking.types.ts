@@ -14,9 +14,15 @@ export default gql`
     createdBook: Booking!
   }
 
+
   input SortingState {
     id: String!
     desc: Boolean!
+  }
+
+  input ColumnFiltersState {
+    id: String!
+    value: [String]!
   }
 
   input BookingsInput {
@@ -27,6 +33,7 @@ export default gql`
 
     query: String!
     sorting: [SortingState!]!
+    columnFilters: [ColumnFiltersState]!
   }
 
   enum SearchTypeBookings {

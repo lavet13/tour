@@ -1,5 +1,5 @@
 import { Resolvers, SearchTypeBookings } from '@/graphql/__generated__/types';
-import { Prisma, Role } from '@prisma/client';
+import { BookingStatus, Prisma, Role } from '@prisma/client';
 
 import {
   ResolversComposerMapping,
@@ -9,13 +9,16 @@ import { GraphQLError } from 'graphql';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { applyConstraints } from '@/helpers/apply-constraints';
 import { hasRoles, isAuthenticated } from '@/graphql/composition/authorization';
+import { inspect } from 'util';
+import { parseIntSafe } from '@/helpers/parse-int-safe';
 
 const resolvers: Resolvers = {
   Query: {
     async bookings(_, args, ctx) {
       const query = args.input.query?.trim();
 
-      const status = args.input.status;
+      const columnFilters = args.input.columnFilters;
+
       enum PaginationDirection {
         NONE = 'NONE',
         FORWARD = 'FORWARD',
@@ -31,7 +34,7 @@ const resolvers: Resolvers = {
       const take = Math.abs(
         applyConstraints({
           type: 'take',
-          min: 1,
+          min: 5,
           max: 50,
           value: args.input.take ?? 30,
         }),
@@ -43,8 +46,8 @@ const resolvers: Resolvers = {
           : {
               id:
                 direction === PaginationDirection.FORWARD
-                  ? args.input.after ?? undefined
-                  : args.input.before ?? undefined,
+                  ? (args.input.after ?? undefined)
+                  : (args.input.before ?? undefined),
             };
 
       // in case where we might get cursor which points to nothing
@@ -57,17 +60,10 @@ const resolvers: Resolvers = {
 
         if (!cursorOrder) {
           if (direction === PaginationDirection.FORWARD) {
-            // this shit is shit and isn't work for me,
-            // or because perhaps I am retard ☺️💕
-            //
-            // const previousValidPost = await ctx.prisma.wbOrder.findFirst({
-            //   where: { id: { lt: args.input.after } },
-            //   orderBy: { id: 'desc' },
-            // });
-            // console.log({ previousValidPost });
-            // cursor = previousValidPost ? { id: previousValidPost.id } : undefined;
+            // Instead of setting cursor to { id: -1 }, set it to undefined
+            // or use a method to get the first valid booking
 
-            cursor = { id: -1 }; // we guarantee bookings are empty
+            cursor = undefined; // we guarantee bookings are empty
           } else if (direction === PaginationDirection.BACKWARD) {
             const nextValidOrder = await ctx.prisma.booking.findFirst({
               where: {
@@ -85,20 +81,43 @@ const resolvers: Resolvers = {
         }
       }
 
-      const searchType = Object.values(SearchTypeBookings);
-      const conditions: Prisma.BookingWhereInput[] = [];
+      const conditions: Prisma.BookingWhereInput[] = columnFilters.map(
+        filter => {
+          if (filter?.id === 'seatsCount' && Array.isArray(filter.value)) {
+            //@ts-ignore
+            const [min, max] = filter.value.map(v => v !== null ? parseIntSafe(v) : null);
 
-      if (searchType.includes(SearchTypeBookings.Id)) {
-        conditions.push({ id: { equals: query } });
-      }
-      if (searchType.includes(SearchTypeBookings.Phone)) {
-        conditions.push({ phoneNumber: { contains: query } });
-      }
+            return {
+              seatsCount: {
+                gte: min ?? undefined,
+                lte: max ?? undefined,
+              },
+            };
+          }
 
-      const sorting = args.input.sorting;
-      const orderBy = sorting[0]
-        ? { [sorting[0].id]: sorting[0].desc ? 'desc' : 'asc' }
-        : [];
+          const operator = filter?.id === 'status' ? 'equals' : 'contains';
+          const value = filter?.value?.[0]; // just a value
+
+          return {
+            [filter?.id as string]: {
+              [operator]: value,
+              ...(operator === 'contains' ? { mode: 'insensitive' } : {}),
+            },
+          };
+        },
+      );
+
+      // Prepare sorting
+      const sorting = args.input.sorting || [];
+
+      const orderBy: Prisma.BookingOrderByWithRelationInput[] = sorting.length
+        ? sorting.flatMap((sort): Prisma.BookingOrderByWithRelationInput[] => {
+            if (sort.id === 'status' || sort.id === 'commentary') {
+              return [{ [sort.id]: sort.desc ? 'asc' : 'desc' }, { id: 'asc' }];
+            }
+            return [{ [sort.id]: sort.desc ? 'desc' : 'asc' }, { id: 'asc' }];
+          })
+        : [{ status: 'asc' }, { updatedAt: 'desc' }, { id: 'asc' }];
 
       // fetching bookings with extra one, so to determine if there's more to fetch
       const bookings = await ctx.prisma.booking.findMany({
@@ -108,12 +127,7 @@ const resolvers: Resolvers = {
         skip: cursor ? 1 : undefined, // Skip the cursor wbOrder for the next/previous page
         orderBy,
         where: {
-          OR:
-            query.length !== 0 && conditions.length > 0
-              ? conditions
-              : undefined,
-
-          status,
+          AND: conditions.length > 0 ? conditions : undefined,
         },
       });
 
@@ -134,11 +148,12 @@ const resolvers: Resolvers = {
         };
       }
 
-      // Fix: Properly handle edge slicing based on direction and take value
       const edges =
-        direction === PaginationDirection.BACKWARD
-          ? bookings.slice(1).reverse().slice(0, take) // For backward pagination, remove first item and take requested amount
-          : bookings.slice(0, take); // For forward/none pagination, just take requested amount
+        bookings.length <= take
+          ? bookings
+          : direction === PaginationDirection.BACKWARD
+            ? bookings.slice(1, bookings.length)
+            : bookings.slice(0, -1);
 
       const hasMore = bookings.length > take;
 
@@ -203,11 +218,7 @@ const resolvers: Resolvers = {
   },
   Mutation: {
     async createBooking(_, args, ctx) {
-      const {
-        departureCityId,
-        arrivalCityId,
-        ...rest
-      } = args.input;
+      const { departureCityId, arrivalCityId, ...rest } = args.input;
 
       const route = await ctx.prisma.route.findFirst({
         where: {
@@ -217,13 +228,15 @@ const resolvers: Resolvers = {
       });
 
       if (!route) {
-        throw new GraphQLError('Неверный/Несуществующий маршрут, указанный для бронирования.');
+        throw new GraphQLError(
+          'Неверный/Несуществующий маршрут, указанный для бронирования.',
+        );
       }
 
       const booking = await ctx.prisma.booking.create({
         data: {
           routeId: route.id,
-          ...rest
+          ...rest,
         },
       });
 

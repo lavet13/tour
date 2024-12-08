@@ -82,7 +82,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ru as fnsRU } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
-import { Textarea } from '@/components/ui/textarea';
 import { useCreateBooking } from '@/features/booking/use-create-booking';
 import { BookingInput } from '@/gql/graphql';
 import ExpandableTextarea from '@/components/expandable-textarea';
@@ -110,6 +109,7 @@ const FormSchema = z.object({
       required_error: 'Дата поездки обязательна!',
       invalid_type_error: 'Выберите корректную дату!',
     })
+    .nullable()
     .refine(
       date => {
         // Ensure date is a valid Date object
@@ -127,7 +127,7 @@ const FormSchema = z.object({
       },
       { message: 'Выберите сегодняшнюю или будущую дату!' },
     ),
-  commentary: z.string().nullish(),
+  commentary: z.string().nullable(),
   arrivalCityId: z
     .string({
       invalid_type_error: 'Выберите город прибытия!',
@@ -204,10 +204,23 @@ const BookingBusPage: FC = () => {
 
   // New effect to handle URL parameter changes
   useEffect(() => {
-    // Reset form if departure city is cleared
-    if (!departureCityId) {
+    const clearFields = () => {
       form.setValue('departureCityId', '', { shouldValidate: false });
       form.setValue('arrivalCityId', '', { shouldValidate: false });
+      setSearchParams(params => {
+        const query = new URLSearchParams(params.toString());
+        query.delete('departureCityId');
+        query.delete('arrivalCityId');
+        return query;
+      });
+    };
+
+    // Check if departure cities are loaded
+    if(departureCities.length === 0) return;
+
+    // Reset form if departure city is cleared
+    if (!departureCityId) {
+      clearFields();
       return;
     }
 
@@ -242,18 +255,11 @@ const BookingBusPage: FC = () => {
       }
     } else {
       // Clear invalid departure city and related arrival city
-      form.setValue('departureCityId', '', { shouldValidate: false });
-      form.setValue('arrivalCityId', '', { shouldValidate: false });
-      setSearchParams(params => {
-        const query = new URLSearchParams(params.toString());
-        query.delete('departureCityId');
-        query.delete('arrivalCityId');
-        return query;
-      });
+      clearFields();
     }
   }, [
-    departureCityId,
     arrivalCityId,
+    departureCityId,
     departureCities,
     arrivalCities,
     form,
@@ -324,12 +330,12 @@ const BookingBusPage: FC = () => {
                     {departureIsPending ? (
                       <Skeleton className='h-6 w-24' />
                     ) : (
-                      departureCities.find(city => city.id === departureCityId)
+                      (departureCities.find(city => city.id === departureCityId)
                         ?.name ?? (
                         <span className='text-sm text-muted-foreground'>
                           Город отправления
                         </span>
-                      )
+                      ))
                     )}
                   </span>
                   {isMobile ? (
@@ -341,12 +347,12 @@ const BookingBusPage: FC = () => {
                     {arrivalIsLoading ? (
                       <Skeleton className='h-6 w-24' />
                     ) : (
-                      arrivalCities.find(city => city.id === arrivalCityId)
+                      (arrivalCities.find(city => city.id === arrivalCityId)
                         ?.name ?? (
                         <span className='text-sm text-muted-foreground text-center'>
                           Город прибытия
                         </span>
-                      )
+                      ))
                     )}
                   </span>
                 </div>
@@ -622,133 +628,81 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
       setOpen(false); // Close the popover or drawer
     };
 
-    return (
-      <>
-        {isDesktop ? (
-          <Popover open={open} onOpenChange={setOpen}>
-            <PopoverTrigger asChild>
-              <FormControl>
-                <Button
-                  ref={ref}
-                  variant='outline'
-                  role='combobox'
-                  disabled={isLoading || disabled}
-                  className={cn(
-                    'flex w-full justify-between',
-                    'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-                    !value && 'text-muted-foreground',
-                  )}
-                >
-                  {isLoading ? (
-                    <div className='w-full select-none flex justify-between items-center gap-2'>
-                      Загрузка городов...
-                      <SonnerSpinner className='bg-foreground' />
-                    </div>
-                  ) : value ? (
-                    items.find(item => item.id === value)?.name ||
-                    'Выберите куда'
-                  ) : (
-                    'Выберите куда'
-                  )}
-                  {!isLoading && (
-                    <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                  )}
-                </Button>
-              </FormControl>
-            </PopoverTrigger>
-            <PopoverContent className='p-0'>
-              <Command>
-                <CommandInput placeholder='Искать город...' />
-                <CommandList>
-                  <CommandEmpty>Не найдено городов</CommandEmpty>
-                  <CommandGroup>
-                    <ScrollArea
-                      className={cn(
-                        items.length >= 7 && 'h-[calc(14rem)] -mr-px pr-3',
-                      )}
-                    >
-                      {items.map(item => (
-                        <CommandItem
-                          key={item.id}
-                          onSelect={() => handleItemSelect(item)}
-                        >
-                          {item.name}
-                          <Check
-                            className={cn(
-                              'ml-auto',
-                              item.id === value ? 'opacity-100' : 'opacity-0',
-                            )}
-                          />
-                        </CommandItem>
-                      ))}
-                    </ScrollArea>
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-        ) : (
-          <Drawer open={open} onOpenChange={setOpen}>
-            <DrawerTrigger asChild>
-              <Button
-                ref={ref}
-                variant='outline'
-                role='combobox'
-                disabled={isLoading || disabled}
+    const renderTrigger = () => {
+      return (
+        <FormControl>
+          <Button
+            ref={ref}
+            variant='outline'
+            role='combobox'
+            disabled={isLoading || disabled}
+            className={cn(
+              'flex w-full justify-between',
+              'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+              !value && 'text-muted-foreground',
+            )}
+          >
+            {isLoading ? (
+              <div className='w-full select-none flex justify-between items-center gap-2'>
+                Загрузка городов...
+                <SonnerSpinner className='bg-foreground' />
+              </div>
+            ) : value ? (
+              items.find(item => item.id === value)?.name || 'Выберите куда'
+            ) : (
+              'Выберите куда'
+            )}
+            {!isLoading && (
+              <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+            )}
+          </Button>
+        </FormControl>
+      );
+    };
+
+    const renderContent = () => {
+      return (
+        <Command>
+          {items.length >= 7 && <CommandInput placeholder='Искать город...' />}
+          <CommandList>
+            {items.length >= 7 && <CommandEmpty>Не найдено городов</CommandEmpty>}
+            <CommandGroup>
+              <ScrollArea
                 className={cn(
-                  'flex w-full justify-between',
-                  'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-                  !value && 'text-muted-foreground',
+                  items.length >= 7 && 'h-[calc(14rem)] -mr-px pr-3',
                 )}
               >
-                {isLoading ? (
-                  <div className='w-full select-none flex justify-between items-center gap-2'>
-                    Загрузка городов...
-                    <SonnerSpinner className='bg-foreground' />
-                  </div>
-                ) : value ? (
-                  items.find(item => item.id === value)?.name || 'Выберите куда'
-                ) : (
-                  'Выберите куда'
-                )}
-                {!isLoading && (
-                  <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-                )}
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent>
-              <Command>
-                <CommandInput placeholder='Искать город...' />
-                <CommandList>
-                  <CommandEmpty>Не найдено городов</CommandEmpty>
-                  <CommandGroup>
-                    <ScrollArea
+                {items.map(item => (
+                  <CommandItem
+                    key={item.id}
+                    onSelect={() => handleItemSelect(item)}
+                  >
+                    {item.name}
+                    <Check
                       className={cn(
-                        items.length >= 7 && 'h-[calc(14rem)] -mr-px pr-3',
+                        'ml-auto',
+                        item.id === value ? 'opacity-100' : 'opacity-0',
                       )}
-                    >
-                      {items.map(item => (
-                        <CommandItem
-                          key={item.id}
-                          onSelect={() => handleItemSelect(item)}
-                        >
-                          {item.name}
-                          <Check
-                            className={cn(
-                              'ml-auto',
-                              item.id === value ? 'opacity-100' : 'opacity-0',
-                            )}
-                          />
-                        </CommandItem>
-                      ))}
-                    </ScrollArea>
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </DrawerContent>
-          </Drawer>
-        )}
-      </>
+                    />
+                  </CommandItem>
+                ))}
+              </ScrollArea>
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      );
+    };
+
+    return isDesktop ? (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
+        <PopoverContent className='p-0'>{renderContent()}</PopoverContent>
+      </Popover>
+    ) : (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>{renderTrigger()}</DrawerTrigger>
+        <DrawerContent>{renderContent()}</DrawerContent>
+      </Drawer>
     );
   },
 );
@@ -841,60 +795,81 @@ type DatePickerProps = {
 
 const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
   ({ value: valueProp, onValueChange, name, disabled }, ref) => {
+    const isDesktop = useMediaQuery('(min-width: 768px)');
     const [value, setValue] = useControllableState({
       prop: valueProp,
       onChange: onValueChange,
     });
 
+    const [open, setOpen] = useState(false);
+
     const {
       fieldState: { error },
     } = useController({ name });
 
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <FormControl>
-            <Button
-              ref={ref}
-              variant='outline'
-              className={cn(
-                'flex w-full',
-                'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
-                'justify-start text-left font-normal',
-                !value && 'text-muted-foreground',
-              )}
-              disabled={disabled}
-            >
-              <CalendarIcon className='mr-2 size-4' />
-              {value ? (
-                <span
-                  className={cn(
-                    'font-semibold',
-                    error && 'text-muted-foreground',
-                  )}
-                >
-                  {format(value, 'PPP', {
-                    locale: fnsRU,
-                  })}
-                </span>
-              ) : (
-                <span className='whitespace-pre leading-3 text-center'>
-                  Выберите дату поездки
-                </span>
-              )}
-            </Button>
-          </FormControl>
-        </PopoverTrigger>
+    const renderTrigger = () => {
+      return (
+        <FormControl>
+          <Button
+            ref={ref}
+            variant='outline'
+            className={cn(
+              'flex w-full',
+              'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+              'justify-start text-left font-normal',
+              !value && 'text-muted-foreground',
+            )}
+            disabled={disabled}
+          >
+            <CalendarIcon className='mr-2 size-4' />
+            {value ? (
+              <span
+                className={cn(
+                  'font-semibold',
+                  error && 'text-muted-foreground',
+                )}
+              >
+                {format(value, 'PPP', {
+                  locale: fnsRU,
+                })}
+              </span>
+            ) : (
+              <span className='whitespace-pre leading-3 text-center'>
+                Выберите дату поездки
+              </span>
+            )}
+          </Button>
+        </FormControl>
+      );
+    };
+
+    const renderContent = () => {
+      return (
+        <Calendar
+          className='w-fit mx-auto'
+          locale={fnsRU}
+          mode='single'
+          selected={value}
+          onSelect={date => setValue(date)}
+          initialFocus
+        />
+      );
+    };
+
+    return isDesktop ? (
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
         <PopoverContent className='w-auto p-0'>
-          <Calendar
-            locale={fnsRU}
-            mode='single'
-            selected={value}
-            onSelect={date => setValue(date)}
-            initialFocus
-          />
+          {renderContent()}
         </PopoverContent>
       </Popover>
+    ) : (
+      <Drawer open={open} onOpenChange={setOpen}>
+        <DrawerTrigger asChild>{renderTrigger()}</DrawerTrigger>
+        <DrawerContent className='min-h-[380px]'>
+          {renderContent()}
+        </DrawerContent>
+      </Drawer>
     );
   },
 );

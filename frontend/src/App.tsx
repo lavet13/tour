@@ -27,9 +27,13 @@ const Loadable =
   );
 
 const NotFound = Loadable(lazy(() => import('@/pages/layout/__not-found')));
-const AdminNotFound = Loadable(lazy(() => import('@/pages/admin/layout/__not-found')));
+const AdminNotFound = Loadable(
+  lazy(() => import('@/pages/admin/layout/__not-found')),
+);
 
-const AdminLayout = Loadable(lazy(() => import('@/pages/admin/layout/__layout')));
+const AdminLayout = Loadable(
+  lazy(() => import('@/pages/admin/layout/__layout')),
+);
 const Layout = Loadable(lazy(() => import('@/pages/layout/__layout')));
 
 /*
@@ -109,7 +113,7 @@ const App = () => {
   return (
     <Routes>
       <Route path='/admin' element={<AdminLayout />}>
-        <Route index element={<Navigate to={'home'} />}  />
+        <Route index element={<Navigate to={'home'} />} />
         {adminRoutes.map(({ path, component: ReactComponent }) => (
           <Route key={path} path={path} element={<ReactComponent />} />
         ))}

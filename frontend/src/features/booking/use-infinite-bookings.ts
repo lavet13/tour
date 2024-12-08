@@ -1,49 +1,45 @@
-import { InfiniteRoutesQuery } from '@/gql/graphql';
+import { InfiniteBookingsQuery } from '@/gql/graphql';
 import { graphql } from '@/gql';
 import { client } from '@/graphql/graphql-request';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { InitialDataInfiniteOptions } from '@/react-query/types/initial-data-infinite-options';
 import { useNavigate } from 'react-router-dom';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
-import { SortingState } from '@tanstack/react-table';
+import { ColumnFiltersState, SortingState } from '@tanstack/react-table';
 
 type TPageParam = {
   after: string | null;
 };
 
-type UseInfiniteRoutesProps = {
+type UseInfiniteBookingsProps = {
   take: number;
-  query: string;
-  sorting: SortingState;
-  options?: InitialDataInfiniteOptions<InfiniteRoutesQuery, TPageParam>;
+  query?: string;
+  sorting?: SortingState;
+  columnFilters?: ColumnFiltersState;
+  options?: InitialDataInfiniteOptions<InfiniteBookingsQuery, TPageParam>;
 };
 
-export const useInfiniteRoutes = ({
-  query,
+export const useInfiniteBookings = ({
+  query = '',
   take = 30,
   sorting = [],
+  columnFilters = [],
   options,
-}: UseInfiniteRoutesProps) => {
+}: UseInfiniteBookingsProps) => {
   const navigate = useNavigate();
 
-  const routes = graphql(`
-    query InfiniteRoutes($input: RoutesInput!) {
-      routes(input: $input) {
+  const bookings = graphql(`
+    query InfiniteBookings($input: BookingsInput!) {
+      bookings(input: $input) {
         edges {
           id
-          price
-          departureCity {
-            id
-            name
-          }
-          region {
-            id
-            name
-          }
-          arrivalCity {
-            id
-            name
-          }
+          firstName
+          lastName
+          phoneNumber
+          travelDate
+          seatsCount
+          commentary
+          status
           createdAt
           updatedAt
         }
@@ -60,17 +56,23 @@ export const useInfiniteRoutes = ({
 
   return useInfiniteQuery({
     queryKey: [
-      (routes.definitions[0] as any).name.value,
-      { input: { take, query, sorting } },
+      (bookings.definitions[0] as any).name.value,
+      { input: { take, query, sorting, columnFilters } },
     ],
     queryFn: async ({ pageParam }) => {
       try {
-        return await client.request(routes, {
+        const transformedFilters = columnFilters.map(filter => ({
+          id: filter.id,
+          value: filter.value as string,
+        }));
+
+        return await client.request(bookings, {
           input: {
             query,
             take,
             after: pageParam.after,
             sorting,
+            columnFilters: transformedFilters,
           },
         });
       } catch (error) {
@@ -85,8 +87,8 @@ export const useInfiniteRoutes = ({
       }
     },
     getNextPageParam: (lastPage) => {
-      return lastPage.routes.pageInfo.hasNextPage
-        ? { after: lastPage.routes.pageInfo.endCursor ?? null }
+      return lastPage.bookings.pageInfo.hasNextPage
+        ? { after: lastPage.bookings.pageInfo.endCursor ?? null }
         : undefined;
     },
     initialPageParam: { after: null },

@@ -6,9 +6,12 @@ import { OctagonAlert } from 'lucide-react';
 import { FC, useEffect, useRef } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Outlet, useLocation } from 'react-router-dom';
-import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import {
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
-import { Separator } from "@/components/ui/separator"
+import { Separator } from '@/components/ui/separator';
 import { useCookies } from 'react-cookie';
 import { ModeToggle } from '@/components/mode-toggle';
 
@@ -18,7 +21,7 @@ const Layout: FC = () => {
   return (
     <SidebarProvider defaultOpen={cookies['sidebar:state'] === true}>
       <AppSidebar />
-      <SidebarInset>
+      <main className={"relative flex min-h-svh flex-1 flex-col bg-background"}>
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary
@@ -37,35 +40,49 @@ const Layout: FC = () => {
                   : error.message;
 
                 return (
-                  <div className='flex justify-center items-center grow'>
-                    <div className='container max-w-[600px]'>
-                      <Alert className='flex flex-col'>
-                        <OctagonAlert className='h-4 w-4' />
-                        <AlertTitle>Ошибка</AlertTitle>
-                        <AlertDescription className='mb-3'>
-                          {errorMessage}
-                        </AlertDescription>
-                        <div className='flex'>
-                          <Button
-                            className='sm:ml-auto flex-1 sm:flex-none'
-                            variant='secondary'
-                            onClick={() => resetErrorBoundary()}
-                          >
-                            Повторить запрос
-                          </Button>
+                  <>
+                    <header className='flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12'>
+                      <div className='flex flex-1 items-center gap-2 px-4'>
+                        <SidebarTrigger className='-ml-1' />
+                        <Separator
+                          orientation='vertical'
+                          className='mr-2 h-4'
+                        />
+                        <div className='ml-auto'>
+                          <ModeToggle />
                         </div>
-                      </Alert>
+                      </div>
+                    </header>
+                    <div className='flex justify-center items-center grow'>
+                      <div className='container max-w-[600px]'>
+                        <Alert className='flex flex-col'>
+                          <OctagonAlert className='h-4 w-4' />
+                          <AlertTitle>Ошибка</AlertTitle>
+                          <AlertDescription className='mb-3'>
+                            {errorMessage}
+                          </AlertDescription>
+                          <div className='flex'>
+                            <Button
+                              className='sm:ml-auto flex-1 sm:flex-none'
+                              variant='secondary'
+                              onClick={() => resetErrorBoundary()}
+                            >
+                              Повторить запрос
+                            </Button>
+                          </div>
+                        </Alert>
+                      </div>
                     </div>
-                  </div>
+                  </>
                 );
               }}
               onReset={reset}
             >
-              <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-                <div className="flex flex-1 items-center gap-2 px-4">
-                  <SidebarTrigger className="-ml-1" />
-                  <Separator orientation="vertical" className="mr-2 h-4" />
-                  <div className="ml-auto">
+              <header className='flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12'>
+                <div className='flex flex-1 items-center gap-2 px-4'>
+                  <SidebarTrigger className='-ml-1' />
+                  <Separator orientation='vertical' className='mr-2 h-4' />
+                  <div className='ml-auto'>
                     <ModeToggle />
                   </div>
                 </div>
@@ -74,7 +91,7 @@ const Layout: FC = () => {
             </ErrorBoundary>
           )}
         </QueryErrorResetBoundary>
-      </SidebarInset>
+      </main>
     </SidebarProvider>
   );
 };

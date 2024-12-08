@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import gql from "graphql-tag";
 
 export default gql`
   type Query {
@@ -40,4 +40,3 @@ export default gql`
     updatedAt: Date!
   }
 `;
-
