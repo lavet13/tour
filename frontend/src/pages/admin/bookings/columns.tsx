@@ -127,6 +127,20 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
       }),
     sortingFn: (rowA, rowB) =>
       rowA.original.createdAt - rowB.original.createdAt,
+    filterFn: (row, columnId, filterValue) => {
+      const rowValue = new Date(row.getValue(columnId));
+      const [startDate, endDate] = filterValue || [];
+      if (!startDate && !endDate) return true; // No filter applied
+      if (startDate && endDate) {
+        return rowValue >= new Date(startDate) && rowValue <= new Date(endDate);
+      }
+      if (startDate) return rowValue >= new Date(startDate);
+      if (endDate) return rowValue <= new Date(endDate);
+      return true;
+    },
+    meta: {
+      filterVariant: 'dateRange',
+    },
   },
   {
     accessorKey: 'updatedAt',
@@ -138,6 +152,20 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     sortingFn: (rowA, rowB) => {
       return rowA.original.updatedAt - rowB.original.updatedAt;
     },
+    filterFn: (row, columnId, filterValue) => {
+      const rowValue = new Date(row.getValue(columnId));
+      const [startDate, endDate] = filterValue || [];
+      if (!startDate && !endDate) return true; // No filter applied
+      if (startDate && endDate) {
+        return rowValue >= new Date(startDate) && rowValue <= new Date(endDate);
+      }
+      if (startDate) return rowValue >= new Date(startDate);
+      if (endDate) return rowValue <= new Date(endDate);
+      return true;
+    },
+    meta: {
+      filterVariant: 'dateRange',
+    },
   },
   {
     accessorKey: 'travelDate',
@@ -148,6 +176,20 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
       }),
     sortingFn: (rowA, rowB) => {
       return rowA.original.travelDate - rowB.original.travelDate;
+    },
+    filterFn: (row, columnId, filterValue) => {
+      const rowValue = new Date(row.getValue(columnId));
+      const [startDate, endDate] = filterValue || [];
+      if (!startDate && !endDate) return true; // No filter applied
+      if (startDate && endDate) {
+        return rowValue >= new Date(startDate) && rowValue <= new Date(endDate);
+      }
+      if (startDate) return rowValue >= new Date(startDate);
+      if (endDate) return rowValue <= new Date(endDate);
+      return true;
+    },
+    meta: {
+      filterVariant: 'dateRange',
     },
   },
   {
@@ -226,7 +268,6 @@ function Header<TData>({ title, column, className }: HeaderProps<TData>) {
 }
 
 type DatePickerProps = {
-  name: string;
   value?: any;
   onValueChange?: (value: any) => void;
   disabled?: boolean;
@@ -239,6 +280,9 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
       prop: valueProp,
       onChange: onValueChange,
     });
+
+    const [from, to] = value || [];
+    console.log({ from, to });
 
     const [open, setOpen] = useState(false);
 
@@ -256,17 +300,20 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
           )}
           disabled={disabled}
         >
-          <CalendarIcon className='mr-2 size-4' />
-          {value ? (
+          <CalendarIcon className='size-4' />
+          {value?.length ? (
             <span className={cn('font-semibold')}>
-              {format(value, 'PPP', {
-                locale: ru,
-              })}
+              {from ?
+                (to ? (
+                  <>
+                    {format(from, 'dd/MM')} - {format(to, 'dd/MM')}
+                  </>
+                ) : (
+                  format(from, 'dd/MM')
+                )) : <span className='whitespace-pre leading-3 text-center'>Дата</span>}
             </span>
           ) : (
-            <span className='whitespace-pre leading-3 text-center'>
-              Выберите дату
-            </span>
+            <span className='whitespace-pre leading-3 text-center'>Дата</span>
           )}
         </Button>
       );
@@ -277,9 +324,14 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
         <Calendar
           className='w-fit mx-auto'
           locale={ru}
-          mode='single'
-          selected={value}
-          onSelect={date => setValue(date)}
+          mode='range'
+          selected={{
+            from,
+            to,
+          }}
+          onSelect={date => {
+            setValue([date?.from, date?.to]);
+          }}
           initialFocus
         />
       );
@@ -364,6 +416,7 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
                   <CommandItem
                     key={item[1]}
                     onSelect={() => handleItemSelect(item)}
+                    className='flex items-center gap-3'
                   >
                     {item[0]}
                     <Check
@@ -384,9 +437,7 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     return isDesktop ? (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
-        <PopoverContent className='p-0 w-[140px]'>
-          {renderContent()}
-        </PopoverContent>
+        <PopoverContent className='p-0 w-fit'>{renderContent()}</PopoverContent>
       </Popover>
     ) : (
       <Drawer open={open} onOpenChange={setOpen}>
@@ -405,6 +456,8 @@ function Filter<TData>({ column }: FilterProps<TData>) {
   const columnFilterValue = column.getFilterValue();
   const { filterVariant } = column.columnDef.meta ?? {};
 
+  console.log({ columnFilterValue });
+
   const statusColumn = Object.entries(BookingStatus).map(([key, value]) => [
     statusTranslation[key as StatusColumns],
     value,
@@ -414,11 +467,17 @@ function Filter<TData>({ column }: FilterProps<TData>) {
       items={[['Весь список', ''], ...statusColumn]}
       value={columnFilterValue?.toString() ?? ''}
       onValueChange={value => {
-        console.log({ selectValue: value });
         column.setFilterValue(value);
       }}
     />
-  ) : filterVariant === 'date' ? null : filterVariant === 'range' ? (
+  ) : filterVariant === 'dateRange' ? (
+    <DatePicker
+      value={columnFilterValue ?? []}
+      onValueChange={value => {
+        column.setFilterValue(value);
+      }}
+    />
+  ) : filterVariant === 'range' ? (
     <div className='flex gap-1 items-center'>
       <Input
         className='p-1 w-16 h-8'
@@ -427,10 +486,7 @@ function Filter<TData>({ column }: FilterProps<TData>) {
         onChange={e => {
           const number = parseIntSafe(e.target.value);
           const value = number ? `${number}` : '';
-          column.setFilterValue((old: [string, string]) => [
-            value,
-            old?.[1],
-          ]);
+          column.setFilterValue((old: [string, string]) => [value, old?.[1]]);
         }}
         placeholder={`Мин`}
       />
@@ -441,12 +497,8 @@ function Filter<TData>({ column }: FilterProps<TData>) {
         onChange={e => {
           const number = parseIntSafe(e.target.value);
           const value = number ? `${number}` : '';
-          column.setFilterValue((old: [string, string]) => [
-            old?.[0],
-            value,
-          ])
-        }
-        }
+          column.setFilterValue((old: [string, string]) => [old?.[0], value]);
+        }}
         placeholder={`Макс`}
       />
     </div>

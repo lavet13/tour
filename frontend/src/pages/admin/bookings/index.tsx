@@ -4,7 +4,6 @@ import {
   flexRender,
   getCoreRowModel,
   Table as ReactTable,
-  VisibilityState,
   SortingState,
   getSortedRowModel,
   useReactTable,
@@ -16,9 +15,8 @@ import {
   columns,
   columnTranslations,
 } from '@/pages/admin/bookings/columns';
-import { BookingStatus, InfiniteBookingsQuery } from '@/gql/graphql';
+import { InfiniteBookingsQuery } from '@/gql/graphql';
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { SonnerSpinner } from '@/components/sonner-spinner';
 import {
   Table,
   TableBody,
@@ -28,52 +26,28 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from '@/components/ui/command';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { useBreakpoint } from '@/hooks/use-breakpoint';
+import { useSidebar } from '@/components/ui/sidebar';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
-
-interface TableCellSkeletonProps<TData> {
-  table: ReactTable<TData>;
-}
-
-const TableCellSkeleton: FC<TableCellSkeletonProps<Booking>> = ({ table }) => {
-  return (
-    <>
-      {table.getAllColumns().map((column, index) => {
-        if (column.id === 'qrCode') {
-          return (
-            <TableCell
-              className='flex'
-              style={{ width: column.getSize() }}
-              key={index}
-            >
-              <Skeleton className='h-12 w-12 rounded-sm' />
-            </TableCell>
-          );
-        }
-
-        return (
-          <TableCell
-            className='flex'
-            style={{ width: column.getSize() }}
-            key={index}
-          >
-            <Skeleton className='h-4 w-12 rounded-sm' />
-          </TableCell>
-        );
-      })}
-    </>
-  );
-};
 
 const BookingsPage: FC = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -83,8 +57,6 @@ const BookingsPage: FC = () => {
   console.log({ columnFilters });
 
   const {
-    status,
-    fetchStatus,
     data,
     hasNextPage,
     isFetchingNextPage,
@@ -106,7 +78,6 @@ const BookingsPage: FC = () => {
   );
 
   import.meta.env.DEV && console.log({ data, flatData });
-  console.log({ fetchStatus, status });
 
   const table = useReactTable({
     data: flatData,
@@ -142,6 +113,13 @@ const BookingsPage: FC = () => {
         : undefined,
   });
 
+  // Scroll to top when sorting changes
+  useEffect(() => {
+    if (tableContainerRef.current) {
+      tableContainerRef.current.scrollTo({ top: 0 });
+    }
+  }, [sorting, columnFilters]); // Dependency: re-run when sorting changes
+
   useEffect(() => {
     const [lastItem] = [...rowVirtualizer.getVirtualItems()].reverse();
 
@@ -168,42 +146,44 @@ const BookingsPage: FC = () => {
     throw error;
   }
 
+  const isDesktop = useMediaQuery(`(min-width: 767px)`);
+  const { state } = useSidebar();
+  const [innerWidth, setInnerWidth] = useState(0);
+  const [innerHeight, setInnerHeight] = useState(0);
+
+  useEffect(() => {
+    const updateRefs = () => {
+      setInnerWidth(window.innerWidth);
+      setInnerHeight(window.innerHeight);
+    };
+
+    updateRefs();
+
+    window.addEventListener('resize', updateRefs);
+
+    return () => {
+      window.removeEventListener('resize', updateRefs);
+    };
+  }, []);
+
   return (
-    <div className='container space-y-2'>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button variant='outline' className='ml-auto'>
-            Скрыть столбцы
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="start" className='w-64 p-4'>
-          <div className='space-y-2'>
-            <h4 className='font-medium mb-4'>Выберите столбцы</h4>
-            {table
-              .getAllColumns()
-              .filter(column => column.getCanHide())
-              .map(column => (
-                <div key={column.id} className='flex items-center space-x-2'>
-                  <Checkbox
-                    id={`column-${column.id}`}
-                    checked={column.getIsVisible()}
-                    onCheckedChange={value => column.toggleVisibility(!!value)}
-                  />
-                  <Label
-                    htmlFor={`column-${column.id}`}
-                    className='text-sm font-normal capitalize'
-                  >
-                    {columnTranslations[column.id as BookingColumns] ??
-                      'no-name'}
-                  </Label>
-                </div>
-              ))}
-          </div>
-        </PopoverContent>
-      </Popover>
+    <div
+      className={cn('relative container px-1 sm:px-4 mx-auto overflow-hidden space-y-2', state === 'collapsed' && 'mx-0')}
+      style={{ maxWidth: `calc(${innerWidth - (isDesktop && state === 'expanded' ? 256 : 0)}px)` }}
+    >
+      <div className='grid grid-cols-[repeat(auto-fill,_minmax(10rem,_1fr))] gap-2'>
+        <HideColumns table={table} />
+        <Button size="sm" variant='outline' onClick={() => setSorting([])}>
+          Сбросить сортировку
+        </Button>
+        <Button size="sm" variant='outline' onClick={() => setColumnFilters([])}>
+          Сбросить фильтр
+        </Button>
+      </div>
       <div
         ref={tableContainerRef}
-        className='max-w-fit overflow-auto w-full relative max-h-[700px] rounded-md border'
+        className='max-w-fit overflow-auto w-full relative rounded-md border'
+        style={{ maxHeight: `calc(${innerHeight}px - 11rem)` }}
       >
         {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
         <Table
@@ -332,5 +312,128 @@ const BookingsPage: FC = () => {
     </div>
   );
 };
+
+interface TableCellSkeletonProps<TData> {
+  table: ReactTable<TData>;
+}
+
+function TableCellSkeleton({ table }: TableCellSkeletonProps<Booking>) {
+  return (
+    <>
+      {table.getAllColumns().map((column, index) => {
+        if (column.id === 'qrCode') {
+          return (
+            <TableCell
+              className='flex'
+              style={{ width: column.getSize() }}
+              key={index}
+            >
+              <Skeleton className='h-12 w-12 rounded-sm' />
+            </TableCell>
+          );
+        }
+
+        return (
+          <TableCell
+            className='flex'
+            style={{ width: column.getSize() }}
+            key={index}
+          >
+            <Skeleton className='h-4 w-full rounded-sm' />
+          </TableCell>
+        );
+      })}
+    </>
+  );
+}
+
+interface HideColumnsProps<TData> {
+  table: ReactTable<TData>;
+}
+
+function HideColumns({ table }: HideColumnsProps<Booking>) {
+  const isDesktop = useMediaQuery('(min-width: 768px)');
+
+  const allColumns = table
+    .getAllColumns()
+    .filter(column => column.getCanHide());
+  const visibleColumns = allColumns.filter(column => column.getIsVisible());
+  const isAllVisible = visibleColumns.length === allColumns.length;
+  const isSomeVisible = visibleColumns.length > 0 && !isAllVisible;
+
+  const toggleAllColumns = (visible: boolean) => {
+    allColumns.forEach(column => column.toggleVisibility(visible));
+  };
+
+  const renderTrigger = () => {
+    return <Button size="sm" variant='outline'>Скрыть столбцы</Button>;
+  };
+
+  const renderContent = () => {
+    return (
+      <Command>
+        <CommandList>
+          <CommandGroup>
+            <CommandItem
+              onSelect={() => toggleAllColumns(!isAllVisible)}
+              className='flex gap-3'
+            >
+              <span>Все столбцы</span>
+              {isAllVisible || isSomeVisible ? (
+                <Check
+                  className={cn(
+                    'ml-auto',
+                    isAllVisible ? 'opacity-100' : 'opacity-70',
+                    isSomeVisible ? 'opacity-70' : '',
+                  )}
+                />
+              ) : null}
+            </CommandItem>
+          </CommandGroup>
+
+          <CommandSeparator />
+
+          <ScrollArea className='h-[calc(16rem)]'>
+            <CommandGroup className='pr-3'>
+              {allColumns.map(column => (
+                <CommandItem
+                  key={column.id}
+                  onSelect={() =>
+                    column.toggleVisibility(!column.getIsVisible())
+                  }
+                  className='flex gap-3'
+                >
+                  <span>
+                    {columnTranslations[column.id as BookingColumns] ??
+                      'no-name'}
+                  </span>
+                  {column.getIsVisible() ? (
+                    <Check className='ml-auto opacity-100' />
+                  ) : (
+                    <Check className='ml-auto opacity-0' />
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </ScrollArea>
+        </CommandList>
+      </Command>
+    );
+  };
+
+  return isDesktop ? (
+    <Popover>
+      <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
+      <PopoverContent align='start' className='p-0 w-fit'>
+        {renderContent()}
+      </PopoverContent>
+    </Popover>
+  ) : (
+    <Drawer>
+      <DrawerTrigger asChild>{renderTrigger()}</DrawerTrigger>
+      <DrawerContent>{renderContent()}</DrawerContent>
+    </Drawer>
+  );
+}
 
 export default BookingsPage;

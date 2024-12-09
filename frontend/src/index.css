@@ -88,40 +88,27 @@
   * {
     @apply border-border;
   }
+  html {
+    @apply scroll-smooth;
+  }
   body {
     @apply bg-background text-foreground;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+
+    ::-webkit-scrollbar {
+      width: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: hsl(var(--border));
+      border-radius: 5px;
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--border)) transparent;
+    }
   }
 }
-
-@layer components {
-  .NavigationMenuContent {
-    @apply absolute top-0 right-0;
-    animation-duration: 250ms;
-    animation-timing-function: ease;
-  }
-
-  .NavigationMenuContent[data-motion="from-start"] {
-    @apply animate-slide-from-right;
-  }
-
-  .NavigationMenuContent[data-motion="from-end"] {
-    @apply animate-slide-from-left;
-  }
-
-  .NavigationMenuContent[data-motion="to-start"] {
-    @apply animate-slide-to-right;
-  }
-
-  .NavigationMenuContent[data-motion="to-end"] {
-    @apply animate-slide-to-left;
-  }
-
-  .NavigationMenuViewport {
-    @apply overflow-hidden;
-    transform-origin: right center;
-    width: var(--radix-navigation-menu-viewport-width);
-    height: var(--radix-navigation-menu-viewport-height);
-    transition: width 250ms ease, height 250ms ease;
-  }
-}
-

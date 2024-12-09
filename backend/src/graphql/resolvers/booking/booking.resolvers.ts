@@ -81,16 +81,33 @@ const resolvers: Resolvers = {
         }
       }
 
-      const conditions: Prisma.BookingWhereInput[] = columnFilters.map(
-        filter => {
+      const conditions: Prisma.BookingWhereInput[] = columnFilters
+        .map(filter => {
           if (filter?.id === 'seatsCount' && Array.isArray(filter.value)) {
             //@ts-ignore
-            const [min, max] = filter.value.map(v => v !== null ? parseIntSafe(v) : null);
+            const [min, max] = filter.value.map(v =>
+              v !== null ? parseIntSafe(v) : null,
+            );
 
             return {
               seatsCount: {
                 gte: min ?? undefined,
                 lte: max ?? undefined,
+              },
+            };
+          }
+
+          if (
+            filter?.id === 'createdAt' ||
+            filter?.id === 'updatedAt' ||
+            filter?.id === 'travelDate'
+          ) {
+            const [from, to] = filter.value;
+
+            return {
+              [filter.id]: {
+                gte: from || undefined,
+                lte: to || undefined,
               },
             };
           }
@@ -104,8 +121,8 @@ const resolvers: Resolvers = {
               ...(operator === 'contains' ? { mode: 'insensitive' } : {}),
             },
           };
-        },
-      );
+        })
+        .filter(Boolean);
 
       // Prepare sorting
       const sorting = args.input.sorting || [];
