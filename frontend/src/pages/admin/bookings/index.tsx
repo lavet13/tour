@@ -39,12 +39,19 @@ import {
   CommandList,
   CommandSeparator,
 } from '@/components/ui/command';
-import { Check } from 'lucide-react';
+import {
+  ArrowDownAZ,
+  ArrowUpDown,
+  Check,
+  FilterX,
+  ListCollapse,
+  ListFilter,
+  ListOrdered,
+} from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useBreakpoint } from '@/hooks/use-breakpoint';
 import { useSidebar } from '@/components/ui/sidebar';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
@@ -168,15 +175,22 @@ const BookingsPage: FC = () => {
 
   return (
     <div
-      className={cn('relative container px-1 sm:px-4 mx-auto overflow-hidden space-y-2', state === 'collapsed' && 'mx-0')}
-      style={{ maxWidth: `calc(${innerWidth - (isDesktop && state === 'expanded' ? 256 : 0)}px)` }}
+      className={cn(
+        'relative container px-1 sm:px-4 mx-auto overflow-hidden space-y-2',
+        state === 'collapsed' && 'mx-0',
+      )}
+      style={{
+        maxWidth: `calc(${innerWidth - (isDesktop && state === 'expanded' ? 256 : 0)}px)`,
+      }}
     >
-      <div className='grid grid-cols-[repeat(auto-fill,_minmax(10rem,_1fr))] gap-2'>
+      <div className='grid grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] md:flex items-center gap-2'>
         <HideColumns table={table} />
-        <Button size="sm" variant='outline' onClick={() => setSorting([])}>
+        <Button size='sm' onClick={() => setSorting([])}>
+          <ArrowUpDown />
           Сбросить сортировку
         </Button>
-        <Button size="sm" variant='outline' onClick={() => setColumnFilters([])}>
+        <Button size='sm' onClick={() => setColumnFilters([])}>
+          <ListFilter />
           Сбросить фильтр
         </Button>
       </div>
@@ -366,7 +380,12 @@ function HideColumns({ table }: HideColumnsProps<Booking>) {
   };
 
   const renderTrigger = () => {
-    return <Button size="sm" variant='outline'>Скрыть столбцы</Button>;
+    return (
+      <Button size='sm' variant='outline'>
+        <ListCollapse />
+        Скрыть столбцы
+      </Button>
+    );
   };
 
   const renderContent = () => {

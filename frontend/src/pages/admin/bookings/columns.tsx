@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Command,
@@ -30,19 +30,31 @@ import { useControllableState } from '@/hooks/use-controllable-state';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
 import { Column, ColumnDef } from '@tanstack/react-table';
+import { VariantProps } from 'class-variance-authority';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
   ArrowDown,
   ArrowUp,
+  ArrowUpCircle,
   CalendarIcon,
   Check,
+  CheckCircle2,
   ChevronsUpDown,
+  CircleFadingArrowUp,
   Edit,
+  List,
+  LucideProps,
   MoreHorizontal,
   Trash,
 } from 'lucide-react';
-import { forwardRef, useState } from 'react';
+import {
+  forwardRef,
+  ForwardRefExoticComponent,
+  ReactNode,
+  RefAttributes,
+  useState,
+} from 'react';
 
 type Booking = Omit<
   InfiniteBookingsQuery['bookings']['edges'][number],
@@ -69,6 +81,22 @@ const statusTranslation = {
   Pending: 'Ждёт',
   Confirmed: 'Принят',
 } as const satisfies Record<StatusColumns, string>;
+
+const statusIcons = {
+  Pending: CircleFadingArrowUp,
+  Confirmed: CheckCircle2,
+} as const satisfies Record<
+  StatusColumns,
+  ForwardRefExoticComponent<
+    Omit<LucideProps, 'ref'> & RefAttributes<SVGSVGElement>
+  >
+>;
+
+const statusColumn = Object.entries(BookingStatus).map(([key, value]) => [
+  statusTranslation[key as StatusColumns],
+  value,
+  statusIcons[key as StatusColumns],
+]);
 
 interface CustomColumnMeta {
   filterVariant?: 'text' | 'range' | 'select';
@@ -111,6 +139,20 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
   },
   {
     accessorKey: 'status',
+    size: 180,
+    cell: props => {
+      return (
+        <ComboBox
+          size={'lg'}
+          items={statusColumn}
+          value={props.getValue() ?? ''}
+          onValueChange={value => {
+            // TODO: add graphql request for modifying the status of booking
+            console.log({ value });
+          }}
+        />
+      );
+    },
     header: ({ column }) => {
       return <Header title='Статус' column={column} />;
     },
@@ -303,14 +345,19 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
           <CalendarIcon className='size-4' />
           {value?.length ? (
             <span className={cn('font-semibold')}>
-              {from ?
-                (to ? (
+              {from ? (
+                to ? (
                   <>
                     {format(from, 'dd/MM')} - {format(to, 'dd/MM')}
                   </>
                 ) : (
                   format(from, 'dd/MM')
-                )) : <span className='whitespace-pre leading-3 text-center'>Дата</span>}
+                )
+              ) : (
+                <span className='whitespace-pre leading-3 text-center'>
+                  Дата
+                </span>
+              )}
             </span>
           ) : (
             <span className='whitespace-pre leading-3 text-center'>Дата</span>
@@ -355,7 +402,8 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
   },
 );
 
-interface ComboBoxProps {
+interface ComboBoxProps extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {
   value?: any;
   onValueChange?: (value: any) => void;
   items: any[];
@@ -364,7 +412,7 @@ interface ComboBoxProps {
 
 const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
   (
-    { value: valueProp, onValueChange, items, disabled }: ComboBoxProps,
+    { value: valueProp, onValueChange, items, disabled, variant, size }: ComboBoxProps,
     ref,
   ) => {
     const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -376,18 +424,22 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     const [open, setOpen] = useState(false);
 
     const handleItemSelect = (item: any) => {
-      console.log({ item });
-      setValue(item[1]);
+      const selectedValue = item[1];
+      setValue(selectedValue);
       setOpen(false); // Close the popover or drawer
     };
-
+    const selectedItem = items.find(item => {
+      return item[1] === value;
+    });
+    const label = selectedItem?.[0] ?? 'Выбрать';
+    const Icon = selectedItem?.[2] as React.ElementType | undefined;
     const renderTrigger = () => {
       return (
         <Button
           ref={ref}
-          variant='outline'
+          variant={variant || 'outline'}
           role='combobox'
-          size='sm'
+          size={size || 'sm'}
           disabled={disabled}
           className={cn(
             'flex w-full justify-between h-8',
@@ -395,7 +447,8 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
             !value && 'text-muted-foreground',
           )}
         >
-          {items.find(item => item[1] === value)?.[0] ?? 'Выберите куда'}
+          {Icon && <Icon />}
+          {label}
           <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
         </Button>
       );
@@ -412,21 +465,37 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
                   items.length >= 7 && 'h-[calc(14rem)] -mr-px pr-3',
                 )}
               >
-                {items.map(item => (
-                  <CommandItem
-                    key={item[1]}
-                    onSelect={() => handleItemSelect(item)}
-                    className='flex items-center gap-3'
-                  >
-                    {item[0]}
-                    <Check
-                      className={cn(
-                        'ml-auto',
-                        item[1] === value ? 'opacity-100' : 'opacity-0',
+                {items.map(item => {
+                  const Icon = item[2] as React.ElementType | undefined;
+                  const label = item[0];
+                  const selectedValue = item[1];
+
+                  return (
+                    <CommandItem
+                      key={selectedValue}
+                      onSelect={() => handleItemSelect(item)}
+                      className='flex items-center gap-3'
+                    >
+                      {Icon && (
+                        <Icon
+                          className={cn(
+                            'h-4 w-4 text-muted-foreground',
+                            value === selectedValue
+                              ? 'opacity-100'
+                              : 'opacity-40',
+                          )}
+                        />
                       )}
-                    />
-                  </CommandItem>
-                ))}
+                      {label}
+                      <Check
+                        className={cn(
+                          'ml-auto',
+                          selectedValue === value ? 'opacity-100' : 'opacity-0',
+                        )}
+                      />
+                    </CommandItem>
+                  );
+                })}
               </ScrollArea>
             </CommandGroup>
           </CommandList>
@@ -457,14 +526,9 @@ function Filter<TData>({ column }: FilterProps<TData>) {
   const { filterVariant } = column.columnDef.meta ?? {};
 
   console.log({ columnFilterValue });
-
-  const statusColumn = Object.entries(BookingStatus).map(([key, value]) => [
-    statusTranslation[key as StatusColumns],
-    value,
-  ]);
   return filterVariant === 'select' ? (
     <ComboBox
-      items={[['Весь список', ''], ...statusColumn]}
+      items={[['Весь список', '', List], ...statusColumn]}
       value={columnFilterValue?.toString() ?? ''}
       onValueChange={value => {
         column.setFilterValue(value);
