@@ -8,12 +8,17 @@ export default gql`
 
   type Mutation {
     createBooking(input: BookingInput!): Booking!
+    updateBookingStatus(input: BookingStatusInput!): Booking!
+  }
+
+  input BookingStatusInput {
+    id: ID!
+    status: BookingStatus!
   }
 
   type Subscription {
     createdBook: Booking!
   }
-
 
   input SortingState {
     id: String!

@@ -259,6 +259,31 @@ const resolvers: Resolvers = {
 
       return booking;
     },
+    async updateBookingStatus(_, args, ctx) {
+      const id = args.input.id;
+      const status = args.input.status;
+
+      const isBookingExist = await ctx.prisma.booking.findUnique({
+        where: {
+          id,
+        },
+      });
+
+      if(!isBookingExist) {
+        throw new GraphQLError('Данного бронирования не существует!');
+      }
+
+      const updatedBooking = await ctx.prisma.booking.update({
+        data: {
+          status,
+        },
+        where: {
+          id,
+        },
+      });
+
+      return updatedBooking;
+    }
   },
   Booking: {
     route(parent, _, { loaders }) {

@@ -112,7 +112,7 @@ const BookingsPage: FC = () => {
   const rowVirtualizer = useVirtualizer({
     count: hasNextPage ? rows.length + 1 : rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 80, //measure dynamic row height, except in firefox because it measures table border height incorrectly
+    estimateSize: () => 73, //measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
       typeof window !== 'undefined' &&
       navigator.userAgent.indexOf('Firefox') === -1

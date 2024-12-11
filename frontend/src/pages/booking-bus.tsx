@@ -216,7 +216,7 @@ const BookingBusPage: FC = () => {
     };
 
     // Check if departure cities are loaded
-    if(departureCities.length === 0) return;
+    if(!departureCities.length || arrivalIsLoading) return;
 
     // Reset form if departure city is cleared
     if (!departureCityId) {
@@ -258,6 +258,7 @@ const BookingBusPage: FC = () => {
       clearFields();
     }
   }, [
+    arrivalIsLoading,
     arrivalCityId,
     departureCityId,
     departureCities,

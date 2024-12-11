@@ -1,10 +1,10 @@
+import { SonnerSpinner } from '@/components/sonner-spinner';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from '@/components/ui/command';
@@ -16,7 +16,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
-import { FormControl } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import {
   Popover,
@@ -24,11 +23,18 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  useInfiniteBookings,
+  useUpdateBookingStatus,
+} from '@/features/booking';
 import { InfiniteBookingsQuery, BookingStatus } from '@/gql/graphql';
 import { parseIntSafe } from '@/helpers/parse-int-safe';
 import { useControllableState } from '@/hooks/use-controllable-state';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
+import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
+import { useInfiniteQuery } from '@tanstack/react-query';
+import { client } from '@/react-query';
 import { Column, ColumnDef } from '@tanstack/react-table';
 import { VariantProps } from 'class-variance-authority';
 import { format } from 'date-fns';
@@ -36,7 +42,6 @@ import { ru } from 'date-fns/locale';
 import {
   ArrowDown,
   ArrowUp,
-  ArrowUpCircle,
   CalendarIcon,
   Check,
   CheckCircle2,
@@ -51,10 +56,10 @@ import {
 import {
   forwardRef,
   ForwardRefExoticComponent,
-  ReactNode,
   RefAttributes,
   useState,
 } from 'react';
+import { toast } from 'sonner';
 
 type Booking = Omit<
   InfiniteBookingsQuery['bookings']['edges'][number],
@@ -141,14 +146,56 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     accessorKey: 'status',
     size: 180,
     cell: props => {
+      const id = props.row.original.id;
+      const status = props.row.original.status;
+      const { mutateAsync, isPending } = useUpdateBookingStatus();
+      const [previousStatus, setPreviousStatus] = useState<BookingStatus>(status);
+
       return (
         <ComboBox
+          isLoading={isPending}
           size={'lg'}
           items={statusColumn}
           value={props.getValue() ?? ''}
-          onValueChange={value => {
-            // TODO: add graphql request for modifying the status of booking
-            console.log({ value });
+          onValueChange={async value => {
+            setPreviousStatus(status);
+
+            const promise = new Promise(async (resolve, reject) => {
+              try {
+                const data = await mutateAsync({ input: { id, status: value } });
+                resolve(data);
+                client.invalidateQueries({ queryKey: ['InfiniteBookings'] });
+              } catch(error) {
+                reject(error);
+              }
+            });
+            toast.promise(promise, {
+              loading: 'Обновление статуса...',
+              duration: 8000,
+              action: {
+                label: 'Отменить',
+                onClick: async () => {
+                  try {
+                    await mutateAsync({ input: { id, status: previousStatus }});
+                    client.invalidateQueries({ queryKey: ['InfiniteBookings'] });
+                    toast.success('Отмена статуса выполнена успешно!');
+                  } catch(error) {
+                    toast.error('Не удалось отменить изменения статуса!');
+                  }
+                },
+              },
+              success: () => {
+                return `Статус изменен!`;
+              },
+              error: error => {
+                if (isGraphQLRequestError(error)) {
+                  return error.response.errors[0].message;
+                } else if (error instanceof Error) {
+                  return error.message;
+                }
+                return 'Произошла ошибка!';
+              },
+            });
           }}
         />
       );
@@ -402,17 +449,27 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
   },
 );
 
-interface ComboBoxProps extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+interface ComboBoxProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   value?: any;
   onValueChange?: (value: any) => void;
   items: any[];
   disabled?: boolean;
+  isLoading?: boolean;
 }
 
 const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
   (
-    { value: valueProp, onValueChange, items, disabled, variant, size }: ComboBoxProps,
+    {
+      value: valueProp,
+      onValueChange,
+      items,
+      disabled,
+      variant,
+      size,
+      isLoading,
+    }: ComboBoxProps,
     ref,
   ) => {
     const isDesktop = useMediaQuery('(min-width: 768px)');
@@ -447,7 +504,13 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
             !value && 'text-muted-foreground',
           )}
         >
-          {Icon && <Icon />}
+          {isLoading ? (
+            <span className='relative top-0.5'>
+              <SonnerSpinner className='bg-foreground' />
+            </span>
+          ) : (
+            Icon && <Icon />
+          )}
           {label}
           <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
         </Button>
