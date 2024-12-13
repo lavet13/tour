@@ -15,6 +15,19 @@ import { parseIntSafe } from '@/helpers/parse-int-safe';
 const resolvers: Resolvers = {
   Query: {
     async bookings(_, args, ctx) {
+      type BookingColumns = Exclude<
+        keyof Prisma.BookingWhereInput,
+        'AND' | 'OR' | 'NOT'
+      >;
+
+      const globalFilterableColumns = [
+        'lastName',
+        'firstName',
+        'phoneNumber',
+        'seatsCount',
+        'commentary',
+      ] as const satisfies BookingColumns[];
+
       const query = args.input.query?.trim();
 
       const columnFilters = args.input.columnFilters;
@@ -43,12 +56,7 @@ const resolvers: Resolvers = {
       let cursor =
         direction === PaginationDirection.NONE
           ? undefined
-          : {
-              id:
-                direction === PaginationDirection.FORWARD
-                  ? (args.input.after ?? undefined)
-                  : (args.input.before ?? undefined),
-            };
+          : { id: args.input.after || args.input.before };
 
       // in case where we might get cursor which points to nothing
       if (direction !== PaginationDirection.NONE) {
@@ -58,57 +66,30 @@ const resolvers: Resolvers = {
           where: { id: cursor?.id },
         });
 
-        if (!cursorOrder) {
-          if (direction === PaginationDirection.FORWARD) {
-            // Instead of setting cursor to { id: -1 }, set it to undefined
-            // or use a method to get the first valid booking
-
-            cursor = undefined; // we guarantee bookings are empty
-          } else if (direction === PaginationDirection.BACKWARD) {
-            const nextValidOrder = await ctx.prisma.booking.findFirst({
-              where: {
-                id: {
-                  gt: args.input.before,
-                },
-              },
-              orderBy: {
-                id: 'asc',
-              },
-            });
-
-            cursor = nextValidOrder ? { id: nextValidOrder.id } : undefined;
-          }
-        }
+        if (!cursorOrder) cursor = undefined;
       }
 
-      const conditions: Prisma.BookingWhereInput[] = columnFilters
+      const columnConditions: Prisma.BookingWhereInput[] = columnFilters
         .map(filter => {
           if (filter?.id === 'seatsCount' && Array.isArray(filter.value)) {
             //@ts-ignore
             const [min, max] = filter.value.map(v =>
-              v !== null ? parseIntSafe(v) : null,
+              v !== null ? parseIntSafe(v as string) : null,
             );
 
             return {
-              seatsCount: {
-                gte: min ?? undefined,
-                lte: max ?? undefined,
-              },
+              seatsCount: { gte: min ?? undefined, lte: max ?? undefined },
             };
           }
 
           if (
-            filter?.id === 'createdAt' ||
-            filter?.id === 'updatedAt' ||
-            filter?.id === 'travelDate'
+            filter?.id &&
+            ['createdAt', 'updatedAt', 'travelDate'].includes(filter.id)
           ) {
             const [from, to] = filter.value;
 
             return {
-              [filter.id]: {
-                gte: from || undefined,
-                lte: to || undefined,
-              },
+              [filter.id]: { gte: from ?? undefined, lte: to ?? undefined },
             };
           }
 
@@ -123,6 +104,31 @@ const resolvers: Resolvers = {
           };
         })
         .filter(Boolean);
+
+      const globalCondition = query
+        ? {
+            OR: globalFilterableColumns.map(column => {
+              if (column === 'seatsCount' as string) {
+                return {
+                  seatsCount: { gte: parseIntSafe(query) ?? undefined },
+                };
+              }
+
+              return {
+                [column]: { contains: query, mode: 'insensitive' },
+              };
+            }),
+          }
+        : undefined;
+
+      // Apply fuzzy matching for `query`
+      const conditions = {
+        AND: [
+          ...(globalCondition ? [globalCondition] : []),
+          ...(columnConditions.length > 0 ? columnConditions : []),
+        ],
+      };
+      console.log(inspect(conditions, { depth: Infinity, colors: true }));
 
       // Prepare sorting
       const sorting = args.input.sorting || [];
@@ -143,17 +149,9 @@ const resolvers: Resolvers = {
         cursor,
         skip: cursor ? 1 : undefined, // Skip the cursor wbOrder for the next/previous page
         orderBy,
-        where: {
-          AND: conditions.length > 0 ? conditions : undefined,
-        },
+        where: conditions,
       });
 
-      // If no results are retrieved, it means we've reached the end of the
-      // pagination or because we stumble upon invalid cursor, so on the
-      // client we just clearing `before` and `after` cursors to get first bookings
-      // forward pagination could have no bookings at all,
-      // or because cursor is set to `{ id: -1 }`, for backward pagination
-      // the only thing would happen if only bookings are empty!
       if (bookings.length === 0) {
         return {
           edges: [],
@@ -177,25 +175,11 @@ const resolvers: Resolvers = {
       const startCursor = edges.length === 0 ? null : edges[0]?.id;
       const endCursor = edges.length === 0 ? null : edges.at(-1)?.id;
 
-      // This is where the condition `edges.length < bookings.length` comes into
-      // play. If the length of the `edges` array is less than the length
-      // of the `bookings` array, it means that the extra wbOrder was fetched and
-      // excluded from the `edges` array. That implies that there are more
-      // bookings available to fetch in the current pagination direction.
       const hasNextPage =
         direction === PaginationDirection.BACKWARD ||
         (direction === PaginationDirection.FORWARD && hasMore) ||
         (direction === PaginationDirection.NONE &&
           edges.length < bookings.length);
-      // /\
-      // |
-      // |
-      // NOTE: This condition `edges.length < bookings.length` is essentially
-      // checking the same thing as `hasMore`, which is whether there are more
-      // bookings available to fetch. Therefore, you can safely replace
-      // `edges.length < bookings.length` with hasMore in the condition for
-      // determining hasNextPage. Both conditions are equivalent and will
-      // produce the same result.
 
       const hasPreviousPage =
         direction === PaginationDirection.FORWARD ||
@@ -269,7 +253,7 @@ const resolvers: Resolvers = {
         },
       });
 
-      if(!isBookingExist) {
+      if (!isBookingExist) {
         throw new GraphQLError('Данного бронирования не существует!');
       }
 
@@ -283,7 +267,7 @@ const resolvers: Resolvers = {
       });
 
       return updatedBooking;
-    }
+    },
   },
   Booking: {
     route(parent, _, { loaders }) {
@@ -300,6 +284,10 @@ const resolvers: Resolvers = {
 const resolversComposition: ResolversComposerMapping<any> = {
   'Query.bookings': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
   'Query.bookingById': [
+    isAuthenticated(),
+    hasRoles([Role.MANAGER, Role.ADMIN]),
+  ],
+  'Mutation.updateBookingStatus': [
     isAuthenticated(),
     hasRoles([Role.MANAGER, Role.ADMIN]),
   ],

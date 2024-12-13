@@ -110,23 +110,51 @@ interface CustomColumnMeta {
 export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
   {
     accessorKey: 'lastName',
+    cell: props => (
+      <span className='overflow-hidden text-ellipsis'>
+        {String(props.getValue() ?? '')}
+      </span>
+    ),
     header: ({ column }) => {
       return <Header title='Фамилия' column={column} />;
     },
+    minSize: 145,
+    size: 150,
   },
   {
+    size: 140,
+    minSize: 120,
+    cell: props => (
+      <span className='overflow-hidden text-ellipsis'>
+        {String(props.getValue() ?? '')}
+      </span>
+    ),
     accessorKey: 'firstName',
     header: ({ column }) => {
       return <Header title='Имя' column={column} />;
     },
   },
   {
+    size: 150,
+    minSize: 140,
+    cell: props => (
+      <span className='overflow-hidden text-ellipsis'>
+        {String(props.getValue() ?? '')}
+      </span>
+    ),
     accessorKey: 'phoneNumber',
     header: ({ column }) => {
       return <Header title='Телефон' column={column} />;
     },
   },
   {
+    size: 160,
+    minSize: 160,
+    cell: props => (
+      <span className='overflow-hidden text-ellipsis'>
+        {String(props.getValue() ?? '')}
+      </span>
+    ),
     accessorKey: 'seatsCount',
     header: ({ column }) => {
       return <Header title='Кол-во мест' column={column} />;
@@ -137,6 +165,13 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     filterFn: 'inNumberRange',
   },
   {
+    size: 160,
+    minSize: 160,
+    cell: props => (
+      <span className='overflow-hidden text-ellipsis'>
+        {String(props.getValue() ?? '')}
+      </span>
+    ),
     accessorKey: 'commentary',
     header: ({ column }) => {
       return <Header title='Комментарий' column={column} />;
@@ -144,12 +179,14 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
   },
   {
     accessorKey: 'status',
-    size: 180,
+    minSize: 200,
+    size: 200,
     cell: props => {
       const id = props.row.original.id;
       const status = props.row.original.status;
       const { mutateAsync, isPending } = useUpdateBookingStatus();
-      const [previousStatus, setPreviousStatus] = useState<BookingStatus>(status);
+      const [previousStatus, setPreviousStatus] =
+        useState<BookingStatus>(status);
 
       return (
         <ComboBox
@@ -162,10 +199,12 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
 
             const promise = new Promise(async (resolve, reject) => {
               try {
-                const data = await mutateAsync({ input: { id, status: value } });
+                const data = await mutateAsync({
+                  input: { id, status: value },
+                });
                 resolve(data);
                 client.invalidateQueries({ queryKey: ['InfiniteBookings'] });
-              } catch(error) {
+              } catch (error) {
                 reject(error);
               }
             });
@@ -176,10 +215,14 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
                 label: 'Отменить',
                 onClick: async () => {
                   try {
-                    await mutateAsync({ input: { id, status: previousStatus }});
-                    client.invalidateQueries({ queryKey: ['InfiniteBookings'] });
+                    await mutateAsync({
+                      input: { id, status: previousStatus },
+                    });
+                    client.invalidateQueries({
+                      queryKey: ['InfiniteBookings'],
+                    });
                     toast.success('Отмена статуса выполнена успешно!');
-                  } catch(error) {
+                  } catch (error) {
                     toast.error('Не удалось отменить изменения статуса!');
                   }
                 },
@@ -208,12 +251,18 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     },
   },
   {
+    minSize: 160,
+    size: 160,
+    enableGlobalFilter: false,
     accessorKey: 'createdAt',
     header: ({ column }) => <Header title='Создано' column={column} />,
-    cell: props =>
-      format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
-        locale: ru,
-      }),
+    cell: props => (
+      <span className='overflow-hidden text-ellipsis'>
+        {format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
+          locale: ru,
+        })}
+      </span>
+    ),
     sortingFn: (rowA, rowB) =>
       rowA.original.createdAt - rowB.original.createdAt,
     filterFn: (row, columnId, filterValue) => {
@@ -232,12 +281,18 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     },
   },
   {
+    minSize: 160,
+    size: 160,
+    enableGlobalFilter: false,
     accessorKey: 'updatedAt',
     header: ({ column }) => <Header title='Изменено' column={column} />,
-    cell: props =>
-      format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
-        locale: ru,
-      }),
+    cell: props => (
+      <span className='overflow-hidden text-ellipsis'>
+        {format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
+          locale: ru,
+        })}
+      </span>
+    ),
     sortingFn: (rowA, rowB) => {
       return rowA.original.updatedAt - rowB.original.updatedAt;
     },
@@ -257,12 +312,18 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     },
   },
   {
+    minSize: 160,
+    size: 160,
+    enableGlobalFilter: false,
     accessorKey: 'travelDate',
     header: ({ column }) => <Header title='Желаемая дата' column={column} />,
-    cell: props =>
-      format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
-        locale: ru,
-      }),
+    cell: props => (
+      <span className='overflow-hidden text-ellipsis'>
+        {format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
+          locale: ru,
+        })}
+      </span>
+    ),
     sortingFn: (rowA, rowB) => {
       return rowA.original.travelDate - rowB.original.travelDate;
     },
@@ -282,6 +343,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     },
   },
   {
+    enableResizing: false,
     id: 'actions',
     size: 70,
     enableHiding: false,
@@ -391,7 +453,7 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
         >
           <CalendarIcon className='size-4' />
           {value?.length ? (
-            <span className={cn('font-semibold')}>
+            <span>
               {from ? (
                 to ? (
                   <>
@@ -605,9 +667,9 @@ function Filter<TData>({ column }: FilterProps<TData>) {
       }}
     />
   ) : filterVariant === 'range' ? (
-    <div className='flex gap-1 items-center'>
+    <div className='flex flex-1 gap-1 items-center'>
       <Input
-        className='p-1 w-16 h-8'
+        className='p-1 w-16 h-8 flex-1'
         type='number'
         value={(columnFilterValue as [string, string])?.[0] ?? ''}
         onChange={e => {
@@ -618,7 +680,7 @@ function Filter<TData>({ column }: FilterProps<TData>) {
         placeholder={`Мин`}
       />
       <Input
-        className='p-1 w-16 h-8'
+        className='p-1 w-16 h-8 flex-1'
         type='number'
         value={(columnFilterValue as [string, string])?.[1] ?? ''}
         onChange={e => {

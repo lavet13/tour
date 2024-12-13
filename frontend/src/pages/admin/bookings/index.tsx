@@ -9,7 +9,11 @@ import {
   useReactTable,
   ColumnFiltersState,
   getFilteredRowModel,
+  FilterFn,
+  GlobalFilterTableState,
+  ColumnResizeMode,
 } from '@tanstack/react-table';
+import { rankItem } from '@tanstack/match-sorter-utils';
 import {
   BookingColumns,
   columns,
@@ -40,26 +44,46 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import {
-  ArrowDownAZ,
   ArrowUpDown,
   Check,
-  FilterX,
   ListCollapse,
   ListFilter,
-  ListOrdered,
+  MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useSidebar } from '@/components/ui/sidebar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { breakpointsAtom } from '@/lib/atoms/tailwind';
+import { useAtom } from 'jotai';
+import { Input } from '@/components/ui/input';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
+
+const fuzzyFilter: FilterFn<Booking> = (row, columnId, value, addMeta) => {
+  // Rank the item
+  const itemRank = rankItem(row.getValue(columnId), value);
+
+  // Store the itemRank info
+  addMeta({ itemRank });
+
+  // Return if the item should be filtered in/out
+  return itemRank.passed;
+};
 
 const BookingsPage: FC = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [globalFilter, setGlobalFilter] = useState('');
 
   console.log({ columnFilters });
 
@@ -74,7 +98,7 @@ const BookingsPage: FC = () => {
     error,
   } = useInfiniteBookings({
     take: import.meta.env.DEV ? 5 : 30,
-    query: '',
+    query: globalFilter,
     sorting,
     columnFilters,
   });
@@ -86,23 +110,33 @@ const BookingsPage: FC = () => {
 
   import.meta.env.DEV && console.log({ data, flatData });
 
+  const columnResizeMode: ColumnResizeMode = 'onChange';
+
   const table = useReactTable({
     data: flatData,
     columns,
-    filterFns: {},
+    filterFns: {
+      fuzzy: fuzzyFilter,
+    },
+    columnResizeMode,
+    columnResizeDirection: 'ltr',
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     getFilteredRowModel: getFilteredRowModel(), // client side filtering
     onColumnFiltersChange: setColumnFilters,
+    onGlobalFilterChange: setGlobalFilter,
+    globalFilterFn: 'fuzzy',
     state: {
+      globalFilter,
       sorting,
       columnVisibility,
       columnFilters,
     },
     manualPagination: true,
     debugTable: true,
+    debugHeaders: true,
     debugColumns: true,
   });
 
@@ -153,7 +187,10 @@ const BookingsPage: FC = () => {
     throw error;
   }
 
-  const isDesktop = useMediaQuery(`(min-width: 767px)`);
+  const [{ md, xl }] = useAtom(breakpointsAtom);
+  const isMobile = useMediaQuery(`(max-width: ${400}px)`);
+  const isFullHD = useMediaQuery(`(min-width: ${xl}px)`);
+  const isTablet = useMediaQuery(`(min-width: ${md}px)`);
   const { state } = useSidebar();
   const [innerWidth, setInnerWidth] = useState(0);
   const [innerHeight, setInnerHeight] = useState(0);
@@ -173,31 +210,82 @@ const BookingsPage: FC = () => {
     };
   }, []);
 
-  return (
-    <div
-      className={cn(
-        'relative container px-1 sm:px-4 mx-auto overflow-hidden space-y-2',
-        state === 'collapsed' && 'mx-0',
-      )}
-      style={{
-        maxWidth: `calc(${innerWidth - (isDesktop && state === 'expanded' ? 256 : 0)}px)`,
-      }}
-    >
-      <div className='grid grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] md:flex items-center gap-2'>
-        <HideColumns table={table} />
-        <Button size='sm' onClick={() => setSorting([])}>
+  const OtherTools = () => {
+    return (
+      <>
+        <Button size='sm' onClick={() => table.resetSorting()}>
           <ArrowUpDown />
           Сбросить сортировку
         </Button>
-        <Button size='sm' onClick={() => setColumnFilters([])}>
+        <Button
+          size='sm'
+          onClick={() => {
+            table.resetColumnFilters();
+            setGlobalFilter('');
+          }}
+        >
           <ListFilter />
           Сбросить фильтр
         </Button>
+      </>
+    );
+  };
+
+  return (
+    <div
+      className={cn(
+        'relative container px-1 sm:px-4 mx-auto overflow-hidden space-y-2 flex-1 pt-2',
+        state === 'collapsed' && 'mx-0',
+      )}
+      style={{
+        maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
+      }}
+    >
+      <div className='grid min-[400px]:grid-cols-[2fr_1fr] md:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] items-center gap-2'>
+        <Input
+          className='h-9'
+          value={globalFilter}
+          onChange={e => table.setGlobalFilter(String(e.target.value))}
+          placeholder={'Глобальный поиск...'}
+        />
+        <div className='grid sm:col-[2_/_-1] grid-cols-[1fr_auto] min-[940px]:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] gap-2'>
+          <HideColumns table={table} />
+          {isFullHD && <OtherTools />}
+          {!isFullHD && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className='size-9' variant='outline' size='icon'>
+                  <MoreHorizontal />
+                  <span className='sr-only'>Другие операции</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align={'end'}>
+                <DropdownMenuGroup>
+                  <DropdownMenuItem onClick={() => table.resetSorting()}>
+                    <ArrowUpDown />
+                    Сбросить сортировку
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      table.resetColumnFilters();
+                      setGlobalFilter('');
+                    }}
+                  >
+                    <ListFilter />
+                    Сбросить фильтр
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
       <div
         ref={tableContainerRef}
         className='max-w-fit overflow-auto w-full relative rounded-md border'
-        style={{ maxHeight: `calc(${innerHeight}px - 11rem)` }}
+        style={{
+          maxHeight: `calc(${innerHeight}px - ${isMobile ? 10 : 7.5}rem)`,
+        }}
       >
         {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
         <Table
@@ -214,20 +302,58 @@ const BookingsPage: FC = () => {
                   return (
                     <TableHead
                       key={header.id}
-                      className='select-none'
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        alignSelf: 'center',
-                        height: 'fit-content',
-                        padding: '0.2rem 1rem',
-                        width: header.getSize(),
+                      {...{
+                        className: 'select-none',
+                        colSpan: header.colSpan,
+                        style: {
+                          display: 'flex',
+                          position: 'relative',
+                          alignItems: 'center',
+                          alignSelf: 'center',
+                          height: 'fit-content',
+                          padding: '0.2rem 1rem',
+                          width: header.getSize(),
+                        },
                       }}
                     >
-                      {flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                      {header.column.getCanResize() ? (
+                        <div
+                          {...{
+                            onDoubleClick: () => header.column.resetSize(),
+                            onMouseDown: header.getResizeHandler(),
+                            onTouchStart: header.getResizeHandler(),
+                            className: cn(
+                              `absolute right-0 rounded-md top-0 w-px px-1 h-full cursor-col-resize select-none touch-none ${
+                                table.options.columnResizeDirection
+                              } ${
+                                header.column.getIsResizing()
+                                  ? 'bg-foreground'
+                                  : 'hover:bg-foreground/50'
+                              }`,
+                            ),
+                            style: {
+                              transform:
+                                columnResizeMode === 'onEnd' &&
+                                header.column.getIsResizing()
+                                  ? `translateX(${
+                                      (table.options.columnResizeDirection ===
+                                      'rtl'
+                                        ? -1
+                                        : 1) *
+                                      (table.getState().columnSizingInfo
+                                        .deltaOffset ?? 0)
+                                    }px)`
+                                  : '',
+                            },
+                          }}
+                        />
+                      ) : null}
                     </TableHead>
                   );
                 })}
@@ -395,7 +521,7 @@ function HideColumns({ table }: HideColumnsProps<Booking>) {
           <CommandGroup>
             <CommandItem
               onSelect={() => toggleAllColumns(!isAllVisible)}
-              className='flex gap-3'
+              className='flex gap-[4rem]'
             >
               <span>Все столбцы</span>
               {isAllVisible || isSomeVisible ? (
@@ -443,9 +569,7 @@ function HideColumns({ table }: HideColumnsProps<Booking>) {
   return isDesktop ? (
     <Popover>
       <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
-      <PopoverContent align='start' className='p-0 w-fit'>
-        {renderContent()}
-      </PopoverContent>
+      <PopoverContent className='p-0 w-fit'>{renderContent()}</PopoverContent>
     </Popover>
   ) : (
     <Drawer>

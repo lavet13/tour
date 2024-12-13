@@ -6,7 +6,7 @@ export type UserWithRoles = User & {
   roles: { role: Role }[];
 };
 
-export const ACCESS_TOKEN_TTL = 10 * 60 * 1000; // 10 minutes
+export const ACCESS_TOKEN_TTL = import.meta.env.DEV ? 5 * 1000 : 10 * 60 * 1000; // 10 minutes
 export const REFRESH_TOKEN_TTL = 1000 * 60 * 60 * 24 * 30.44; // 1 month
 
 const createTokens = (user: UserWithRoles) => {
