@@ -10,7 +10,6 @@ import {
   ColumnFiltersState,
   getFilteredRowModel,
   FilterFn,
-  GlobalFilterTableState,
   ColumnResizeMode,
 } from '@tanstack/react-table';
 import { rankItem } from '@tanstack/match-sorter-utils';
@@ -64,7 +63,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import { useAtom } from 'jotai';
-import { Input } from '@/components/ui/input';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
 
@@ -83,7 +81,6 @@ const BookingsPage: FC = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
 
   console.log({ columnFilters });
 
@@ -98,7 +95,6 @@ const BookingsPage: FC = () => {
     error,
   } = useInfiniteBookings({
     take: import.meta.env.DEV ? 5 : 30,
-    query: globalFilter,
     sorting,
     columnFilters,
   });
@@ -110,7 +106,7 @@ const BookingsPage: FC = () => {
 
   import.meta.env.DEV && console.log({ data, flatData });
 
-  const columnResizeMode: ColumnResizeMode = 'onChange';
+  const columnResizeModeRef = useRef<ColumnResizeMode>('onChange');
 
   const table = useReactTable({
     data: flatData,
@@ -118,7 +114,7 @@ const BookingsPage: FC = () => {
     filterFns: {
       fuzzy: fuzzyFilter,
     },
-    columnResizeMode,
+    columnResizeMode: columnResizeModeRef.current,
     columnResizeDirection: 'ltr',
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
@@ -126,10 +122,7 @@ const BookingsPage: FC = () => {
     onColumnVisibilityChange: setColumnVisibility,
     getFilteredRowModel: getFilteredRowModel(), // client side filtering
     onColumnFiltersChange: setColumnFilters,
-    onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: 'fuzzy',
     state: {
-      globalFilter,
       sorting,
       columnVisibility,
       columnFilters,
@@ -221,7 +214,7 @@ const BookingsPage: FC = () => {
           size='sm'
           onClick={() => {
             table.resetColumnFilters();
-            setGlobalFilter('');
+            // setGlobalFilter('');
           }}
         >
           <ListFilter />
@@ -241,14 +234,8 @@ const BookingsPage: FC = () => {
         maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
       }}
     >
-      <div className='grid min-[400px]:grid-cols-[2fr_1fr] md:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] items-center gap-2'>
-        <Input
-          className='h-9'
-          value={globalFilter}
-          onChange={e => table.setGlobalFilter(String(e.target.value))}
-          placeholder={'Глобальный поиск...'}
-        />
-        <div className='grid sm:col-[2_/_-1] grid-cols-[1fr_auto] min-[940px]:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] gap-2'>
+      <div className='grid md:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] items-center gap-2'>
+        <div className='grid sm:col-[1_/_-1] grid-cols-[1fr_auto] min-[940px]:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] gap-2'>
           <HideColumns table={table} />
           {isFullHD && <OtherTools />}
           {!isFullHD && (
@@ -268,7 +255,7 @@ const BookingsPage: FC = () => {
                   <DropdownMenuItem
                     onClick={() => {
                       table.resetColumnFilters();
-                      setGlobalFilter('');
+                      // setGlobalFilter('');
                     }}
                   >
                     <ListFilter />
@@ -284,7 +271,7 @@ const BookingsPage: FC = () => {
         ref={tableContainerRef}
         className='max-w-fit overflow-auto w-full relative rounded-md border'
         style={{
-          maxHeight: `calc(${innerHeight}px - ${isMobile ? 10 : 7.5}rem)`,
+          maxHeight: `calc(${innerHeight}px - ${isMobile ? 8 : 7.5}rem)`,
         }}
       >
         {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
@@ -329,17 +316,17 @@ const BookingsPage: FC = () => {
                             onMouseDown: header.getResizeHandler(),
                             onTouchStart: header.getResizeHandler(),
                             className: cn(
-                              `absolute right-0 rounded-md top-0 w-px px-1 h-full cursor-col-resize select-none touch-none ${
+                              `absolute right-0 rounded-sm top-0 w-1.5 h-full cursor-col-resize select-none touch-none ${
                                 table.options.columnResizeDirection
                               } ${
                                 header.column.getIsResizing()
-                                  ? 'bg-foreground'
+                                  ? 'bg-foreground/70'
                                   : 'hover:bg-foreground/50'
                               }`,
                             ),
                             style: {
                               transform:
-                                columnResizeMode === 'onEnd' &&
+                                columnResizeModeRef.current === 'onEnd' &&
                                 header.column.getIsResizing()
                                   ? `translateX(${
                                       (table.options.columnResizeDirection ===
@@ -523,13 +510,13 @@ function HideColumns({ table }: HideColumnsProps<Booking>) {
               onSelect={() => toggleAllColumns(!isAllVisible)}
               className='flex gap-[4rem]'
             >
-              <span>Все столбцы</span>
+              <span className={cn(!isAllVisible && "opacity-70")}>Все столбцы</span>
               {isAllVisible || isSomeVisible ? (
                 <Check
                   className={cn(
                     'ml-auto',
                     isAllVisible ? 'opacity-100' : 'opacity-70',
-                    isSomeVisible ? 'opacity-70' : '',
+                    isSomeVisible && 'opacity-70',
                   )}
                 />
               ) : null}
@@ -548,7 +535,7 @@ function HideColumns({ table }: HideColumnsProps<Booking>) {
                   }
                   className='flex gap-3'
                 >
-                  <span>
+                  <span className={cn(!column.getIsVisible() && "opacity-50")}>
                     {columnTranslations[column.id as BookingColumns] ??
                       'no-name'}
                   </span>

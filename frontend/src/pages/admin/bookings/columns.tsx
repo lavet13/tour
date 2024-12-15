@@ -109,6 +109,7 @@ interface CustomColumnMeta {
 
 export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
   {
+    id: 'lastName',
     accessorKey: 'lastName',
     cell: props => (
       <span className='overflow-hidden text-ellipsis'>
@@ -129,6 +130,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
         {String(props.getValue() ?? '')}
       </span>
     ),
+    id: 'firstName',
     accessorKey: 'firstName',
     header: ({ column }) => {
       return <Header title='Имя' column={column} />;
@@ -142,6 +144,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
         {String(props.getValue() ?? '')}
       </span>
     ),
+    id: 'phoneNumber',
     accessorKey: 'phoneNumber',
     header: ({ column }) => {
       return <Header title='Телефон' column={column} />;
@@ -155,6 +158,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
         {String(props.getValue() ?? '')}
       </span>
     ),
+    id: 'seatsCount',
     accessorKey: 'seatsCount',
     header: ({ column }) => {
       return <Header title='Кол-во мест' column={column} />;
@@ -172,12 +176,14 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
         {String(props.getValue() ?? '')}
       </span>
     ),
+    id: 'commentary',
     accessorKey: 'commentary',
     header: ({ column }) => {
       return <Header title='Комментарий' column={column} />;
     },
   },
   {
+    id: 'status',
     accessorKey: 'status',
     minSize: 200,
     size: 200,
@@ -210,7 +216,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
             });
             toast.promise(promise, {
               loading: 'Обновление статуса...',
-              duration: 8000,
+              duration: 10000,
               action: {
                 label: 'Отменить',
                 onClick: async () => {
@@ -254,6 +260,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     minSize: 160,
     size: 160,
     enableGlobalFilter: false,
+    id: 'createdAt',
     accessorKey: 'createdAt',
     header: ({ column }) => <Header title='Создано' column={column} />,
     cell: props => (
@@ -284,6 +291,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     minSize: 160,
     size: 160,
     enableGlobalFilter: false,
+    id: 'updatedAt',
     accessorKey: 'updatedAt',
     header: ({ column }) => <Header title='Изменено' column={column} />,
     cell: props => (
@@ -315,6 +323,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     minSize: 160,
     size: 160,
     enableGlobalFilter: false,
+    id: 'travelDate',
     accessorKey: 'travelDate',
     header: ({ column }) => <Header title='Желаемая дата' column={column} />,
     cell: props => (

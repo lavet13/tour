@@ -36,7 +36,6 @@ export default gql`
     before: ID
     status: BookingStatus
 
-    query: String!
     sorting: [SortingState!]!
     columnFilters: [ColumnFiltersState]!
   }

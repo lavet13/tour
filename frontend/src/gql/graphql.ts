@@ -48,7 +48,6 @@ export type BookingsInput = {
   after?: InputMaybe<Scalars['ID']['input']>;
   before?: InputMaybe<Scalars['ID']['input']>;
   columnFilters: Array<InputMaybe<ColumnFiltersState>>;
-  query: Scalars['String']['input'];
   sorting: Array<SortingState>;
   status?: InputMaybe<BookingStatus>;
   take?: InputMaybe<Scalars['Int']['input']>;

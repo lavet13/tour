@@ -13,14 +13,12 @@ type TPageParam = {
 
 type UseInfiniteBookingsProps = {
   take: number;
-  query?: string;
   sorting?: SortingState;
   columnFilters?: ColumnFiltersState;
   options?: InitialDataInfiniteOptions<InfiniteBookingsQuery, TPageParam>;
 };
 
 export const useInfiniteBookings = ({
-  query = '',
   take = 30,
   sorting = [],
   columnFilters = [],
@@ -57,18 +55,17 @@ export const useInfiniteBookings = ({
   return useInfiniteQuery({
     queryKey: [
       (bookings.definitions[0] as any).name.value,
-      { input: { take, query, sorting, columnFilters } },
+      { input: { take, sorting, columnFilters } },
     ],
     queryFn: async ({ pageParam }) => {
       try {
         const transformedFilters = columnFilters.map(filter => ({
           id: filter.id,
-          value: filter.value as string,
+          value: filter.value as string[],
         }));
 
         return await client.request(bookings, {
           input: {
-            query,
             take,
             after: pageParam.after,
             sorting,

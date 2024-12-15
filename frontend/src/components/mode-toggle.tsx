@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils';
 
 export function ModeToggle() {
   const { theme, setTheme } = useTheme();
-  const activeStyles = 'text-primary focus:text-primary focus:bg-primary/10';
+  const activeStyles = 'text-primary focus:text-primary focus:bg-primary/10 opacity-100';
 
   return (
     <DropdownMenu>
@@ -23,13 +23,13 @@ export function ModeToggle() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='end'>
-        <DropdownMenuItem className={cn("transition-none", theme === 'light' ? activeStyles : '')} onClick={() => setTheme('light')}>
+        <DropdownMenuItem className={cn("transition-none", theme === 'light' ? activeStyles : 'opacity-40')} onClick={() => setTheme('light')}>
           <SunIcon className='mr-2 size-4' /> Светлая
         </DropdownMenuItem>
-        <DropdownMenuItem className={cn("transition-none", theme === 'dark' ? activeStyles : '')} onClick={() => setTheme('dark')}>
+        <DropdownMenuItem className={cn("transition-none", theme === 'dark' ? activeStyles : 'opacity-40')} onClick={() => setTheme('dark')}>
           <MoonIcon className='mr-2 size-4' /> Темная
         </DropdownMenuItem>
-        <DropdownMenuItem className={cn("transition-none", theme === 'system' ? activeStyles : '')} onClick={() => setTheme('system')}>
+        <DropdownMenuItem className={cn("transition-none", theme === 'system' ? activeStyles : 'opacity-40')} onClick={() => setTheme('system')}>
           <LaptopIcon className="mr-2 size-4" /> Системная
         </DropdownMenuItem>
       </DropdownMenuContent>

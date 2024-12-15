@@ -28,7 +28,7 @@ const resolvers: Resolvers = {
         'commentary',
       ] as const satisfies BookingColumns[];
 
-      const query = args.input.query?.trim();
+      // const query = args.input.query?.trim();
 
       const columnFilters = args.input.columnFilters;
 
@@ -105,26 +105,26 @@ const resolvers: Resolvers = {
         })
         .filter(Boolean);
 
-      const globalCondition = query
-        ? {
-            OR: globalFilterableColumns.map(column => {
-              if (column === 'seatsCount' as string) {
-                return {
-                  seatsCount: { gte: parseIntSafe(query) ?? undefined },
-                };
-              }
-
-              return {
-                [column]: { contains: query, mode: 'insensitive' },
-              };
-            }),
-          }
-        : undefined;
+      // const globalCondition = query
+      //   ? {
+      //       OR: globalFilterableColumns.map(column => {
+      //         if (column === 'seatsCount' as string) {
+      //           return {
+      //             seatsCount: { gte: parseIntSafe(query) ?? undefined },
+      //           };
+      //         }
+      //
+      //         return {
+      //           [column]: { contains: query, mode: 'insensitive' },
+      //         };
+      //       }),
+      //     }
+      //   : undefined;
 
       // Apply fuzzy matching for `query`
       const conditions = {
         AND: [
-          ...(globalCondition ? [globalCondition] : []),
+          // ...(globalCondition ? [globalCondition] : []),
           ...(columnConditions.length > 0 ? columnConditions : []),
         ],
       };
