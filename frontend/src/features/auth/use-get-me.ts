@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { graphql } from '@/gql';
 import { MeQuery } from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
@@ -9,6 +9,8 @@ import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-er
 
 export const useGetMe = (options?: InitialDataOptions<MeQuery>) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
 
   const me = graphql(`
     query Me {
@@ -28,23 +30,28 @@ export const useGetMe = (options?: InitialDataOptions<MeQuery>) => {
         return await client.request(me);
       } catch (error) {
         import.meta.env.DEV && console.error('HELP?', error);
-        if (
-          isGraphQLRequestError(error) &&
-          error.response.errors[0].extensions.code === 'AUTHENTICATION_REQUIRED'
-        ) {
-          queryClient.setQueryData(['Me'], null);
-          import.meta.env.DEV && console.warn('Session timeout!');
+        if (isGraphQLRequestError(error)) {
+          const errorCode = error.response.errors[0].extensions.code;
 
-          import.meta.env.DEV && console.log('navigation fired!');
-          navigate('/');
+          if (errorCode === 'AUTHENTICATION_REQUIRED') {
+            queryClient.setQueryData(['Me'], null);
+            sessionStorage.setItem('redirectPath', location.pathname);
+            import.meta.env.DEV && console.warn('Session timeout!');
+
+            navigate('/', {
+              replace: true,
+              state: { from: location.pathname },
+            });
+            import.meta.env.DEV && console.log('navigation fired!');
+          }
+
+          if (errorCode === 'UNAUTHENTICATED') {
+            queryClient.setQueryData(['Me'], null);
+            isAdminRoute && sessionStorage.setItem('redirectPath', location.pathname);
+            import.meta.env.DEV && console.warn('Unauthenticated!');
+          }
         }
-        if (
-          isGraphQLRequestError(error) &&
-          error.response.errors[0].extensions.code === 'UNAUTHENTICATED'
-        ) {
-          queryClient.setQueryData(['Me'], null);
-          import.meta.env.DEV && console.warn('Unauthenticated!');
-        }
+
         throw error;
       }
     },

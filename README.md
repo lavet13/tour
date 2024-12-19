@@ -50,16 +50,13 @@ export default tseslint.config({
 ```
 
 # Implement
-- change the font mate
 - chatting through graphql-ws
 - notifications
 - history of changes
 - sending binary data through graphql
 - retrieving binary data through graphql
-- algolia(dunno :D)
 
 ## Other stuff
 - bash programming,
 - typescript pocock begginer's tutorial
 - killercoda linux stuff
-- read tailwind docs

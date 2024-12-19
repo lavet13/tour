@@ -53,26 +53,23 @@ const LoginPage: FC = () => {
     values,
   });
 
-  const { data: me, refetch: refetchMe } = useGetMe();
+  const { data: user, refetch: refetchMe } = useGetMe();
   const { mutateAsync: loginUser } = useLogin();
-
-  useEffect(() => {
-    if (me?.me) {
-      navigate('/');
-    }
-  }, [me]);
 
   const onSubmit: SubmitHandler<DefaultValues> = async data => {
     try {
       await loginUser({
         loginInput: data,
       });
-      refetchMe();
+      await refetchMe();
 
       form.reset();
       toast.success('Вход выполнен успешно', { position: 'bottom-center' });
-      navigate('/');
-    } catch(error) {
+
+      const redirectPath = sessionStorage.getItem('redirectPath') || '/admin';
+      sessionStorage.removeItem('redirectPath');
+      navigate(redirectPath);
+    } catch (error) {
       console.error(error);
       if (isGraphQLRequestError(error)) {
         toast.error(error.response.errors[0].message, {
@@ -164,4 +161,3 @@ const LoginPage: FC = () => {
 };
 
 export default LoginPage;
-

@@ -155,7 +155,9 @@ const MainNav: FC = () => {
       >
         <NavigationMenuList>
           <NavigationMenuItem>
-            <NavigationMenuTrigger className={'bg-background/20'}>Рейсы</NavigationMenuTrigger>
+            <NavigationMenuTrigger className={'bg-background/20'}>
+              Рейсы
+            </NavigationMenuTrigger>
             <NavigationMenuContent>
               <RadixNavigationMenuSub className='flex'>
                 <ScrollArea className='h-fit'>

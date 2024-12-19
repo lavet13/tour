@@ -11,6 +11,8 @@ import {
   getFilteredRowModel,
   FilterFn,
   ColumnResizeMode,
+  Row,
+  FilterMeta,
 } from '@tanstack/react-table';
 import { rankItem } from '@tanstack/match-sorter-utils';
 import {
@@ -45,6 +47,7 @@ import {
 import {
   ArrowUpDown,
   Check,
+  ChevronDown,
   ListCollapse,
   ListFilter,
   MoreHorizontal,
@@ -65,17 +68,6 @@ import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import { useAtom } from 'jotai';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
-
-const fuzzyFilter: FilterFn<Booking> = (row, columnId, value, addMeta) => {
-  // Rank the item
-  const itemRank = rankItem(row.getValue(columnId), value);
-
-  // Store the itemRank info
-  addMeta({ itemRank });
-
-  // Return if the item should be filtered in/out
-  return itemRank.passed;
-};
 
 const BookingsPage: FC = () => {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -189,40 +181,19 @@ const BookingsPage: FC = () => {
   const [innerHeight, setInnerHeight] = useState(0);
 
   useEffect(() => {
-    const updateRefs = () => {
+    const updateViewportSize = () => {
       setInnerWidth(window.innerWidth);
       setInnerHeight(window.innerHeight);
     };
 
-    updateRefs();
+    updateViewportSize();
 
-    window.addEventListener('resize', updateRefs);
+    window.addEventListener('resize', updateViewportSize);
 
     return () => {
-      window.removeEventListener('resize', updateRefs);
+      window.removeEventListener('resize', updateViewportSize);
     };
   }, []);
-
-  const OtherTools = () => {
-    return (
-      <>
-        <Button size='sm' onClick={() => table.resetSorting()}>
-          <ArrowUpDown />
-          Сбросить сортировку
-        </Button>
-        <Button
-          size='sm'
-          onClick={() => {
-            table.resetColumnFilters();
-            // setGlobalFilter('');
-          }}
-        >
-          <ListFilter />
-          Сбросить фильтр
-        </Button>
-      </>
-    );
-  };
 
   return (
     <div
@@ -237,7 +208,23 @@ const BookingsPage: FC = () => {
       <div className='grid md:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] items-center gap-2'>
         <div className='grid sm:col-[1_/_-1] grid-cols-[1fr_auto] min-[940px]:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] gap-2'>
           <HideColumns table={table} />
-          {isFullHD && <OtherTools />}
+          {isFullHD && (
+            <>
+              <Button size='sm' onClick={() => table.resetSorting()}>
+                <ArrowUpDown />
+                Сбросить сортировку
+              </Button>
+              <Button
+                size='sm'
+                onClick={() => {
+                  table.resetColumnFilters();
+                }}
+              >
+                <ListFilter />
+                Сбросить фильтр
+              </Button>
+            </>
+          )}
           {!isFullHD && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -255,7 +242,6 @@ const BookingsPage: FC = () => {
                   <DropdownMenuItem
                     onClick={() => {
                       table.resetColumnFilters();
-                      // setGlobalFilter('');
                     }}
                   >
                     <ListFilter />
@@ -497,6 +483,7 @@ function HideColumns({ table }: HideColumnsProps<Booking>) {
       <Button size='sm' variant='outline'>
         <ListCollapse />
         Скрыть столбцы
+        <ChevronDown />
       </Button>
     );
   };
@@ -510,7 +497,9 @@ function HideColumns({ table }: HideColumnsProps<Booking>) {
               onSelect={() => toggleAllColumns(!isAllVisible)}
               className='flex gap-[4rem]'
             >
-              <span className={cn(!isAllVisible && "opacity-70")}>Все столбцы</span>
+              <span className={cn(!isAllVisible && 'opacity-70')}>
+                Все столбцы
+              </span>
               {isAllVisible || isSomeVisible ? (
                 <Check
                   className={cn(
@@ -535,7 +524,7 @@ function HideColumns({ table }: HideColumnsProps<Booking>) {
                   }
                   className='flex gap-3'
                 >
-                  <span className={cn(!column.getIsVisible() && "opacity-50")}>
+                  <span className={cn(!column.getIsVisible() && 'opacity-50')}>
                     {columnTranslations[column.id as BookingColumns] ??
                       'no-name'}
                   </span>
@@ -564,6 +553,22 @@ function HideColumns({ table }: HideColumnsProps<Booking>) {
       <DrawerContent>{renderContent()}</DrawerContent>
     </Drawer>
   );
+}
+
+function fuzzyFilter(
+  row: Row<Booking>,
+  columnId: string,
+  value: any,
+  addMeta: (meta: FilterMeta) => void,
+): ReturnType<FilterFn<Booking>> {
+  // Rank the item
+  const itemRank = rankItem(row.getValue(columnId), value);
+
+  // Store the itemRank info
+  addMeta({ itemRank });
+
+  // Return if the item should be filtered in/out
+  return itemRank.passed;
 }
 
 export default BookingsPage;

@@ -3,6 +3,7 @@ import suspenseFallbackMap from './suspense-fallback-map';
 import { lazy, Suspense } from 'react';
 
 import { SonnerSpinner } from '@/components/sonner-spinner';
+import { useGetMe } from './features/auth';
 
 type RouteComponent = (props: JSX.IntrinsicAttributes) => JSX.Element;
 type AppRoute = {
@@ -35,6 +36,8 @@ const AdminLayout = Loadable(
   lazy(() => import('@/pages/admin/layout/__layout')),
 );
 const Layout = Loadable(lazy(() => import('@/pages/layout/__layout')));
+
+const Login = Loadable(lazy(() => import('@/pages/__login')));
 
 /*
  *
@@ -112,21 +115,75 @@ import.meta.env.DEV && console.log({ adminRoutes, regularRoutes });
 const App = () => {
   return (
     <Routes>
-      <Route path='/admin' element={<AdminLayout />}>
-        <Route index element={<Navigate to={'home'} />} />
+      <Route
+        path='/admin'
+        element={
+          <RequireAuth>
+            <AdminLayout />
+          </RequireAuth>
+        }
+      >
+        <Route index element={<Navigate to={'home'} replace />} />
         {adminRoutes.map(({ path, component: ReactComponent }) => (
           <Route key={path} path={path} element={<ReactComponent />} />
         ))}
         <Route path='*' element={<AdminNotFound />} />
       </Route>
+
       <Route path='/' element={<Layout />}>
         {regularRoutes.map(({ path, component: ReactComponent }) => (
           <Route key={path} path={path} element={<ReactComponent />} />
         ))}
+        <Route
+          path='login'
+          element={
+            <RedirectUser>
+              <Login />
+            </RedirectUser>
+          }
+        />
       </Route>
       <Route path='*' element={<NotFound />} />
     </Routes>
   );
 };
+
+function RedirectUser({ children }: { children: JSX.Element }) {
+  const { data: user, isLoading } = useGetMe();
+  const location = useLocation();
+
+  if (isLoading) {
+    return (
+      <div className='flex-1 flex items-center justify-center min-h-screen'>
+        <SonnerSpinner className='bg-foreground' scale='2' />
+      </div>
+    );
+  }
+
+  if (user?.me) {
+    return <Navigate to={'/'} replace state={{ from: location.pathname }} />;
+  }
+
+  return children;
+}
+
+function RequireAuth({ children }: { children: JSX.Element }) {
+  const { data: user, isLoading } = useGetMe();
+  const location = useLocation();
+
+  if (isLoading) {
+    return (
+      <div className='flex-1 flex items-center justify-center min-h-screen'>
+        <SonnerSpinner className='bg-foreground' scale='2' />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to='/' replace state={{ from: location.pathname }} />;
+  }
+
+  return children;
+}
 
 export default App;
