@@ -1,9 +1,10 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import suspenseFallbackMap from './suspense-fallback-map';
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { useGetMe } from './features/auth';
+import { pagesConfig } from './pages/admin/config/__pages';
 
 type RouteComponent = (props: JSX.IntrinsicAttributes) => JSX.Element;
 type AppRoute = {
@@ -17,7 +18,7 @@ const Loadable =
     Component: React.ComponentType,
     fallback = (
       <div className='flex-1 flex items-center justify-center min-h-screen'>
-        <SonnerSpinner className='bg-foreground' scale='2' />
+        <SonnerSpinner className='bg-foreground' />
       </div>
     ),
   ) =>
@@ -150,18 +151,33 @@ const App = () => {
 
 function RedirectUser({ children }: { children: JSX.Element }) {
   const { data: user, isLoading } = useGetMe();
-  const location = useLocation();
+  const navigate = useNavigate();
+  const [redirectTo, setRedirectTo] = useState<string | null>(null);
 
+  useEffect(() => {
+    const storedPath = sessionStorage.getItem('redirectPath');
+
+    if(storedPath) {
+      setRedirectTo(storedPath);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user?.me) {
+      const finalRedirectPath = redirectTo || '/';
+      // @ts-ignore
+      navigate(finalRedirectPath, { replace: true });
+      sessionStorage.removeItem('redirectPath');
+    }
+  }, [user?.me, redirectTo, navigate]);
+
+  // Conditionals come after all hooks
   if (isLoading) {
     return (
       <div className='flex-1 flex items-center justify-center min-h-screen'>
-        <SonnerSpinner className='bg-foreground' scale='2' />
+        <SonnerSpinner className='bg-foreground' />
       </div>
     );
-  }
-
-  if (user?.me) {
-    return <Navigate to={'/'} replace state={{ from: location.pathname }} />;
   }
 
   return children;
@@ -174,7 +190,7 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   if (isLoading) {
     return (
       <div className='flex-1 flex items-center justify-center min-h-screen'>
-        <SonnerSpinner className='bg-foreground' scale='2' />
+        <SonnerSpinner className='bg-foreground' />
       </div>
     );
   }

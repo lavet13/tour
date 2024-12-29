@@ -162,6 +162,9 @@ const MainNav: FC = () => {
               <RadixNavigationMenuSub className='flex'>
                 <ScrollArea className='h-fit'>
                   <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 p-2'>
+                    <Button className='px-3 underline decoration-dotted hover:decoration-solid h-fit' variant='link' asChild>
+                      <Link to={'/bookings'}>Показать все</Link>
+                    </Button>
                     <NavigationMenuItem>
                       <NavigationRoutes title='ЛДНР' routes={ldnrRoutes} />
                     </NavigationMenuItem>

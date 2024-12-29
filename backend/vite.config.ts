@@ -22,7 +22,6 @@ export default defineConfig({
     ssrManifest: true,
     manifest: true,
     rollupOptions: {
-      external: ['sharp'],
       output: {
         entryFileNames: `[name].js`,
         chunkFileNames: `chunks/[name].js`,

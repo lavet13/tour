@@ -9,7 +9,7 @@ export default gql`
 
   type Mutation {
     createSchedule(input: ScheduleInput!): Schedule!
-    createRoute(input: RouteInput!): Route!
+    createRoute(input: CreateRouteInput!): Route!
   }
 
   type Subscription {
@@ -49,18 +49,14 @@ export default gql`
     pageInfo: PageInfo!
   }
 
-  input RouteInput {
+  input CreateRouteInput {
     departureCityId: ID!
     arrivalCityId: ID!
-    price: Int!
   }
 
   input ScheduleInput {
     routeId: ID!
-    daysOfWeek: ID!
-    startTime: Date!
-    endTime: Date!
-    seatsAvailable: Int!
+    daysOfWeek: DaysOfWeek!
   }
 
   type Route {
@@ -68,7 +64,6 @@ export default gql`
     departureCity: City
     arrivalCity: City
     region: Region
-    price: Int!
     createdAt: Date!
     updatedAt: Date!
     departureDate: Date

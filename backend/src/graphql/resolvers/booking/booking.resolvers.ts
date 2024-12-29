@@ -207,7 +207,7 @@ const resolvers: Resolvers = {
         .catch((err: unknown) => {
           if (err instanceof PrismaClientKnownRequestError) {
             if (err.code === 'P2025') {
-              throw new GraphQLError(`OrderWb with ID \`${id}\` not found.`);
+              throw new GraphQLError(`Booking with ID \`${id}\` not found.`);
             }
           }
           console.log({ err });
@@ -243,7 +243,7 @@ const resolvers: Resolvers = {
 
       return booking;
     },
-    async updateBookingStatus(_, args, ctx) {
+    async updateBooking(_, args, ctx) {
       const id = args.input.id;
       const status = args.input.status;
 
@@ -291,7 +291,7 @@ const resolversComposition: ResolversComposerMapping<any> = {
     isAuthenticated(),
     hasRoles([Role.MANAGER, Role.ADMIN]),
   ],
-  // 'Subscription.newWbOrder': [
+  // 'Subscription.createdBook': [
   //   isAuthenticated(),
   //   hasRoles([Role.MANAGER, Role.ADMIN]),
   // ],

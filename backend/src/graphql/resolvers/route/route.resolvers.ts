@@ -213,17 +213,18 @@ const resolvers: Resolvers = {
         },
       });
 
+      console.log({ cities });
+
       return cities;
     },
   },
   Mutation: {
     async createRoute(_, args, ctx) {
-      const { arrivalCityId, departureCityId, price } = args.input;
+      const { arrivalCityId, departureCityId } = args.input;
       console.log({ input: args.input });
 
       const route = await ctx.prisma.route.create({
         data: {
-          price,
           arrivalCityId,
           departureCityId,
         },
@@ -232,7 +233,7 @@ const resolvers: Resolvers = {
       return route;
     },
     async createSchedule(_, args, ctx) {
-      const { routeId, endTime, startTime, daysOfWeek, seatsAvailable } =
+      const { routeId, daysOfWeek } =
         args.input;
 
       const route = await ctx.prisma.route.findUnique({
@@ -248,10 +249,6 @@ const resolvers: Resolvers = {
       const schedule = await ctx.prisma.schedule.create({
         data: {
           routeId,
-          daysOfWeek,
-          startTime,
-          endTime,
-          seatsAvailable,
         },
       });
 

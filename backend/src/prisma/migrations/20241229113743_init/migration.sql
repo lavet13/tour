@@ -40,7 +40,7 @@ CREATE TABLE "refresh_tokens" (
 
 -- CreateTable
 CREATE TABLE "cities" (
-    "id" BIGSERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -50,13 +50,16 @@ CREATE TABLE "cities" (
 
 -- CreateTable
 CREATE TABLE "schedules" (
-    "id" BIGSERIAL NOT NULL,
-    "routeId" BIGINT NOT NULL,
-    "daysOfWeek" "DaysOfWeek"[],
+    "id" TEXT NOT NULL,
+    "routeId" TEXT NOT NULL,
+    "dayOfWeek" "DaysOfWeek" NOT NULL,
+    "travelDate" TIMESTAMP(3) NOT NULL,
     "startTime" TIMESTAMP(3) NOT NULL,
-    "endTime" TIMESTAMP(3),
+    "endTime" TIMESTAMP(3) NOT NULL,
     "seatsAvailable" INTEGER NOT NULL,
-    "departureDate" TIMESTAMP(3) NOT NULL,
+    "seatsBooked" INTEGER NOT NULL DEFAULT 0,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "price" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -65,7 +68,7 @@ CREATE TABLE "schedules" (
 
 -- CreateTable
 CREATE TABLE "regions" (
-    "id" BIGSERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
@@ -75,11 +78,12 @@ CREATE TABLE "regions" (
 
 -- CreateTable
 CREATE TABLE "routes" (
-    "id" BIGSERIAL NOT NULL,
-    "departureCityId" BIGINT,
-    "arrivalCityId" BIGINT,
-    "regionId" BIGINT,
-    "price" INTEGER NOT NULL,
+    "id" TEXT NOT NULL,
+    "departureCityId" TEXT NOT NULL,
+    "arrivalCityId" TEXT NOT NULL,
+    "regionId" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "departureDate" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -88,11 +92,12 @@ CREATE TABLE "routes" (
 
 -- CreateTable
 CREATE TABLE "bookings" (
-    "id" BIGSERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "firstName" TEXT NOT NULL,
     "lastName" TEXT NOT NULL,
     "phoneNumber" TEXT NOT NULL,
-    "routeId" BIGINT,
+    "commentary" TEXT,
+    "routeId" TEXT,
     "travelDate" TIMESTAMP(3) NOT NULL,
     "seatsCount" INTEGER NOT NULL,
     "status" "BookingStatus" NOT NULL DEFAULT 'PENDING',
@@ -112,10 +117,16 @@ CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 CREATE UNIQUE INDEX "refresh_tokens_token_key" ON "refresh_tokens"("token");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "schedules_routeId_travelDate_key" ON "schedules"("routeId", "travelDate");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "regions_name_key" ON "regions"("name");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "routes_departureCityId_arrivalCityId_key" ON "routes"("departureCityId", "arrivalCityId");
+
+-- CreateIndex
+CREATE INDEX "bookings_status_idx" ON "bookings"("status");
 
 -- AddForeignKey
 ALTER TABLE "user_roles" ADD CONSTRAINT "user_roles_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -127,10 +138,10 @@ ALTER TABLE "refresh_tokens" ADD CONSTRAINT "refresh_tokens_userId_fkey" FOREIGN
 ALTER TABLE "schedules" ADD CONSTRAINT "schedules_routeId_fkey" FOREIGN KEY ("routeId") REFERENCES "routes"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "routes" ADD CONSTRAINT "routes_departureCityId_fkey" FOREIGN KEY ("departureCityId") REFERENCES "cities"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "routes" ADD CONSTRAINT "routes_departureCityId_fkey" FOREIGN KEY ("departureCityId") REFERENCES "cities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "routes" ADD CONSTRAINT "routes_arrivalCityId_fkey" FOREIGN KEY ("arrivalCityId") REFERENCES "cities"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "routes" ADD CONSTRAINT "routes_arrivalCityId_fkey" FOREIGN KEY ("arrivalCityId") REFERENCES "cities"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "routes" ADD CONSTRAINT "routes_regionId_fkey" FOREIGN KEY ("regionId") REFERENCES "regions"("id") ON DELETE SET NULL ON UPDATE CASCADE;

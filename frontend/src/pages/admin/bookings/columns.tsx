@@ -454,7 +454,7 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
           size='sm'
           className={cn(
             'flex w-full',
-            'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+            'focus:outline-none focus:ring-1 focus:ring-ring',
             'justify-start text-left font-normal',
             !value && 'text-muted-foreground',
           )}
@@ -571,7 +571,7 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
           disabled={disabled}
           className={cn(
             'flex w-full justify-between h-8',
-            'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+            'focus:outline-none focus:ring-1 focus:ring-ring',
             !value && 'text-muted-foreground',
           )}
         >

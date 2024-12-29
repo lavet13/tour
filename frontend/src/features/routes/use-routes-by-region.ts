@@ -15,7 +15,6 @@ export const useRoutesByRegion = (
         name
         departureTrips {
           id
-          price
           arrivalCity {
             id
             name

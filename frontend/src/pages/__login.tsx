@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect } from 'react';
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -20,7 +20,6 @@ import { FormButton } from '@/components/form-button';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { useGetMe, useLogin } from '@/features/auth';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
-import { useNavigate } from 'react-router-dom';
 
 const FormSchema = z.object({
   login: z.string().trim().min(1, { message: 'Логин обязателен!' }),
@@ -35,12 +34,15 @@ const defaultValues: DefaultValues = {
 };
 
 const LoginPage: FC = () => {
-  const navigate = useNavigate();
   const form = useForm<DefaultValues>({
     resolver: zodResolver(FormSchema),
     defaultValues,
     mode: 'onChange',
   });
+
+  useEffect(() => {
+    form.setFocus('login');
+  }, [form]);
 
   const formState = form.formState;
   const values = form.getValues();
@@ -53,7 +55,7 @@ const LoginPage: FC = () => {
     values,
   });
 
-  const { data: user, refetch: refetchMe } = useGetMe();
+  const { refetch: refetchMe } = useGetMe();
   const { mutateAsync: loginUser } = useLogin();
 
   const onSubmit: SubmitHandler<DefaultValues> = async data => {
@@ -65,10 +67,6 @@ const LoginPage: FC = () => {
 
       form.reset();
       toast.success('Вход выполнен успешно', { position: 'bottom-center' });
-
-      const redirectPath = sessionStorage.getItem('redirectPath') || '/admin';
-      sessionStorage.removeItem('redirectPath');
-      navigate(redirectPath);
     } catch (error) {
       console.error(error);
       if (isGraphQLRequestError(error)) {

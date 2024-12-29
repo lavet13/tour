@@ -30,7 +30,7 @@ import { Link, useNavigate } from 'react-router-dom';
 
 export function NavUser() {
   const { isMobile } = useSidebar();
-  const { data, isPending } = useGetMe();
+  const { data, isPending, refetch: refetchUser } = useGetMe();
   const { me: user } = data || {};
 
   const { mutateAsync: logout } = useLogout();
@@ -108,6 +108,7 @@ export function NavUser() {
             <DropdownMenuItem
               onClick={async () => {
                 await logout();
+                await refetchUser();
                 navigate('/');
               }}
             >

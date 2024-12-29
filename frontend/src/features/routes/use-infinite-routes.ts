@@ -31,7 +31,6 @@ export const useInfiniteRoutes = ({
       routes(input: $input) {
         edges {
           id
-          price
           departureCity {
             id
             name

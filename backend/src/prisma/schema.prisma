@@ -30,6 +30,7 @@ model User {
   RefreshToken RefreshToken[]
   roles        UserRole[]
 
+  @@index([email])
   @@map("users")
 }
 
@@ -46,6 +47,7 @@ model RefreshToken {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
 
+  @@index([userId, token])
   @@map("refresh_tokens")
 }
 
@@ -62,20 +64,28 @@ model City {
   departureTrips Route[]  @relation("RouteDepartureCity")
   arrivalTrips   Route[]  @relation("RouteArrivalCity")
 
+  @@index([name])
   @@map("cities")
 }
 
 model Schedule {
-  id             String       @id @default(cuid())
-  route          Route        @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  id             String     @id @default(cuid())
+  route          Route      @relation(fields: [routeId], references: [id], onDelete: Cascade)
   routeId        String
-  daysOfWeek     DaysOfWeek[]
-  startTime      DateTime
-  endTime        DateTime?
-  seatsAvailable Int
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  dayOfWeek      DaysOfWeek
+  travelDate     DateTime // Конкретный день, для которого действует расписание
+  startTime      DateTime // Переопределение времени отправления
+  endTime        DateTime // Переопределение времени прибытия
+  seatsAvailable Int // Свободные места на этот день
+  seatsBooked    Int        @default(0) // Уже забронированные места
+  isActive       Boolean    @default(true)
+  price          Int // Перезапись базовой цены (если null, используется из Schedule)
 
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([routeId, travelDate])
+  @@index([dayOfWeek, routeId, travelDate, isActive])
   @@map("schedules")
 }
 
@@ -108,14 +118,14 @@ model Route {
   schedules       Schedule[]
   region          Region?    @relation(fields: [regionId], references: [id])
   regionId        String?
-  price           Int
-  departureDate   DateTime?
   isActive        Boolean    @default(true)
+  departureDate   DateTime?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
   bookings        Booking[]
 
   @@unique([departureCityId, arrivalCityId])
+  @@index([departureCityId, arrivalCityId, regionId, isActive, departureDate])
   @@map("routes")
 }
 
@@ -133,6 +143,6 @@ model Booking {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  @@index([status])
+  @@index([status, routeId, travelDate, phoneNumber])
   @@map("bookings")
 }

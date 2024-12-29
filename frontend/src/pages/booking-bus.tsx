@@ -639,7 +639,7 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
             disabled={isLoading || disabled}
             className={cn(
               'flex w-full justify-between',
-              'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+              'focus:outline-none focus:ring-1 focus:ring-ring',
               !value && 'text-muted-foreground',
             )}
           >
@@ -738,7 +738,6 @@ const Counter = forwardRef<HTMLButtonElement, CounterProps>(
           size='icon'
           className={cn(
             'h-8 w-8 shrink-0 rounded-full',
-            'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
           )}
           type='button'
           onClick={() => setValue(value - 1)}
@@ -772,7 +771,6 @@ const Counter = forwardRef<HTMLButtonElement, CounterProps>(
             size='icon'
             className={cn(
               'h-8 w-8 shrink-0 rounded-full',
-              'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
             )}
             type='button'
             onClick={() => setValue(value + 1)}
@@ -816,7 +814,7 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
             variant='outline'
             className={cn(
               'flex w-full',
-              'ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
+              'focus:outline-none focus:ring-1 focus:ring-ring',
               'justify-start text-left font-normal',
               !value && 'text-muted-foreground',
             )}

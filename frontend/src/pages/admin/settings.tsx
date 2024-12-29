@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { PageHeader, PageHeaderDescription, PageHeaderHeading } from '@/components/page-header';
 
 function SettingsPage() {

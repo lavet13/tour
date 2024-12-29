@@ -257,7 +257,7 @@ const BookingsPage: FC = () => {
         ref={tableContainerRef}
         className='max-w-fit overflow-auto w-full relative rounded-md border'
         style={{
-          maxHeight: `calc(${innerHeight}px - ${isMobile ? 8 : 7.5}rem)`,
+          maxHeight: `calc(${innerHeight}px - ${isMobile ? 8 : 7.9}rem)`,
         }}
       >
         {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}

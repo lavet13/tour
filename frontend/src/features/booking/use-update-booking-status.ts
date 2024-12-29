@@ -1,22 +1,21 @@
 import { UseMutationOptions, useMutation } from '@tanstack/react-query';
 import {
-  UpdateBookingStatusMutation,
-  UpdateBookingStatusMutationVariables,
+  UpdateBookingMutation,
+  UpdateBookingMutationVariables,
 } from '@/gql/graphql';
 import { graphql } from '@/gql';
 import { client } from '@/graphql/graphql-request';
-import { client as queryClient } from '@/react-query';
 
 export const useUpdateBookingStatus = (
   options: UseMutationOptions<
-    UpdateBookingStatusMutation,
+    UpdateBookingMutation,
     Error,
-    UpdateBookingStatusMutationVariables
+    UpdateBookingMutationVariables
   > = {},
 ) => {
-  const updateBookingStatus = graphql(`
-    mutation UpdateBookingStatus($input: BookingStatusInput!) {
-      updateBookingStatus(input: $input) {
+  const updateBooking = graphql(`
+    mutation UpdateBooking($input: UpdateBookingInput!) {
+      updateBooking(input: $input) {
         id
         firstName
         lastName
@@ -32,8 +31,8 @@ export const useUpdateBookingStatus = (
   `);
 
   return useMutation({
-    mutationFn: (variables: UpdateBookingStatusMutationVariables) => {
-      return client.request(updateBookingStatus, {
+    mutationFn: (variables: UpdateBookingMutationVariables) => {
+      return client.request(updateBooking, {
         ...variables,
       });
     },

@@ -24,7 +24,7 @@ const Header: FC = () => {
           <div className='w-full flex-1 sm:w-auto sm:flex-none'>
             {isPending && (
               <RainbowButton className='text-xs px-2 py-1 sm:text-sm w-full h-7 sm:h-9 sm:px-4 sm:py-2 animate-pulse'>
-                <Skeleton className='w-24 h-full bg-background/10' />
+                <Skeleton className='w-24 h-full bg-accent/20' />
               </RainbowButton>
             )}
             {!me && !isPending && (

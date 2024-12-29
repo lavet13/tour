@@ -14,13 +14,14 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { Separator } from '@/components/ui/separator';
 import { useCookies } from 'react-cookie';
 import { ModeToggle } from '@/components/mode-toggle';
+import { pagesConfig } from '@/pages/admin/config/__pages';
 
 const Layout: FC = () => {
   const [cookies] = useCookies();
 
   return (
     <SidebarProvider defaultOpen={cookies['sidebar:state'] === true}>
-      <AppSidebar />
+      <AppSidebar config={pagesConfig} />
       <main className={"relative flex min-h-svh flex-1 flex-col bg-background"}>
         <QueryErrorResetBoundary>
           {({ reset }) => (
