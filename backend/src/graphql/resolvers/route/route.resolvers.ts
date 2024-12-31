@@ -39,49 +39,17 @@ const resolvers: Resolvers = {
       let cursor =
         direction === PaginationDirection.NONE
           ? undefined
-          : {
-              id:
-                direction === PaginationDirection.FORWARD
-                  ? args.input.after ?? undefined
-                  : args.input.before ?? undefined,
-            };
+          : { id: args.input.after || args.input.before };
 
       // in case where we might get cursor which points to nothing
       if (direction !== PaginationDirection.NONE) {
         // checking if the cursor pointing to the wbOrder doesn't exist,
         // otherwise skip
-        const cursorOrder = await ctx.prisma.route.findUnique({
+        const cursorOrder = await ctx.prisma.booking.findUnique({
           where: { id: cursor?.id },
         });
 
-        if (!cursorOrder) {
-          if (direction === PaginationDirection.FORWARD) {
-            // this shit is shit and isn't work for me,
-            // or because perhaps I am retard ☺️💕
-            //
-            // const previousValidPost = await ctx.prisma.wbOrder.findFirst({
-            //   where: { id: { lt: args.input.after } },
-            //   orderBy: { id: 'desc' },
-            // });
-            // console.log({ previousValidPost });
-            // cursor = previousValidPost ? { id: previousValidPost.id } : undefined;
-
-            cursor = { id: -1 }; // we guarantee routes are empty
-          } else if (direction === PaginationDirection.BACKWARD) {
-            const nextValidOrder = await ctx.prisma.route.findFirst({
-              where: {
-                id: {
-                  gt: args.input.before,
-                },
-              },
-              orderBy: {
-                id: 'asc',
-              },
-            });
-
-            cursor = nextValidOrder ? { id: nextValidOrder.id } : undefined;
-          }
-        }
+        if (!cursorOrder) cursor = undefined;
       }
 
       const searchType = Object.values(SearchTypeRoutes);
@@ -111,12 +79,6 @@ const resolvers: Resolvers = {
         },
       });
 
-      // If no results are retrieved, it means we've reached the end of the
-      // pagination or because we stumble upon invalid cursor, so on the
-      // client we just clearing `before` and `after` cursors to get first routes
-      // forward pagination could have no routes at all,
-      // or because cursor is set to `{ id: -1 }`, for backward pagination
-      // the only thing would happen if only routes are empty!
       if (routes.length === 0) {
         return {
           edges: [],
@@ -128,7 +90,6 @@ const resolvers: Resolvers = {
         };
       }
 
-      // Fix: Properly handle edge slicing based on direction and take value
       const edges =
         direction === PaginationDirection.BACKWARD
           ? routes.slice(1).reverse().slice(0, take) // For backward pagination, remove first item and take requested amount
@@ -139,25 +100,11 @@ const resolvers: Resolvers = {
       const startCursor = edges.length === 0 ? null : edges[0]?.id;
       const endCursor = edges.length === 0 ? null : edges.at(-1)?.id;
 
-      // This is where the condition `edges.length < routes.length` comes into
-      // play. If the length of the `edges` array is less than the length
-      // of the `routes` array, it means that the extra wbOrder was fetched and
-      // excluded from the `edges` array. That implies that there are more
-      // routes available to fetch in the current pagination direction.
       const hasNextPage =
         direction === PaginationDirection.BACKWARD ||
         (direction === PaginationDirection.FORWARD && hasMore) ||
         (direction === PaginationDirection.NONE &&
           edges.length < routes.length);
-      // /\
-      // |
-      // |
-      // NOTE: This condition `edges.length < routes.length` is essentially
-      // checking the same thing as `hasMore`, which is whether there are more
-      // routes available to fetch. Therefore, you can safely replace
-      // `edges.length < routes.length` with hasMore in the condition for
-      // determining hasNextPage. Both conditions are equivalent and will
-      // produce the same result.
 
       const hasPreviousPage =
         direction === PaginationDirection.FORWARD ||
@@ -233,8 +180,17 @@ const resolvers: Resolvers = {
       return route;
     },
     async createSchedule(_, args, ctx) {
-      const { routeId, daysOfWeek } =
-        args.input;
+      const {
+        routeId,
+        endTime,
+        startTime,
+        dayOfWeek,
+        seatsAvailable,
+        price,
+        isActive,
+        travelDate,
+        seatsBooked,
+      } = args.input;
 
       const route = await ctx.prisma.route.findUnique({
         where: {
@@ -249,6 +205,14 @@ const resolvers: Resolvers = {
       const schedule = await ctx.prisma.schedule.create({
         data: {
           routeId,
+          dayOfWeek,
+          startTime,
+          endTime,
+          seatsAvailable,
+          travelDate,
+          price,
+          isActive,
+          seatsBooked,
         },
       });
 

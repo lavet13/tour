@@ -14,11 +14,11 @@ export const createDepartureTripsLoader = (prisma: typeof prismaClient) => {
       cityIds.map(id => [id, []]),
     );
 
-    routes.forEach(route => {
+    for (const route of routes) {
       if (routesByCityId.has(route.departureCityId!)) {
         routesByCityId.get(route.departureCityId!)!.push(route);
       }
-    });
+    }
 
     return cityIds.map(id => routesByCityId.get(id) || []);
   });

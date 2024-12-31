@@ -56,7 +56,14 @@ export default gql`
 
   input ScheduleInput {
     routeId: ID!
-    daysOfWeek: DaysOfWeek!
+    dayOfWeek: DaysOfWeek!
+    travelDate: Date!
+    startTime: Date!
+    endTime: Date!
+    seatsAvailable: Int!
+    seatsBooked: Int!
+    isActive: Boolean!
+    price: Int!
   }
 
   type Route {
@@ -73,10 +80,14 @@ export default gql`
 
   type Schedule {
     route: Route
-    daysOfWeek: [DaysOfWeek!]!
+    dayOfWeek: DaysOfWeek!
+    travelDate: Date!
     startTime: Date!
-    endTime: Date
+    endTime: Date!
     seatsAvailable: Int!
+    seatsBooked: Int!
+    isActive: Boolean!
+    price: Int!
     createdAt: Date!
     updatedAt: Date!
   }
