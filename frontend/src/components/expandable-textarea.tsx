@@ -8,7 +8,7 @@ interface ExpandableTextareaProps extends React.ComponentProps<typeof Textarea> 
   onValueChange?: (value: any) => void;
 }
 
-const ExpandableTextarea = forwardRef<
+export const ExpandableTextarea = forwardRef<
   HTMLTextAreaElement,
   ExpandableTextareaProps
 >(({ value: valueProp, onValueChange, className, ...rest }, ref) => {
@@ -51,4 +51,4 @@ const ExpandableTextarea = forwardRef<
   );
 });
 
-export default ExpandableTextarea;
+ExpandableTextarea.displayName = 'ExpandableTextarea';

@@ -84,7 +84,8 @@ import { ru as fnsRU } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import { useCreateBooking } from '@/features/booking/use-create-booking';
 import { BookingInput } from '@/gql/graphql';
-import ExpandableTextarea from '@/components/expandable-textarea';
+import { ExpandableTextarea } from '@/components/expandable-textarea';
+import { AutosizeTextarea } from '@/components/autosize-textarea';
 
 const FormSchema = z.object({
   firstName: z
@@ -216,7 +217,7 @@ const BookingBusPage: FC = () => {
     };
 
     // Check if departure cities are loaded
-    if(!departureCities.length || arrivalIsLoading) return;
+    if (!departureCities.length || arrivalIsLoading) return;
 
     // Reset form if departure city is cleared
     if (!departureCityId) {
@@ -556,13 +557,15 @@ const BookingBusPage: FC = () => {
                 <FormField
                   control={form.control}
                   name='commentary'
-                  render={({ field: { value, ...field } }) => (
+                  render={({ field: { value, onChange, ...field } }) => (
                     <FormItem className='sm:col-span-2'>
                       <FormLabel>Комментарий(необязательно)</FormLabel>
                       <FormControl>
-                        <ExpandableTextarea
+                        <AutosizeTextarea
                           placeholder='Можете написать что-нибудь...'
                           value={value ?? ''}
+                          onValueChange={onChange}
+                          maxHeight={200}
                           {...field}
                         />
                       </FormControl>
@@ -666,7 +669,9 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
         <Command>
           {items.length >= 7 && <CommandInput placeholder='Искать город...' />}
           <CommandList>
-            {items.length >= 7 && <CommandEmpty>Не найдено городов</CommandEmpty>}
+            {items.length >= 7 && (
+              <CommandEmpty>Не найдено городов</CommandEmpty>
+            )}
             <CommandGroup>
               <ScrollArea
                 className={cn(
@@ -736,9 +741,7 @@ const Counter = forwardRef<HTMLButtonElement, CounterProps>(
         <Button
           variant='outline'
           size='icon'
-          className={cn(
-            'h-8 w-8 shrink-0 rounded-full',
-          )}
+          className={cn('h-8 w-8 shrink-0 rounded-full')}
           type='button'
           onClick={() => setValue(value - 1)}
           disabled={value <= 0}
@@ -769,9 +772,7 @@ const Counter = forwardRef<HTMLButtonElement, CounterProps>(
             ref={ref}
             variant='outline'
             size='icon'
-            className={cn(
-              'h-8 w-8 shrink-0 rounded-full',
-            )}
+            className={cn('h-8 w-8 shrink-0 rounded-full')}
             type='button'
             onClick={() => setValue(value + 1)}
             disabled={value >= 20}
