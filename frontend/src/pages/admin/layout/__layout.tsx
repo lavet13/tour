@@ -14,7 +14,7 @@ import { AppSidebar } from '@/components/app-sidebar';
 import { Separator } from '@/components/ui/separator';
 import { useCookies } from 'react-cookie';
 import { ModeToggle } from '@/components/mode-toggle';
-import { pagesConfig } from '@/pages/admin/config/__pages';
+import { pagesConfig } from '@/pages/admin/layout/config/__pages';
 
 const Layout: FC = () => {
   const [cookies] = useCookies();

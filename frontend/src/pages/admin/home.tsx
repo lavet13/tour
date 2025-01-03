@@ -2,8 +2,8 @@ import * as React from 'react';
 import { Link, LinkProps } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { PageHeader, PageHeaderHeading } from '@/components/page-header';
-import { pagesConfig } from '@/pages/admin/config/__pages';
-import { NavItemWithChildren } from './types/__nav';
+import { pagesConfig } from '@/pages/admin/layout/config/__pages';
+import { NavItemWithChildren } from '@/pages/admin/layout/types/__nav';
 
 function AdminPage() {
   const sidebarNav = pagesConfig.sidebarNav;
@@ -13,13 +13,13 @@ function AdminPage() {
       <PageHeader>
         <PageHeaderHeading>Административная панель</PageHeaderHeading>
       </PageHeader>
-      <div className='relative container px-1 sm:px-4 mx-auto overflow-hidden space-y-2 flex-1 pt-2 md:pt-4 lg:pt-6'>
+      <div className='relative container px-1 sm:px-4 mx-auto overflow-hidden space-y-2 flex-1 pt-3 md:pt-4 lg:pt-6'>
         {sidebarNav.map(nav => (
           <React.Fragment key={nav.title}>
-            <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight">
+            <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight indent-3">
               {nav.title}
             </h3>
-            <div className='block flex-1 sm:grid space-y-2 sm:grid-cols-[repeat(auto-fill,_minmax(19rem,_1fr))]'>
+            <div className='block flex-1 sm:grid sm:grid-cols-[repeat(auto-fill,_minmax(19rem,_1fr))]'>
               {nav.items?.map(item => (
                 <ListItem key={item.title} item={item}>
                   {item.description}

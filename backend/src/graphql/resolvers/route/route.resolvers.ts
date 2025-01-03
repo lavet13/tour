@@ -179,45 +179,6 @@ const resolvers: Resolvers = {
 
       return route;
     },
-    async createSchedule(_, args, ctx) {
-      const {
-        routeId,
-        endTime,
-        startTime,
-        dayOfWeek,
-        seatsAvailable,
-        price,
-        isActive,
-        travelDate,
-        seatsBooked,
-      } = args.input;
-
-      const route = await ctx.prisma.route.findUnique({
-        where: {
-          id: routeId,
-        },
-      });
-
-      if (!route) {
-        throw new GraphQLError(`Route with ID ${routeId} not found.`);
-      }
-
-      const schedule = await ctx.prisma.schedule.create({
-        data: {
-          routeId,
-          dayOfWeek,
-          startTime,
-          endTime,
-          seatsAvailable,
-          travelDate,
-          price,
-          isActive,
-          seatsBooked,
-        },
-      });
-
-      return schedule;
-    },
   },
   Route: {
     region(parent, _, { loaders }) {
@@ -236,19 +197,10 @@ const resolvers: Resolvers = {
       return loaders.schedulesLoader.load(parent.id);
     },
   },
-  Schedule: {
-    route(parent, _, { loaders }) {
-      return loaders.routeLoader.load(parent.routeId);
-    },
-  },
 };
 
 const resolversComposition: ResolversComposerMapping<any> = {
   'Query.routeById': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
-  'Mutation.createSchedule': [
-    isAuthenticated(),
-    hasRoles([Role.MANAGER, Role.ADMIN]),
-  ],
   // 'Subscription.newWbOrder': [
   //   isAuthenticated(),
   //   hasRoles([Role.MANAGER, Role.ADMIN]),

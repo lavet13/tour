@@ -1,5 +1,5 @@
-import { Resolvers, SearchTypeBookings } from '@/graphql/__generated__/types';
-import { BookingStatus, Prisma, Role } from '@prisma/client';
+import { Resolvers, } from '@/graphql/__generated__/types';
+import { Prisma, Role } from '@prisma/client';
 
 import {
   ResolversComposerMapping,

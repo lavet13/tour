@@ -162,7 +162,11 @@ const MainNav: FC = () => {
               <RadixNavigationMenuSub className='flex'>
                 <ScrollArea className='h-fit'>
                   <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 p-2'>
-                    <Button className='px-3 underline decoration-dotted hover:decoration-solid h-fit' variant='link' asChild>
+                    <Button
+                      className='px-3 underline decoration-dotted hover:decoration-solid h-fit'
+                      variant='link'
+                      asChild
+                    >
                       <Link to={'/bookings'}>Показать все</Link>
                     </Button>
                     <NavigationMenuItem>
@@ -403,28 +407,22 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                                   </Link>
                                 </Button>
                               ) : (
-                                <Tooltip key={trip.id} delayDuration={200}>
-                                  <TooltipTrigger asChild>
-                                    <Button
-                                      asChild={isAvailable}
-                                      variant='ghost'
-                                      className={cn(
-                                        'w-full justify-between',
-                                        !isAvailable && 'opacity-50',
-                                      )}
-                                    >
-                                      {trip.arrivalCity?.name}
-                                      {!isAvailable && formattedDate && (
-                                        <span className='text-xs text-muted-foreground'>
-                                          {`от ${formattedDate}`}
-                                        </span>
-                                      )}
-                                    </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    Будет доступно с {formattedDate}
-                                  </TooltipContent>
-                                </Tooltip>
+                                <Button
+                                  key={trip.id}
+                                  asChild={isAvailable}
+                                  variant='ghost'
+                                  className={cn(
+                                    'w-full justify-between',
+                                    !isAvailable && 'opacity-50',
+                                  )}
+                                >
+                                  {trip.arrivalCity?.name}
+                                  {!isAvailable && formattedDate && (
+                                    <span className='text-xs text-muted-foreground'>
+                                      {`от ${formattedDate}`}
+                                    </span>
+                                  )}
+                                </Button>
                               );
 
                               return content;

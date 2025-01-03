@@ -302,12 +302,12 @@ const BookingsPage: FC = () => {
                             onMouseDown: header.getResizeHandler(),
                             onTouchStart: header.getResizeHandler(),
                             className: cn(
-                              `absolute right-0 rounded-sm top-0 w-1.5 h-full cursor-col-resize select-none touch-none ${
+                              `absolute right-0 rounded-sm top-0 w-1 h-full cursor-col-resize select-none touch-none ${
                                 table.options.columnResizeDirection
                               } ${
                                 header.column.getIsResizing()
-                                  ? 'bg-foreground/70'
-                                  : 'hover:bg-foreground/50'
+                                  ? 'bg-foreground/50'
+                                  : 'hover:bg-foreground/30'
                               }`,
                             ),
                             style: {

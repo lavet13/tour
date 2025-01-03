@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import express from 'express';
+import express, { Application } from 'express';
 import 'json-bigint-patch';
 
 import { makeExecutableSchema } from '@graphql-tools/schema';
@@ -9,10 +9,8 @@ import { useGraphQLSSE } from '@graphql-yoga/plugin-graphql-sse';
 import resolvers from '@/graphql/resolvers';
 import typeDefs from '@/graphql/types';
 
-import { createContext } from '@/context';
-import { createYoga } from 'graphql-yoga';
-
-import configure from '@/routers';
+import { ContextValue, createContext } from '@/context';
+import { YogaServerInstance, createYoga } from 'graphql-yoga';
 
 const schema = makeExecutableSchema({
   typeDefs,
@@ -56,6 +54,13 @@ async function bootstrap() {
   }
 
   return app;
+}
+
+function configure(
+  app: Application,
+  yoga: YogaServerInstance<{}, ContextValue>,
+) {
+  app.use('/graphql', yoga);
 }
 
 const app = bootstrap();

@@ -1,6 +1,6 @@
-import { MainNavItem } from "@/pages/admin/types/__nav";
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "./ui/sidebar";
-import { RouterLink } from "./router-link";
+import { MainNavItem } from "@/pages/admin/layout/types/__nav";
+import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from "@/components/ui/sidebar";
+import { RouterLink } from "@/components/router-link";
 
 export function NavHeader({ items }: { items: MainNavItem[] }) {
   return (

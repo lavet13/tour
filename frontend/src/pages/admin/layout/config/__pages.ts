@@ -1,5 +1,5 @@
-import { Bus, Home, Tickets } from "lucide-react";
-import { MainNavItem, SidebarNavItem } from "../types/__nav";
+import { Bus, Home, Tickets, CalendarClock } from "lucide-react";
+import { MainNavItem, SidebarNavItem } from "@/pages/admin/layout/types/__nav";
 
 export interface PagesConfig {
   mainNav: MainNavItem[];
@@ -26,6 +26,12 @@ export const pagesConfig: PagesConfig = {
           title: 'Бронирования',
           url: '/admin/bookings',
           description: 'Заявки на бронирование от клиентов',
+        },
+        {
+          icon: CalendarClock,
+          title: 'Расписания',
+          url: '/admin/schedules',
+          description: 'Определение расписания маршрутов',
         },
       ],
     },

@@ -4,7 +4,6 @@ import prisma from '@/prisma';
 import { getTokenFromRequest } from '@/helpers/get-token-from-request';
 import { pubSub } from '@/pubsub';
 import { createLoaders } from './graphql/loaders';
-
 export type ContextValue = {
   prisma: typeof prisma;
   token: string | null;

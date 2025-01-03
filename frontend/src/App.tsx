@@ -4,7 +4,6 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { useGetMe } from './features/auth';
-import { pagesConfig } from './pages/admin/config/__pages';
 
 type RouteComponent = (props: JSX.IntrinsicAttributes) => JSX.Element;
 type AppRoute = {

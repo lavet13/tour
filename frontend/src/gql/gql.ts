@@ -30,6 +30,7 @@ const documents = {
     "\n    query InfiniteRoutes($input: RoutesInput!) {\n      routes(input: $input) {\n        edges {\n          id\n          departureCity {\n            id\n            name\n          }\n          region {\n            id\n            name\n          }\n          arrivalCity {\n            id\n            name\n          }\n          createdAt\n          updatedAt\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  ": types.InfiniteRoutesDocument,
     "\n    query GetRoutesByRegion($regionId: ID!) {\n      routesByRegion(regionId: $regionId) {\n        id\n        name\n        departureTrips {\n          id\n          arrivalCity {\n            id\n            name\n          }\n          departureDate\n        }\n      }\n    }\n  ": types.GetRoutesByRegionDocument,
     "\n    query Routes($input: RoutesInput!) {\n      routes(input: $input) {\n        edges {\n          id\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  ": types.RoutesDocument,
+    "\n    query GetSchedulesByRoute($routeId: ID!) {\n      schedulesByRoute(routeId: $routeId) {\n        dayOfWeek\n        travelDate\n        startTime\n        endTime\n        seatsAvailable\n        seatsBooked\n        isActive\n        price\n      }\n    }\n  ": types.GetSchedulesByRouteDocument,
     "\n    subscription CreatedBookSubscription {\n      createdBook {\n        id\n      }\n    }\n  ": types.CreatedBookSubscriptionDocument,
     "\n        mutation RefreshToken {\n          refreshToken {\n            accessToken\n            refreshToken\n          }\n        }\n      ": types.RefreshTokenDocument,
 };
@@ -112,6 +113,10 @@ export function graphql(source: "\n    query GetRoutesByRegion($regionId: ID!) {
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n    query Routes($input: RoutesInput!) {\n      routes(input: $input) {\n        edges {\n          id\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  "): (typeof documents)["\n    query Routes($input: RoutesInput!) {\n      routes(input: $input) {\n        edges {\n          id\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    query GetSchedulesByRoute($routeId: ID!) {\n      schedulesByRoute(routeId: $routeId) {\n        dayOfWeek\n        travelDate\n        startTime\n        endTime\n        seatsAvailable\n        seatsBooked\n        isActive\n        price\n      }\n    }\n  "): (typeof documents)["\n    query GetSchedulesByRoute($routeId: ID!) {\n      schedulesByRoute(routeId: $routeId) {\n        dayOfWeek\n        travelDate\n        startTime\n        endTime\n        seatsAvailable\n        seatsBooked\n        isActive\n        price\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

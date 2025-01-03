@@ -8,7 +8,6 @@ export default gql`
   }
 
   type Mutation {
-    createSchedule(input: ScheduleInput!): Schedule!
     createRoute(input: CreateRouteInput!): Route!
   }
 
@@ -54,18 +53,6 @@ export default gql`
     arrivalCityId: ID!
   }
 
-  input ScheduleInput {
-    routeId: ID!
-    dayOfWeek: DaysOfWeek!
-    travelDate: Date!
-    startTime: Date!
-    endTime: Date!
-    seatsAvailable: Int!
-    seatsBooked: Int!
-    isActive: Boolean!
-    price: Int!
-  }
-
   type Route {
     id: ID!
     departureCity: City
@@ -76,29 +63,5 @@ export default gql`
     departureDate: Date
     bookings: [Booking!]!
     schedules: [Schedule!]!
-  }
-
-  type Schedule {
-    route: Route
-    dayOfWeek: DaysOfWeek!
-    travelDate: Date!
-    startTime: Date!
-    endTime: Date!
-    seatsAvailable: Int!
-    seatsBooked: Int!
-    isActive: Boolean!
-    price: Int!
-    createdAt: Date!
-    updatedAt: Date!
-  }
-
-  enum DaysOfWeek {
-    MONDAY
-    TUESDAY
-    WEDNESDAY
-    THURSDAY
-    FRIDAY
-    SATURDAY
-    SUNDAY
   }
 `;

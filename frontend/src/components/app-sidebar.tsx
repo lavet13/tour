@@ -7,7 +7,7 @@ import {
   SidebarHeader,
   SidebarSeparator,
 } from '@/components/ui/sidebar';
-import { PagesConfig } from '@/pages/admin/config/__pages';
+import { PagesConfig } from '@/pages/admin/layout/config/__pages';
 import { NavHeader } from './nav-header';
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {

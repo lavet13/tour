@@ -141,6 +141,7 @@ export default async function seed() {
         departureCityId: mariupol.id,
         arrivalCityId: coastalCityIds[city],
         regionId: regions.COASTAL.id,
+        departureDate: new Date('2025-05-01'),
       },
     });
 
