@@ -5,24 +5,31 @@ import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { OctagonAlert } from 'lucide-react';
 import { FC, useEffect, useRef } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
-import { Outlet, useLocation } from 'react-router-dom';
-import {
-  SidebarProvider,
-  SidebarTrigger,
-} from '@/components/ui/sidebar';
+import { Link, Outlet, useLocation } from 'react-router-dom';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/app-sidebar';
 import { Separator } from '@/components/ui/separator';
 import { useCookies } from 'react-cookie';
 import { ModeToggle } from '@/components/mode-toggle';
 import { pagesConfig } from '@/pages/admin/layout/config/__pages';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 
 const Layout: FC = () => {
   const [cookies] = useCookies();
+  const { breadcrumbs, path } = useBreadcrumbs();
 
   return (
     <SidebarProvider defaultOpen={cookies['sidebar:state'] === true}>
       <AppSidebar config={pagesConfig} />
-      <main className={"relative flex min-h-svh flex-1 flex-col bg-background"}>
+      <main className={'relative flex min-h-svh flex-1 flex-col bg-background'}>
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary
@@ -83,6 +90,29 @@ const Layout: FC = () => {
                 <div className='flex flex-1 items-center gap-2 px-2 sm:px-4'>
                   <SidebarTrigger className='-ml-1' />
                   <Separator orientation='vertical' className='mr-2 h-4' />
+                  {breadcrumbs.length > 0 && (
+                    <Breadcrumb>
+                      <BreadcrumbList>
+                        {breadcrumbs.map((crumb, idx) => (
+                          <BreadcrumbItem key={(crumb.url as string) || crumb.title}>
+                            {crumb.url &&
+                            crumb.url !== '#' &&
+                            crumb.url !== path ? (
+                              <BreadcrumbLink asChild>
+                                <Link to={crumb.url}>{crumb.title}</Link>
+                              </BreadcrumbLink>
+                            ) : (
+                              <BreadcrumbPage>{crumb.title}</BreadcrumbPage>
+                            )}
+                            {idx < breadcrumbs.length - 1 && (
+                              <BreadcrumbSeparator />
+                            )}
+                          </BreadcrumbItem>
+                        ))}
+                      </BreadcrumbList>
+                    </Breadcrumb>
+                  )}
+
                   <div className='ml-auto'>
                     <ModeToggle />
                   </div>
