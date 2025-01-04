@@ -1,4 +1,4 @@
-import { Bus, Home, Tickets, CalendarClock } from "lucide-react";
+import { Bus, Home, Tickets, CalendarClock, Route } from "lucide-react";
 import { MainNavItem, SidebarNavItem } from "@/pages/admin/layout/types/__nav";
 
 export interface PagesConfig {
@@ -26,6 +26,12 @@ export const pagesConfig: PagesConfig = {
           title: 'Бронирования',
           url: '/admin/bookings',
           description: 'Заявки на бронирование от клиентов',
+        },
+        {
+          icon: Route,
+          title: 'Маршруты',
+          url: '/admin/routes',
+          description: 'Определение маршрутов',
         },
         {
           icon: CalendarClock,

@@ -448,11 +448,14 @@ const BookingBusPage: FC = () => {
                                 const words = value.split(' ');
                                 const capitalizedWorlds = words
                                   .map(w =>
-                                    w.replace(
-                                      /^./,
-                                      (w.at(0) as string)?.toUpperCase(),
-                                    ),
+                                    w
+                                      .replace(
+                                        /^./,
+                                        (w.at(0) as string)?.toUpperCase(),
+                                      )
+                                      .replace(/\d/gi, ''),
                                   )
+
                                   .join(' ');
                                 return capitalizedWorlds;
                               };
@@ -482,10 +485,12 @@ const BookingBusPage: FC = () => {
                                 const words = value.split(' ');
                                 const capitalizedWorlds = words
                                   .map(w =>
-                                    w.replace(
-                                      /^./,
-                                      (w.at(0) as string)?.toUpperCase(),
-                                    ),
+                                    w
+                                      .replace(
+                                        /^./,
+                                        (w.at(0) as string)?.toUpperCase(),
+                                      )
+                                      .replace(/\d/gi, ''),
                                   )
                                   .join(' ');
                                 return capitalizedWorlds;

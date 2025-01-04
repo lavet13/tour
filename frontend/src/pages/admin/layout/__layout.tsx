@@ -94,15 +94,22 @@ const Layout: FC = () => {
                     <Breadcrumb>
                       <BreadcrumbList>
                         {breadcrumbs.map((crumb, idx) => (
-                          <BreadcrumbItem key={(crumb.url as string) || crumb.title}>
+                          <BreadcrumbItem
+                            key={(crumb.url as string) || crumb.title}
+                          >
                             {crumb.url &&
                             crumb.url !== '#' &&
                             crumb.url !== path ? (
-                              <BreadcrumbLink asChild>
+                              <BreadcrumbLink
+                                className='max-w-20 truncate md:max-w-none'
+                                asChild
+                              >
                                 <Link to={crumb.url}>{crumb.title}</Link>
                               </BreadcrumbLink>
                             ) : (
-                              <BreadcrumbPage>{crumb.title}</BreadcrumbPage>
+                              <BreadcrumbPage className='max-w-20 truncate md:max-w-none'>
+                                {crumb.title}
+                              </BreadcrumbPage>
                             )}
                             {idx < breadcrumbs.length - 1 && (
                               <BreadcrumbSeparator />
