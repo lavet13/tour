@@ -5,6 +5,8 @@ import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 
 const Drawer = ({
   shouldScaleBackground = true,
@@ -51,16 +53,28 @@ const DrawerContent = React.forwardRef<
           isTablet &&
             'fixed inset-x-auto bottom-2 right-2 top-2 z-50 mt-0 flex flex-col h-auto max-w-[400px] w-full bg-transparent rounded-[10px]',
           !isTablet &&
-            'fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background',
+            'fixed inset-x-0 bottom-0 outline-none z-50 mt-24 flex h-fit flex-col rounded-t-[10px] border bg-background',
           className,
         )}
         {...props}
       >
         {isTablet && (
-          <div className='bg-background border h-full w-full grow flex flex-col rounded-[16px]'>
-            <div className='mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted' />
-            {children}
-          </div>
+          <>
+            <div className='bg-background border h-full w-full grow flex flex-col rounded-[16px]'>
+              <div className='mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted' />
+              <DrawerClose asChild>
+                <Button
+                  className='absolute top-3 right-3 w-6 h-6'
+                  variant='ghost'
+                  size='icon'
+                >
+                  <X />
+                  <span className='sr-only'>Закрыть модальное окно</span>
+                </Button>
+              </DrawerClose>
+              {children}
+            </div>
+          </>
         )}
         {!isTablet && (
           <>

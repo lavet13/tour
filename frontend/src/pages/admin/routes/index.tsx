@@ -1,7 +1,12 @@
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useInfiniteRoutes } from '@/features/routes';
 import { InfiniteRoutesQuery } from '@/gql/graphql';
@@ -20,6 +25,11 @@ import {
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { useImage } from 'react-image';
 import { Link } from 'react-router-dom';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 type Route = InfiniteRoutesQuery['routes']['edges'][number];
 
@@ -27,10 +37,11 @@ function RoutesPage() {
   const { state } = useSidebar();
   const [{ md }] = useAtom(breakpointsAtom);
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
+
   const [innerWidth, setInnerWidth] = useState(0);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<'add' | 'edit'>('add')
+  const [drawerMode, setDrawerMode] = useState<'add' | 'edit'>('add');
 
   useEffect(() => {
     const updateViewportSize = () => {
@@ -83,7 +94,7 @@ function RoutesPage() {
         maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
       }}
     >
-      <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(18rem,_1fr))] gap-4 pb-2'>
+      <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(20rem,_1fr))] gap-4 pb-2'>
         {flatData.map(route => (
           <RouteCard
             route={route}
@@ -92,15 +103,20 @@ function RoutesPage() {
           />
         ))}
       </div>
-      <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
+      <Drawer
+        repositionInputs
+        open={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
+      >
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>
-              {drawerMode === 'add' ? 'Добавить новый маршрут' : 'Изменить маршрут'}
+              {drawerMode === 'add'
+                ? 'Добавить новый маршрут'
+                : 'Изменить маршрут'}
             </DrawerTitle>
           </DrawerHeader>
-          <div className='p-4'>
-          </div>
+          <div className='p-4'></div>
         </DrawerContent>
       </Drawer>
     </div>
@@ -172,6 +188,9 @@ function RouteCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const MOBILE_BREAKPOINT = 340;
+  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+
   return (
     <Card className='overflow-hidden'>
       <CardContent className='p-0 h-full flex flex-col'>
@@ -201,7 +220,7 @@ function RouteCard({
           </div>
           <div className='flex justify-between space-x-2'>
             <Button
-              className='min-w-7 h-9'
+              className='shrink-0 w-9 h-9'
               variant='outline'
               size='icon'
               asChild
@@ -211,24 +230,58 @@ function RouteCard({
               </Link>
             </Button>
             <div className='flex space-x-2'>
-              <Button
-                className='gap-0'
-                variant='outline'
-                size='sm'
-                onClick={onEdit}
-              >
-                <Edit className='h-4 w-4 mr-2' />
-                Изменить
-              </Button>
-              <Button
-                className='gap-0 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'
-                variant='outline'
-                size='sm'
-                onClick={onDelete}
-              >
-                <Trash className='h-4 w-4 mr-2' />
-                Удалить
-              </Button>
+              {isMobile && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      className='size-9 gap-0'
+                      variant='outline'
+                      size='icon'
+                      onClick={onEdit}
+                    >
+                      <Edit className='h-4 w-4' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Изменить</TooltipContent>
+                </Tooltip>
+              )}
+              {!isMobile && (
+                <Button
+                  className='gap-0'
+                  variant='outline'
+                  size='sm'
+                  onClick={onEdit}
+                >
+                  <Edit className='h-4 w-4 mr-2' />
+                  Изменить
+                </Button>
+              )}
+              {isMobile && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      className='size-9 gap-0 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'
+                      variant='outline'
+                      size='sm'
+                      onClick={onDelete}
+                    >
+                      <Trash className='h-4 w-4' />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent align='end'>Удалить</TooltipContent>
+                </Tooltip>
+              )}
+              {!isMobile && (
+                <Button
+                  className='gap-0 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'
+                  variant='outline'
+                  size='sm'
+                  onClick={onDelete}
+                >
+                  <Trash className='h-4 w-4 mr-2' />
+                  Удалить
+                </Button>
+              )}
             </div>
           </div>
         </div>

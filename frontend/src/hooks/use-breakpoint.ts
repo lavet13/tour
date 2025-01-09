@@ -1,4 +1,3 @@
-// hooks/use-breakpoint.ts
 import { useEffect, useState } from 'react';
 import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import { useAtom, useAtomValue } from 'jotai';
