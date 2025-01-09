@@ -85,7 +85,8 @@ model Schedule {
   updatedAt DateTime @updatedAt
 
   @@unique([routeId, travelDate])
-  @@index([dayOfWeek, routeId, travelDate, isActive])
+  @@index([routeId, travelDate, isActive])
+  @@index([dayOfWeek, isActive])
   @@map("schedules")
 }
 
@@ -125,7 +126,8 @@ model Route {
   bookings        Booking[]
 
   @@unique([departureCityId, arrivalCityId])
-  @@index([departureCityId, arrivalCityId, regionId, isActive, departureDate])
+  @@index([departureCityId, arrivalCityId, isActive])
+  @@index([regionId])
   @@map("routes")
 }
 

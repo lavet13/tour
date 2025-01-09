@@ -12,17 +12,17 @@ type TPageParam = {
 };
 
 type UseInfiniteRoutesProps = {
-  take: number;
-  query: string;
-  sorting: SortingState;
+  take?: number;
+  query?: string;
+  sorting?: SortingState;
   options?: InitialDataInfiniteOptions<InfiniteRoutesQuery, TPageParam>;
 };
 
 export const useInfiniteRoutes = ({
-  query,
+  query = '',
   take = 30,
   sorting = [],
-  options,
+  options = {},
 }: UseInfiniteRoutesProps) => {
   const navigate = useNavigate();
 
@@ -39,6 +39,7 @@ export const useInfiniteRoutes = ({
             id
             name
           }
+          departureDate
           arrivalCity {
             id
             name

@@ -1,4 +1,4 @@
-import { Resolvers, SearchTypeRoutes } from '@/graphql/__generated__/types';
+import { Resolvers } from '@/graphql/__generated__/types';
 import { Prisma, Role } from '@prisma/client';
 
 import {
@@ -13,8 +13,6 @@ import { hasRoles, isAuthenticated } from '@/graphql/composition/authorization';
 const resolvers: Resolvers = {
   Query: {
     async routes(_, args, ctx) {
-      const query = args.input.query?.trim();
-
       enum PaginationDirection {
         NONE = 'NONE',
         FORWARD = 'FORWARD',
@@ -30,7 +28,7 @@ const resolvers: Resolvers = {
       const take = Math.abs(
         applyConstraints({
           type: 'take',
-          min: 1,
+          min: 5,
           max: 50,
           value: args.input.take ?? 30,
         }),
@@ -45,38 +43,29 @@ const resolvers: Resolvers = {
       if (direction !== PaginationDirection.NONE) {
         // checking if the cursor pointing to the wbOrder doesn't exist,
         // otherwise skip
-        const cursorOrder = await ctx.prisma.booking.findUnique({
+        const cursorOrder = await ctx.prisma.route.findUnique({
           where: { id: cursor?.id },
         });
 
         if (!cursorOrder) cursor = undefined;
       }
 
-      const searchType = Object.values(SearchTypeRoutes);
-      const conditions: Prisma.RouteWhereInput[] = [];
+      // Prepare sorting
+      const sorting = args.input.sorting || [];
 
-      if (searchType.includes(SearchTypeRoutes.Id)) {
-        conditions.push({ id: { equals: query } });
-      }
+      const orderBy: Prisma.BookingOrderByWithRelationInput[] = sorting.length
+        ? sorting.flatMap((sort): Prisma.BookingOrderByWithRelationInput[] => {
+            return [{ [sort.id]: sort.desc ? 'desc' : 'asc' }, { id: 'asc' }];
+          })
+        : [{ updatedAt: 'desc' }, { id: 'asc' }];
 
-      const sorting = args.input.sorting;
-      const orderBy = sorting[0]
-        ? { [sorting[0].id]: sorting[0].desc ? 'desc' : 'asc' }
-        : [];
-
-      // fetching routes with extra one, so to determine if there's more to fetch
+      // fetching bookings with extra one, so to determine if there's more to fetch
       const routes = await ctx.prisma.route.findMany({
         take:
           direction === PaginationDirection.BACKWARD ? -(take + 1) : take + 1, // Fetch one extra wbOrder for determining `hasNextPage`
         cursor,
         skip: cursor ? 1 : undefined, // Skip the cursor wbOrder for the next/previous page
         orderBy,
-        where: {
-          OR:
-            query.length !== 0 && conditions.length > 0
-              ? conditions
-              : undefined,
-        },
       });
 
       if (routes.length === 0) {
@@ -91,9 +80,11 @@ const resolvers: Resolvers = {
       }
 
       const edges =
-        direction === PaginationDirection.BACKWARD
-          ? routes.slice(1).reverse().slice(0, take) // For backward pagination, remove first item and take requested amount
-          : routes.slice(0, take); // For forward/none pagination, just take requested amount
+        routes.length <= take
+          ? routes
+          : direction === PaginationDirection.BACKWARD
+            ? routes.slice(1, routes.length)
+            : routes.slice(0, -1);
 
       const hasMore = routes.length > take;
 
@@ -201,10 +192,9 @@ const resolvers: Resolvers = {
 
 const resolversComposition: ResolversComposerMapping<any> = {
   'Query.routeById': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
-  // 'Subscription.newWbOrder': [
-  //   isAuthenticated(),
-  //   hasRoles([Role.MANAGER, Role.ADMIN]),
-  // ],
+  'Query.routesByRegion': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
+  'Query.routes': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
+  'Mutation.createRoute': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
 };
 
 export default composeResolvers(resolvers, resolversComposition);
