@@ -39,21 +39,35 @@ const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
 >(({ className, children, ...props }, ref) => {
+  const [{ md }] = useAtom(breakpointsAtom);
+  const isTablet = useMediaQuery(`(min-width: ${md}px)`);
+
   return (
     <DrawerPortal>
       <DrawerOverlay />
       <DrawerPrimitive.Content
         ref={ref}
         className={cn(
-          'fixed inset-x-0 md:inset-x-auto bottom-0 md:bottom-2 md:right-2 md:top-2 z-50 mt-24 md:mt-0 flex flex-col h-auto md:max-w-[400px] md:w-full bg-background md:bg-transparent',
+          isTablet &&
+            'fixed inset-x-auto bottom-2 right-2 top-2 z-50 mt-0 flex flex-col h-auto max-w-[400px] w-full bg-transparent rounded-[10px]',
+          !isTablet &&
+            'fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto flex-col rounded-t-[10px] border bg-background',
           className,
         )}
         {...props}
       >
-        <div className='bg-background border border-b-0 md:border-b h-full w-full grow flex flex-col rounded-t-[10px] md:rounded-[16px]'>
-          <div className='mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted' />
-          {children}
-        </div>
+        {isTablet && (
+          <div className='bg-background border h-full w-full grow flex flex-col rounded-[16px]'>
+            <div className='mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted' />
+            {children}
+          </div>
+        )}
+        {!isTablet && (
+          <>
+            <div className='mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted' />
+            {children}
+          </>
+        )}
       </DrawerPrimitive.Content>
     </DrawerPortal>
   );
@@ -65,7 +79,10 @@ const DrawerHeader = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn('grid gap-1.5 p-4 md:pt-7 md:px-5 text-center sm:text-left', className)}
+    className={cn(
+      'grid gap-1.5 p-4 md:pt-7 md:px-5 text-center sm:text-left',
+      className,
+    )}
     {...props}
   />
 );
