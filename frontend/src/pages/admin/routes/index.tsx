@@ -22,7 +22,7 @@ import {
   MapPin,
   Trash,
 } from 'lucide-react';
-import { Suspense, useEffect, useMemo, useState } from 'react';
+import { Suspense, useDeferredValue, useEffect, useMemo, useState } from 'react';
 import { useImage } from 'react-image';
 import { Link } from 'react-router-dom';
 import {
@@ -30,6 +30,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Input } from '@/components/ui/input';
 
 type Route = InfiniteRoutesQuery['routes']['edges'][number];
 
@@ -42,6 +43,10 @@ function RoutesPage() {
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'add' | 'edit'>('add');
+
+  const [searchQuery, setSearchQuery] = useState('');
+  const deferredSearchQuery = useDeferredValue(searchQuery);
+  const isStaleSearchQuery = searchQuery !== deferredSearchQuery;
 
   useEffect(() => {
     const updateViewportSize = () => {
@@ -83,6 +88,13 @@ function RoutesPage() {
   const handleDeleteRoute = () => {};
 
   console.log({ flatData });
+  const filteredData = flatData.filter(
+    route =>
+      route.departureCity?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      route.arrivalCity?.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  console.log({ filteredData });
 
   return (
     <div
@@ -94,15 +106,30 @@ function RoutesPage() {
         maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
       }}
     >
-      <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(20rem,_1fr))] gap-4 pb-2'>
-        {flatData.map(route => (
-          <RouteCard
-            route={route}
-            onEdit={handleEditRoute}
-            onDelete={handleDeleteRoute}
-          />
-        ))}
+      <div className='flex items-center'>
+        <Input
+          className='max-w-[300px]'
+          placeholder='Найти маршрут...'
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+        />
       </div>
+      <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(20rem,_1fr))] gap-4 pb-2'>
+        {filteredData.length !== 0 &&
+          filteredData.map(route => (
+            <RouteCard
+              key={route.id}
+              route={route}
+              onEdit={handleEditRoute}
+              onDelete={handleDeleteRoute}
+            />
+          ))}
+      </div>
+      {filteredData.length === 0 && (
+        <p className='text-center text-sm text-muted-foreground'>
+          Не найдено подходящего маршрута.
+        </p>
+      )}
       <Drawer
         repositionInputs
         open={isDrawerOpen}
@@ -219,19 +246,24 @@ function RouteCard({
             )}
           </div>
           <div className='flex justify-between space-x-2'>
-            <Button
-              className='shrink-0 w-9 h-9'
-              variant='outline'
-              size='icon'
-              asChild
-            >
-              <Link to={`/admin/schedules?id=${route.id}`}>
-                <CalendarClock />
-              </Link>
-            </Button>
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <Button
+                  className='shrink-0 w-9 h-9'
+                  variant='outline'
+                  size='icon'
+                  asChild
+                >
+                  <Link to={`/admin/schedules?id=${route.id}`}>
+                    <CalendarClock />
+                  </Link>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Расписание</TooltipContent>
+            </Tooltip>
             <div className='flex space-x-2'>
               {isMobile && (
-                <Tooltip>
+                <Tooltip delayDuration={700}>
                   <TooltipTrigger asChild>
                     <Button
                       className='size-9 gap-0'
@@ -257,7 +289,7 @@ function RouteCard({
                 </Button>
               )}
               {isMobile && (
-                <Tooltip>
+                <Tooltip delayDuration={700}>
                   <TooltipTrigger asChild>
                     <Button
                       className='size-9 gap-0 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'

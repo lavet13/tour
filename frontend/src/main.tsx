@@ -1,13 +1,13 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
+import App from './App';
 import './index.css';
 import { ReactQueryProvider } from '@/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import { Toaster } from '@/components/ui/sonner';
 import { type ToasterProps } from 'sonner';
 import { CookiesProvider } from 'react-cookie';
-import { TooltipProvider } from '@/components/ui/tooltip.tsx';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 const toastOptions = {
   classNames: {
