@@ -683,7 +683,7 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
                   items.length >= 7 && 'h-[calc(14rem)] -mr-px pr-3',
                 )}
               >
-                {items.map(item => (
+                {items.length !== 0 && items.map(item => (
                   <CommandItem
                     key={item.id}
                     onSelect={() => handleItemSelect(item)}
@@ -697,6 +697,9 @@ const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
                     />
                   </CommandItem>
                 ))}
+                {items.length === 0 && (
+                  <p className="text-center text-sm text-muted-foreground">Нет данных</p>
+                )}
               </ScrollArea>
             </CommandGroup>
           </CommandList>

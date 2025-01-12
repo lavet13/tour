@@ -5,7 +5,7 @@ import { buttonVariants } from '@/components/ui/button';
 import { cva, VariantProps } from 'class-variance-authority';
 
 const formButtonVariants = cva(
-  "group relative w-full overflow-hidden font-semibold tracking-tighter transform-gpu transition-all ease-out hover:ring-2 hover:ring-offset-2",
+  "group relative w-full overflow-hidden tracking-tighter transform-gpu transition-all ease-out hover:ring-2 hover:ring-offset-2",
   {
     variants: {
       variant: {

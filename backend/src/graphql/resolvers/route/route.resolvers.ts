@@ -13,6 +13,8 @@ import { hasRoles, isAuthenticated } from '@/graphql/composition/authorization';
 const resolvers: Resolvers = {
   Query: {
     async routes(_, args, ctx) {
+      const query = args.input.query;
+
       enum PaginationDirection {
         NONE = 'NONE',
         FORWARD = 'FORWARD',
@@ -66,6 +68,20 @@ const resolvers: Resolvers = {
         cursor,
         skip: cursor ? 1 : undefined, // Skip the cursor wbOrder for the next/previous page
         orderBy,
+        where: {
+          OR: [
+            {
+              arrivalCity: {
+                name: { contains: query, mode: 'insensitive' },
+              },
+            },
+            {
+              departureCity: {
+                name: { contains: query, mode: 'insensitive' },
+              },
+            },
+          ],
+        },
       });
 
       if (routes.length === 0) {
@@ -114,8 +130,12 @@ const resolvers: Resolvers = {
     async routeById(_, args, ctx) {
       const id = args.id;
 
+      if(!id?.length) {
+        return null;
+      }
+
       const route = await ctx.prisma.route
-        .findUnique({
+        .findUniqueOrThrow({
           where: {
             id,
           },
@@ -123,7 +143,7 @@ const resolvers: Resolvers = {
         .catch((err: unknown) => {
           if (err instanceof PrismaClientKnownRequestError) {
             if (err.code === 'P2025') {
-              throw new GraphQLError(`Route with ID \`${id}\` not found.`);
+              throw new GraphQLError(`Маршрут с таким идентификатором \`${id}\` не найден.`);
             }
           }
           console.log({ err });
@@ -192,9 +212,11 @@ const resolvers: Resolvers = {
 
 const resolversComposition: ResolversComposerMapping<any> = {
   'Query.routeById': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
-  'Query.routesByRegion': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
   'Query.routes': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
-  'Mutation.createRoute': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
+  'Mutation.createRoute': [
+    isAuthenticated(),
+    hasRoles([Role.MANAGER, Role.ADMIN]),
+  ],
 };
 
 export default composeResolvers(resolvers, resolversComposition);

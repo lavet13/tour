@@ -22,7 +22,14 @@ import {
   MapPin,
   Trash,
 } from 'lucide-react';
-import { Suspense, useDeferredValue, useEffect, useMemo, useState } from 'react';
+import {
+  Fragment,
+  Suspense,
+  useDeferredValue,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import { useImage } from 'react-image';
 import { Link } from 'react-router-dom';
 import {
@@ -31,23 +38,23 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { Input } from '@/components/ui/input';
+import { Waypoint } from 'react-waypoint';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Route = InfiniteRoutesQuery['routes']['edges'][number];
 
 function RoutesPage() {
-  const { state } = useSidebar();
   const [{ md }] = useAtom(breakpointsAtom);
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
-
-  const [innerWidth, setInnerWidth] = useState(0);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [drawerMode, setDrawerMode] = useState<'add' | 'edit'>('add');
 
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
-  const isStaleSearchQuery = searchQuery !== deferredSearchQuery;
 
+  const { state } = useSidebar();
+  const [innerWidth, setInnerWidth] = useState(0);
   useEffect(() => {
     const updateViewportSize = () => {
       setInnerWidth(window.innerWidth);
@@ -73,6 +80,7 @@ function RoutesPage() {
     error,
   } = useInfiniteRoutes({
     take: import.meta.env.DEV ? 5 : 30,
+    query: deferredSearchQuery,
   });
 
   const flatData = useMemo(
@@ -87,14 +95,13 @@ function RoutesPage() {
 
   const handleDeleteRoute = () => {};
 
-  console.log({ flatData });
   const filteredData = flatData.filter(
     route =>
-      route.departureCity?.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      route.departureCity?.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
       route.arrivalCity?.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
-
-  console.log({ filteredData });
 
   return (
     <div
@@ -114,18 +121,42 @@ function RoutesPage() {
           onChange={e => setSearchQuery(e.target.value)}
         />
       </div>
-      <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(20rem,_1fr))] gap-4 pb-2'>
-        {filteredData.length !== 0 &&
-          filteredData.map(route => (
-            <RouteCard
-              key={route.id}
-              route={route}
-              onEdit={handleEditRoute}
-              onDelete={handleDeleteRoute}
-            />
-          ))}
+      <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(19rem,_1fr))] gap-2 pb-2'>
+        {isPending ? (
+          Array.from({ length: 8 }).map((_, idx) => (
+            <SkeletonRouteCard key={idx} />
+          ))
+        ) : (
+          <>
+            {filteredData.length !== 0 &&
+              filteredData.map((route, idx, routes) => (
+                <Fragment key={route.id}>
+                  <RouteCard
+                    key={route.id}
+                    route={route}
+                    onEdit={handleEditRoute}
+                    onDelete={handleDeleteRoute}
+                  />
+                  {idx === routes.length - 1 && (
+                    <Waypoint
+                      onEnter={() =>
+                        !isFetching && hasNextPage && fetchNextPage()
+                      }
+                    />
+                  )}
+                </Fragment>
+              ))}
+            {isFetchingNextPage &&
+              Array.from({ length: 5 }).map((_, idx) => (
+                <SkeletonRouteCard key={idx} />
+              ))}
+          </>
+        )}
       </div>
-      {filteredData.length === 0 && (
+      {deferredSearchQuery.length === 0 && filteredData.length === 0 && (
+        <p className='text-center text-sm text-muted-foreground'>Нет данных.</p>
+      )}
+      {deferredSearchQuery.length !== 0 && filteredData.length === 0 && (
         <p className='text-center text-sm text-muted-foreground'>
           Не найдено подходящего маршрута.
         </p>
@@ -135,6 +166,7 @@ function RoutesPage() {
         open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
       >
+        {/* <DrawerContent className="inset-x-auto right-2"> */}
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>
@@ -145,6 +177,7 @@ function RoutesPage() {
           </DrawerHeader>
           <div className='p-4'></div>
         </DrawerContent>
+        {/* </DrawerContent> */}
       </Drawer>
     </div>
   );
@@ -219,7 +252,7 @@ function RouteCard({
   const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
 
   return (
-    <Card className='overflow-hidden'>
+    <Card className={cn('overflow-hidden transition-opacity')}>
       <CardContent className='p-0 h-full flex flex-col'>
         <LazyImageWrapper
           className='basis-2'
@@ -313,6 +346,52 @@ function RouteCard({
                   <Trash className='h-4 w-4 mr-2' />
                   Удалить
                 </Button>
+              )}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function SkeletonRouteCard() {
+  const MOBILE_BREAKPOINT = 340;
+  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+
+  return (
+    <Card className='overflow-hidden'>
+      <CardContent className='p-0 h-full flex flex-col'>
+        {/* Image skeleton */}
+        <div className='relative h-48 w-full'>
+          <Skeleton className='absolute inset-0 w-full h-full' />
+        </div>
+
+        {/* Content skeleton */}
+        <div className='p-4 flex flex-col flex-1 justify-between gap-2'>
+          {/* Title skeleton */}
+          <Skeleton className='h-6 w-2/3 mb-2' />
+
+          {/* Details skeleton */}
+          <div className='space-y-2 mb-2'>
+            <Skeleton className='h-4 w-1/2' />
+            <Skeleton className='h-4 w-1/3' />
+          </div>
+
+          {/* Action buttons skeleton */}
+          <div className='flex justify-between space-x-2'>
+            <Skeleton className='h-9 w-9 rounded-md' />
+            <div className='flex space-x-2'>
+              {isMobile ? (
+                <>
+                  <Skeleton className='h-9 w-9 rounded-md' />
+                  <Skeleton className='h-9 w-9 rounded-md' />
+                </>
+              ) : (
+                <>
+                  <Skeleton className='h-9 w-16 rounded-md' />
+                  <Skeleton className='h-9 w-16 rounded-md' />
+                </>
               )}
             </div>
           </div>

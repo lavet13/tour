@@ -3,7 +3,7 @@ import gql from "graphql-tag";
 export default gql`
   type Query {
     routes(input: RoutesInput!): RoutesResponse!
-    routeById(id: ID!): Route
+    routeById(id: ID): Route
     routesByRegion(regionId: ID!): [City!]!
   }
 

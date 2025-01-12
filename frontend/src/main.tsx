@@ -23,8 +23,8 @@ const toastOptions = {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <CookiesProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <CookiesProvider>
         <ReactQueryProvider>
           <Toaster
             toastOptions={toastOptions}
@@ -36,7 +36,7 @@ createRoot(document.getElementById('root')!).render(
             <App />
           </TooltipProvider>
         </ReactQueryProvider>
-      </BrowserRouter>
-    </CookiesProvider>
+      </CookiesProvider>
+    </BrowserRouter>
   </StrictMode>,
 );

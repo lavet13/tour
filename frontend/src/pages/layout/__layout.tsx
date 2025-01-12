@@ -10,6 +10,9 @@ import { OctagonAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const Layout: FC = () => {
+  const location = useLocation();
+  const errorLocation = useRef(location.pathname);
+
   return (
     <div className='relative flex flex-col'>
       <Header />
@@ -18,9 +21,6 @@ const Layout: FC = () => {
           {({ reset }) => (
             <ErrorBoundary
               FallbackComponent={({ error, resetErrorBoundary }) => {
-                const location = useLocation();
-                const errorLocation = useRef(location.pathname);
-
                 useEffect(() => {
                   if (location.pathname !== errorLocation.current) {
                     resetErrorBoundary();
@@ -34,14 +34,18 @@ const Layout: FC = () => {
                 return (
                   <div className='flex justify-center items-center grow'>
                     <div className='container max-w-[600px]'>
-                      <Alert className="flex flex-col">
+                      <Alert className='flex flex-col'>
                         <OctagonAlert className='h-4 w-4' />
                         <AlertTitle>Ошибка</AlertTitle>
-                        <AlertDescription className="mb-3">
+                        <AlertDescription className='mb-3'>
                           {errorMessage}
                         </AlertDescription>
-                        <div className="flex">
-                          <Button className="sm:ml-auto flex-1 sm:flex-none" variant="secondary" onClick={() => resetErrorBoundary()}>
+                        <div className='flex'>
+                          <Button
+                            className='sm:ml-auto flex-1 sm:flex-none'
+                            variant='secondary'
+                            onClick={() => resetErrorBoundary()}
+                          >
                             Повторить запрос
                           </Button>
                         </div>

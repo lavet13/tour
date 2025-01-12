@@ -25,6 +25,8 @@ import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 const Layout: FC = () => {
   const [cookies] = useCookies();
   const { breadcrumbs, path } = useBreadcrumbs();
+  const location = useLocation();
+  const errorLocation = useRef(location.pathname);
 
   return (
     <SidebarProvider defaultOpen={cookies['sidebar:state'] === true}>
@@ -34,9 +36,6 @@ const Layout: FC = () => {
           {({ reset }) => (
             <ErrorBoundary
               FallbackComponent={({ error, resetErrorBoundary }) => {
-                const location = useLocation();
-                const errorLocation = useRef(location.pathname);
-
                 useEffect(() => {
                   if (location.pathname !== errorLocation.current) {
                     resetErrorBoundary();
@@ -49,7 +48,7 @@ const Layout: FC = () => {
 
                 return (
                   <>
-                    <header className='flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12'>
+                    <header className='sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
                       <div className='flex flex-1 items-center gap-2 px-4'>
                         <SidebarTrigger className='-ml-1' />
                         <Separator
@@ -86,7 +85,7 @@ const Layout: FC = () => {
               }}
               onReset={reset}
             >
-              <header className='flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12'>
+              <header className='sticky top-0 z-10 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
                 <div className='flex flex-1 items-center gap-2 px-2 sm:px-4'>
                   <SidebarTrigger className='-ml-1' />
                   <Separator orientation='vertical' className='mr-2 h-4' />
