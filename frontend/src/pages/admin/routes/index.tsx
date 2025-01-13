@@ -43,7 +43,6 @@ import { Waypoint } from 'react-waypoint';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSchedulesByRoute } from '@/features/schedule/use-schedules-by-route';
 import { useRouteById } from '@/features/routes/use-route-by-id';
-import { useRouteScheduleById } from '@/features/routes/use-route-schedule-id';
 
 type Route = InfiniteRoutesQuery['routes']['edges'][number];
 
@@ -53,9 +52,9 @@ function RoutesPage() {
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<
-    'addRoute' | 'editRoute' | 'editSchedule'
-  >('addRoute');
+  const [drawerMode, setDrawerMode] = useState<'addRoute' | 'editRoute'>(
+    'addRoute',
+  );
 
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -174,12 +173,21 @@ function RoutesPage() {
       {isSchedule && (
         <Tooltip delayDuration={700}>
           <TooltipTrigger asChild>
-        <Button className="size-8" variant='outline' size='icon' onClick={() => navigate(-1)}>
-          <ArrowLeft />
-        </Button>
-        </TooltipTrigger>
-          <TooltipContent side="bottom" sideOffset={-5}>
-            Назад
+            <Button
+              className='size-8'
+              variant='outline'
+              size='icon'
+              onClick={() => navigate(-1)}
+            >
+              <ArrowLeft />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent
+            align={state === 'collapsed' ? 'start' : 'center'}
+            side='bottom'
+            sideOffset={-3}
+          >
+            Вернуться назад
           </TooltipContent>
         </Tooltip>
       )}
@@ -377,9 +385,7 @@ function RouteCard({
                   </Link>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent align='start' alignOffset={-10} side='bottom'>
-                Расписание
-              </TooltipContent>
+              <TooltipContent side='bottom'>Расписание</TooltipContent>
             </Tooltip>
             <div className='flex space-x-2'>
               {isMobile && (
