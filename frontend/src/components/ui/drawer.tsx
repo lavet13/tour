@@ -51,7 +51,7 @@ const DrawerContent = React.forwardRef<
         ref={ref}
         className={cn(
           isTablet &&
-            'fixed inset-x-0 bottom-2 top-2 z-50 flex flex-col h-auto mx-auto max-w-[500px] w-full bg-transparent rounded-[10px]',
+            'fixed inset-x-0 bottom-2 top-2 z-50 flex flex-col h-auto mx-auto max-w-lg w-full bg-transparent rounded-[10px]',
           !isTablet &&
             'fixed inset-x-0 bottom-0 outline-none z-50 mt-24 flex h-fit flex-col rounded-t-[10px] border bg-background',
           className,
@@ -61,7 +61,7 @@ const DrawerContent = React.forwardRef<
         {isTablet && (
           <>
             <div className='bg-background border h-full w-full grow flex flex-col rounded-[16px]'>
-              <div className='mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted' />
+              <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
               <DrawerClose asChild>
                 <Button
                   className='absolute top-3 right-3 w-6 h-6'
@@ -78,7 +78,7 @@ const DrawerContent = React.forwardRef<
         )}
         {!isTablet && (
           <>
-            <div className='mx-auto mt-4 h-2 w-[100px] rounded-full bg-muted' />
+            <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
             {children}
           </>
         )}

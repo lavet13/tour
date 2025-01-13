@@ -15,6 +15,7 @@ import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import {
+  ArrowLeft,
   ArrowRight,
   Calendar,
   CalendarClock,
@@ -31,7 +32,7 @@ import {
   useState,
 } from 'react';
 import { useImage } from 'react-image';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Tooltip,
   TooltipContent,
@@ -40,15 +41,21 @@ import {
 import { Input } from '@/components/ui/input';
 import { Waypoint } from 'react-waypoint';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useSchedulesByRoute } from '@/features/schedule/use-schedules-by-route';
+import { useRouteById } from '@/features/routes/use-route-by-id';
+import { useRouteScheduleById } from '@/features/routes/use-route-schedule-id';
 
 type Route = InfiniteRoutesQuery['routes']['edges'][number];
 
 function RoutesPage() {
+  const navigate = useNavigate();
   const [{ md }] = useAtom(breakpointsAtom);
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<'add' | 'edit'>('add');
+  const [drawerMode, setDrawerMode] = useState<
+    'addRoute' | 'editRoute' | 'editSchedule'
+  >('addRoute');
 
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -69,6 +76,28 @@ function RoutesPage() {
     };
   }, []);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const routeId = searchParams.get('route_id');
+  const scheduleId = searchParams.get('schedule_id')!;
+
+  const { data: routeData } = useRouteById(routeId);
+
+  // show me schedules for existing route
+  const {
+    data: scheduleData,
+    fetchStatus: scheduleFetchStatus,
+    status: scheduleStatus,
+    error: scheduleError,
+    isError: scheduleIsError,
+  } = useSchedulesByRoute(scheduleId, {
+    enabled: !!scheduleId,
+  });
+
+  const scheduleBackgroundUpdate =
+    scheduleFetchStatus === 'fetching' && scheduleStatus === 'success';
+  const scheduleInitialLoading =
+    scheduleFetchStatus === 'fetching' && scheduleStatus === 'pending';
+
   const {
     data,
     hasNextPage,
@@ -88,12 +117,31 @@ function RoutesPage() {
     [data],
   );
 
-  const handleEditRoute = () => {
-    setDrawerMode('edit');
-    setIsDrawerOpen(true);
+  if (scheduleIsError) {
+    throw scheduleError;
+  }
+
+  const handleClose = () => {
+    if (drawerMode === 'editRoute') {
+      setSearchParams(params => {
+        const query = new URLSearchParams(params.toString());
+        query.delete('route_id');
+        return query;
+      });
+    }
   };
 
-  const handleDeleteRoute = () => {};
+  const handleEditRoute = (id: string) => () => {
+    setDrawerMode('editRoute');
+    setIsDrawerOpen(true);
+    setSearchParams(params => {
+      const query = new URLSearchParams(params.toString());
+      query.set('route_id', id);
+      return query;
+    });
+  };
+
+  const handleDeleteRoute = (id: string) => () => {};
 
   const filteredData = flatData.filter(
     route =>
@@ -102,6 +150,10 @@ function RoutesPage() {
         .includes(searchQuery.toLowerCase()) ||
       route.arrivalCity?.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
+
+  const isNotSchedule =
+    !scheduleInitialLoading && !scheduleData?.schedulesByRoute;
+  const isSchedule = !!scheduleData?.schedulesByRoute;
 
   return (
     <div
@@ -113,64 +165,97 @@ function RoutesPage() {
         maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
       }}
     >
-      <div className='flex items-center'>
-        <Input
-          className='max-w-[300px]'
-          placeholder='Найти маршрут...'
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-        />
-      </div>
-      <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(19rem,_1fr))] gap-2 pb-2'>
-        {isPending ? (
-          Array.from({ length: 8 }).map((_, idx) => (
-            <SkeletonRouteCard key={idx} />
-          ))
-        ) : (
-          <>
-            {filteredData.length !== 0 &&
-              filteredData.map((route, idx, routes) => (
-                <Fragment key={route.id}>
-                  <RouteCard
-                    key={route.id}
-                    route={route}
-                    onEdit={handleEditRoute}
-                    onDelete={handleDeleteRoute}
-                  />
-                  {idx === routes.length - 1 && (
-                    <Waypoint
-                      onEnter={() =>
-                        !isFetching && hasNextPage && fetchNextPage()
-                      }
+      {scheduleInitialLoading && (
+        <div className='flex-1 h-full flex items-center justify-center'>
+          <SonnerSpinner className='bg-foreground' />
+        </div>
+      )}
+
+      {isSchedule && (
+        <Tooltip delayDuration={700}>
+          <TooltipTrigger asChild>
+        <Button className="size-8" variant='outline' size='icon' onClick={() => navigate(-1)}>
+          <ArrowLeft />
+        </Button>
+        </TooltipTrigger>
+          <TooltipContent side="bottom" sideOffset={-5}>
+            Назад
+          </TooltipContent>
+        </Tooltip>
+      )}
+
+      {isNotSchedule && (
+        <div className='flex items-center'>
+          <Input
+            className='max-w-full sm:max-w-[300px]'
+            placeholder='Найти маршрут...'
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+          />
+        </div>
+      )}
+
+      {isNotSchedule && (
+        <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(19rem,_1fr))] gap-2 pb-2'>
+          {isPending &&
+            Array.from({ length: 8 }).map((_, idx) => (
+              <SkeletonRouteCard key={idx} />
+            ))}
+          {!isPending && (
+            <>
+              {filteredData.length !== 0 &&
+                filteredData.map((route, idx, routes) => (
+                  <Fragment key={route.id}>
+                    <RouteCard
+                      key={route.id}
+                      route={route}
+                      onEdit={handleEditRoute(route.id)}
+                      onDelete={handleDeleteRoute(route.id)}
                     />
-                  )}
-                </Fragment>
-              ))}
-            {isFetchingNextPage &&
-              Array.from({ length: 5 }).map((_, idx) => (
-                <SkeletonRouteCard key={idx} />
-              ))}
-          </>
+                    {idx === routes.length - 1 && (
+                      <Waypoint
+                        onEnter={() =>
+                          !isFetching && hasNextPage && fetchNextPage()
+                        }
+                      />
+                    )}
+                  </Fragment>
+                ))}
+              {isFetchingNextPage &&
+                Array.from({ length: 5 }).map((_, idx) => (
+                  <SkeletonRouteCard key={idx} />
+                ))}
+            </>
+          )}
+        </div>
+      )}
+
+      {deferredSearchQuery.length === 0 &&
+        filteredData.length === 0 &&
+        isNotSchedule && (
+          <p className='text-center text-sm text-muted-foreground'>
+            Нет данных.
+          </p>
         )}
-      </div>
-      {deferredSearchQuery.length === 0 && filteredData.length === 0 && (
-        <p className='text-center text-sm text-muted-foreground'>Нет данных.</p>
-      )}
-      {deferredSearchQuery.length !== 0 && filteredData.length === 0 && (
-        <p className='text-center text-sm text-muted-foreground'>
-          Не найдено подходящего маршрута.
-        </p>
-      )}
+      {deferredSearchQuery.length !== 0 &&
+        filteredData.length === 0 &&
+        isNotSchedule && (
+          <p className='text-center text-sm text-muted-foreground'>
+            Не найдено подходящего маршрута.
+          </p>
+        )}
+
       <Drawer
         repositionInputs
         open={isDrawerOpen}
         onOpenChange={setIsDrawerOpen}
+        onClose={handleClose}
       >
         {/* <DrawerContent className="inset-x-auto right-2"> */}
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>
-              {drawerMode === 'add'
+              {drawerMode === 'addRoute'
                 ? 'Добавить новый маршрут'
                 : 'Изменить маршрут'}
             </DrawerTitle>
@@ -287,12 +372,14 @@ function RouteCard({
                   size='icon'
                   asChild
                 >
-                  <Link to={`/admin/schedules?id=${route.id}`}>
+                  <Link to={`/admin/routes?schedule_id=${route.id}`}>
                     <CalendarClock />
                   </Link>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Расписание</TooltipContent>
+              <TooltipContent align='start' alignOffset={-10} side='bottom'>
+                Расписание
+              </TooltipContent>
             </Tooltip>
             <div className='flex space-x-2'>
               {isMobile && (
@@ -307,7 +394,7 @@ function RouteCard({
                       <Edit className='h-4 w-4' />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Изменить</TooltipContent>
+                  <TooltipContent side='bottom'>Изменить</TooltipContent>
                 </Tooltip>
               )}
               {!isMobile && (
@@ -333,7 +420,9 @@ function RouteCard({
                       <Trash className='h-4 w-4' />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent align='end'>Удалить</TooltipContent>
+                  <TooltipContent side='bottom' align='end'>
+                    Удалить
+                  </TooltipContent>
                 </Tooltip>
               )}
               {!isMobile && (

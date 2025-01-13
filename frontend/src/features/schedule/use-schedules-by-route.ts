@@ -5,7 +5,7 @@ import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
 
 export const useSchedulesByRoute = (
-  routeId: string,
+  routeId: string | null,
   options?: InitialDataOptions<GetSchedulesByRouteQuery>,
 ) => {
   const schedulesByRoute = graphql(`

@@ -5,13 +5,36 @@ import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
 
 export const useRouteById = (
-  id: string,
+  id: string | null,
   options?: InitialDataOptions<GetRouteByIdQuery>,
 ) => {
   const routeById = graphql(`
     query GetRouteById($id: ID) {
       routeById(id: $id) {
         id
+        departureCity {
+          id
+          name
+        }
+        arrivalCity {
+          id
+          name
+        }
+        region {
+          id
+          name
+        }
+        departureDate
+        schedules {
+          dayOfWeek
+          travelDate
+          startTime
+          endTime
+          seatsAvailable
+          seatsBooked
+          isActive
+          price
+        }
       }
     }
   `);
