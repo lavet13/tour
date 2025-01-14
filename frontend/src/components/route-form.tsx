@@ -4,9 +4,6 @@ import { SubmitHandler, useForm } from 'react-hook-form';
 import { Form } from '@/components/ui/form';
 import { z } from 'zod';
 
-interface RouteFormProps {
-  drawerMode: DrawerMode;
-}
 
 const FormSchema = z.object({
   firstName: z
@@ -67,6 +64,10 @@ const defaultValues: DefaultValues = {
   arrivalCityId: '',
   departureCityId: '',
 };
+
+interface RouteFormProps {
+  drawerMode: DrawerMode;
+}
 
 function RouteForm({ drawerMode }: RouteFormProps) {
   const form = useForm<DefaultValues>({

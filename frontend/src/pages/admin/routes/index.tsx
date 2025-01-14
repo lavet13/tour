@@ -19,8 +19,10 @@ import {
   ArrowRight,
   Calendar,
   CalendarClock,
+  CalendarPlus,
   Edit,
   MapPin,
+  MapPinPlus,
   Trash,
 } from 'lucide-react';
 import {
@@ -45,20 +47,21 @@ import { useSchedulesByRoute } from '@/features/schedule/use-schedules-by-route'
 import { useRouteById } from '@/features/routes/use-route-by-id';
 import RouteForm from '@/components/route-form';
 import { useDrawerState } from '@/hooks/use-drawer-state';
+import Schedules from '@/components/schedules';
 
 type Route = InfiniteRoutesQuery['routes']['edges'][number];
 
 function RoutesPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [{ md }] = useAtom(breakpointsAtom);
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchQuery = searchParams.get('q') ?? '';
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
-  const [searchParams, setSearchParams] = useSearchParams();
   const routeId = searchParams.get('route_id');
-  const scheduleId = searchParams.get('schedule_id')!;
+  const scheduleId = searchParams.get('schedule_id');
   const addRoute = searchParams.get('add_route');
 
   const { state } = useSidebar();
@@ -170,6 +173,9 @@ function RoutesPage() {
     !scheduleInitialLoading && !scheduleData?.schedulesByRoute;
   const isSchedule = !!scheduleData?.schedulesByRoute;
 
+  const MOBILE_BREAKPOINT = 400;
+  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+
   return (
     <div
       className={cn(
@@ -186,73 +192,89 @@ function RoutesPage() {
         </div>
       )}
 
-      {isSchedule && (
-        <Tooltip delayDuration={700}>
-          <TooltipTrigger asChild>
-            <Button
-              className='size-8'
-              variant='outline'
-              size='icon'
-              onClick={() => navigate(-1)}
-            >
-              <ArrowLeft />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent
-            align={state === 'collapsed' ? 'start' : 'center'}
-            side='bottom'
-            sideOffset={-3}
-          >
-            Вернуться назад
-          </TooltipContent>
-        </Tooltip>
-      )}
+      {isSchedule && <Schedules />}
 
       {isNotSchedule && (
-        <div className='flex items-center gap-2'>
-          <Input
-            className='max-w-full sm:max-w-[300px]'
-            placeholder='Найти маршрут...'
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-          <Button onClick={handleAddRoute}>Добавить маршрут</Button>
-        </div>
-      )}
+        <>
+          <div className='flex items-center gap-2'>
+            <Input
+              className='max-w-full sm:max-w-[300px]'
+              placeholder='Найти маршрут...'
+              value={searchQuery}
+              onChange={e => {
+                setSearchParams(params => {
+                  const query = new URLSearchParams(params.toString());
 
-      {isNotSchedule && (
-        <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(19rem,_1fr))] gap-2 pb-2'>
-          {isPending &&
-            Array.from({ length: 8 }).map((_, idx) => (
-              <SkeletonRouteCard key={idx} />
-            ))}
-          {!isPending && (
-            <>
-              {filteredData.length !== 0 &&
-                filteredData.map((route, idx, routes) => (
-                  <Fragment key={route.id}>
-                    <RouteCard
-                      key={route.id}
-                      route={route}
-                      onEdit={handleEditRoute(route.id)}
-                      onDelete={handleDeleteRoute(route.id)}
-                    />
-                    {idx === routes.length - 1 && (
-                      <Waypoint
-                        onEnter={() =>
-                          !isFetching && hasNextPage && fetchNextPage()
-                        }
+                  if (e.target.value.length === 0) {
+                    query.delete('q');
+                    return query;
+                  }
+
+                  query.set('q', e.target.value);
+                  return query;
+                });
+              }}
+            />
+            {isMobile && (
+              <Tooltip delayDuration={700}>
+                <TooltipTrigger asChild>
+                  <Button
+                    className='w-12'
+                    size={'icon'}
+                    onClick={handleAddRoute}
+                  >
+                    <MapPinPlus />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent
+                  align={state === 'collapsed' ? 'start' : 'center'}
+                  side='bottom'
+                >
+                  Добавить маршрут
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {!isMobile && (
+              <Button onClick={handleAddRoute}>
+                <MapPinPlus />
+                Добавить маршрут
+              </Button>
+            )}
+          </div>
+          <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(19rem,_1fr))] gap-2 pb-2'>
+            {isPending &&
+              Array.from({ length: 8 }).map((_, idx) => (
+                <SkeletonRouteCard key={idx} />
+              ))}
+
+            {!isPending && (
+              <>
+                {filteredData.length !== 0 &&
+                  filteredData.map((route, idx, routes) => (
+                    <Fragment key={route.id}>
+                      <RouteCard
+                        key={route.id}
+                        route={route}
+                        onEdit={handleEditRoute(route.id)}
+                        onDelete={handleDeleteRoute(route.id)}
                       />
-                    )}
-                  </Fragment>
-                ))}
-              {isFetchingNextPage &&
-                Array.from({ length: 5 }).map((_, idx) => (
-                  <SkeletonRouteCard key={idx} />
-                ))}
-            </>
-          )}
-        </div>
+                      {idx === routes.length - 1 && (
+                        <Waypoint
+                          onEnter={() =>
+                            !isFetching && hasNextPage && fetchNextPage()
+                          }
+                        />
+                      )}
+                    </Fragment>
+                  ))}
+                {isFetchingNextPage &&
+                  Array.from({ length: 5 }).map((_, idx) => (
+                    <SkeletonRouteCard key={idx} />
+                  ))}
+              </>
+            )}
+          </div>
+        </>
       )}
 
       {deferredSearchQuery.length === 0 &&
