@@ -8,6 +8,7 @@ import {
   composeResolvers,
 } from '@graphql-tools/resolvers-composition';
 import { Role } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { GraphQLError } from 'graphql';
 
 const resolvers: Resolvers = {
@@ -15,14 +16,35 @@ const resolvers: Resolvers = {
     async schedulesByRoute(_, args, ctx) {
       const routeId = args.routeId;
 
+      const route = await ctx.prisma.route
+        .findUniqueOrThrow({
+          where: {
+            id: routeId,
+          },
+          select: {
+            id: true,
+          },
+        })
+        .catch((err: unknown) => {
+          if (err instanceof PrismaClientKnownRequestError) {
+            if (err.code === 'P2025') {
+              throw new GraphQLError(
+                `Маршрут с таким идентификатором \`${routeId}\` не найден.`,
+              );
+            }
+          }
+          console.log({ err });
+          throw new GraphQLError('Unknown error!');
+        });
+
       const schedules = await ctx.prisma.schedule.findMany({
         where: {
-          routeId,
+          routeId: route.id,
         },
       });
 
       return schedules;
-    }
+    },
   },
   Mutation: {
     async createSchedule(_, args, ctx) {
