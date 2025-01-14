@@ -52,12 +52,16 @@ function RoutesPage() {
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<'addRoute' | 'editRoute'>(
-    'addRoute',
-  );
+  const [drawerMode, setDrawerMode] = useState<
+    'addRoute' | 'editRoute' | 'idle'
+  >('idle');
 
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
+
+  const [searchParams, setSearchParams] = useSearchParams();
+  const routeId = searchParams.get('route_id');
+  const scheduleId = searchParams.get('schedule_id')!;
 
   const { state } = useSidebar();
   const [innerWidth, setInnerWidth] = useState(0);
@@ -75,9 +79,24 @@ function RoutesPage() {
     };
   }, []);
 
-  const [searchParams, setSearchParams] = useSearchParams();
-  const routeId = searchParams.get('route_id');
-  const scheduleId = searchParams.get('schedule_id')!;
+  // Only set up edit mode when route_id is present
+  useEffect(() => {
+    if (routeId) {
+      setDrawerMode('editRoute');
+    } else if (!isDrawerOpen) {
+      setDrawerMode('idle');
+    }
+  }, [routeId, isDrawerOpen]);
+
+  // Handle drawer state based on route_id
+  useEffect(() => {
+    if (!routeId && isDrawerOpen) {
+      setIsDrawerOpen(false);
+    }
+    if (routeId && !isDrawerOpen) {
+      setIsDrawerOpen(true);
+    }
+  }, [routeId, isDrawerOpen, drawerMode]);
 
   const { data: routeData } = useRouteById(routeId);
 
@@ -116,11 +135,20 @@ function RoutesPage() {
     [data],
   );
 
+  const filteredData = flatData.filter(
+    route =>
+      route.departureCity?.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      route.arrivalCity?.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
   if (scheduleIsError) {
     throw scheduleError;
   }
 
   const handleClose = () => {
+    setDrawerMode('idle');
     if (drawerMode === 'editRoute') {
       setSearchParams(params => {
         const query = new URLSearchParams(params.toString());
@@ -128,6 +156,11 @@ function RoutesPage() {
         return query;
       });
     }
+  };
+
+  const handleAddRoute = () => {
+    setDrawerMode('addRoute');
+    setIsDrawerOpen(true);
   };
 
   const handleEditRoute = (id: string) => () => {
@@ -141,14 +174,6 @@ function RoutesPage() {
   };
 
   const handleDeleteRoute = (id: string) => () => {};
-
-  const filteredData = flatData.filter(
-    route =>
-      route.departureCity?.name
-        .toLowerCase()
-        .includes(searchQuery.toLowerCase()) ||
-      route.arrivalCity?.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
 
   const isNotSchedule =
     !scheduleInitialLoading && !scheduleData?.schedulesByRoute;
@@ -263,9 +288,9 @@ function RoutesPage() {
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>
-              {drawerMode === 'addRoute'
-                ? 'Добавить новый маршрут'
-                : 'Изменить маршрут'}
+              {drawerMode === 'addRoute' && 'Добавить новый маршрут'}
+              {drawerMode === 'editRoute' && 'Изменить маршрут'}
+              {drawerMode === 'idle' && <Skeleton className="h-6 w-full" />}
             </DrawerTitle>
           </DrawerHeader>
           <div className='p-4'></div>
