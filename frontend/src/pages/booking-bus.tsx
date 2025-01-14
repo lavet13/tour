@@ -156,8 +156,8 @@ const defaultValues: DefaultValues = {
 
 const BookingBusPage: FC = () => {
   const [phoneInputKey, setPhoneInputKey] = useState(0);
-  // Search Params syncronization
 
+  // Search Params syncronization
   const [searchParams, setSearchParams] = useSearchParams();
   const departureCityId = searchParams.get('departureCityId')!;
   const arrivalCityId = searchParams.get('arrivalCityId')!;

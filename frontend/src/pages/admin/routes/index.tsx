@@ -43,6 +43,8 @@ import { Waypoint } from 'react-waypoint';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSchedulesByRoute } from '@/features/schedule/use-schedules-by-route';
 import { useRouteById } from '@/features/routes/use-route-by-id';
+import RouteForm from '@/components/route-form';
+import { useDrawerState } from '@/hooks/use-drawer-state';
 
 type Route = InfiniteRoutesQuery['routes']['edges'][number];
 
@@ -51,17 +53,13 @@ function RoutesPage() {
   const [{ md }] = useAtom(breakpointsAtom);
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<
-    'addRoute' | 'editRoute' | 'idle'
-  >('idle');
-
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const routeId = searchParams.get('route_id');
   const scheduleId = searchParams.get('schedule_id')!;
+  const addRoute = searchParams.get('add_route');
 
   const { state } = useSidebar();
   const [innerWidth, setInnerWidth] = useState(0);
@@ -79,26 +77,9 @@ function RoutesPage() {
     };
   }, []);
 
-  // Only set up edit mode when route_id is present
-  useEffect(() => {
-    if (routeId) {
-      setDrawerMode('editRoute');
-    } else if (!isDrawerOpen) {
-      setDrawerMode('idle');
-    }
-  }, [routeId, isDrawerOpen]);
-
-  // Handle drawer state based on route_id
-  useEffect(() => {
-    if (!routeId && isDrawerOpen) {
-      setIsDrawerOpen(false);
-    }
-    if (routeId && !isDrawerOpen) {
-      setIsDrawerOpen(true);
-    }
-  }, [routeId, isDrawerOpen, drawerMode]);
-
   const { data: routeData } = useRouteById(routeId);
+  const { isDrawerOpen, drawerMode, setDrawerMode, setIsDrawerOpen } =
+    useDrawerState({ routeId, addRoute });
 
   // show me schedules for existing route
   const {
@@ -148,11 +129,16 @@ function RoutesPage() {
   }
 
   const handleClose = () => {
-    setDrawerMode('idle');
     if (drawerMode === 'editRoute') {
       setSearchParams(params => {
         const query = new URLSearchParams(params.toString());
         query.delete('route_id');
+        return query;
+      });
+    } else if (drawerMode === 'addRoute') {
+      setSearchParams(params => {
+        const query = new URLSearchParams(params.toString());
+        query.delete('add_route');
         return query;
       });
     }
@@ -161,6 +147,11 @@ function RoutesPage() {
   const handleAddRoute = () => {
     setDrawerMode('addRoute');
     setIsDrawerOpen(true);
+    setSearchParams(params => {
+      const query = new URLSearchParams(params.toString());
+      query.set('add_route', 'true');
+      return query;
+    });
   };
 
   const handleEditRoute = (id: string) => () => {
@@ -218,13 +209,14 @@ function RoutesPage() {
       )}
 
       {isNotSchedule && (
-        <div className='flex items-center'>
+        <div className='flex items-center gap-2'>
           <Input
             className='max-w-full sm:max-w-[300px]'
             placeholder='Найти маршрут...'
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
           />
+          <Button onClick={handleAddRoute}>Добавить маршрут</Button>
         </div>
       )}
 
@@ -290,10 +282,10 @@ function RoutesPage() {
             <DrawerTitle>
               {drawerMode === 'addRoute' && 'Добавить новый маршрут'}
               {drawerMode === 'editRoute' && 'Изменить маршрут'}
-              {drawerMode === 'idle' && <Skeleton className="h-6 w-full" />}
+              {drawerMode === 'idle' && <Skeleton className='h-6 w-full' />}
             </DrawerTitle>
           </DrawerHeader>
-          <div className='p-4'></div>
+          <RouteForm drawerMode={drawerMode} />
         </DrawerContent>
         {/* </DrawerContent> */}
       </Drawer>
