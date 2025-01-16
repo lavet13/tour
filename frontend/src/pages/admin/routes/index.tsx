@@ -34,7 +34,7 @@ import {
   useState,
 } from 'react';
 import { useImage } from 'react-image';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import {
   Tooltip,
   TooltipContent,
@@ -48,11 +48,11 @@ import { useRouteById } from '@/features/routes/use-route-by-id';
 import RouteForm from '@/components/route-form';
 import { useDrawerState } from '@/hooks/use-drawer-state';
 import Schedules from '@/components/schedules';
+import { Separator } from '@/components/ui/separator';
 
 type Route = InfiniteRoutesQuery['routes']['edges'][number];
 
 function RoutesPage() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [{ md }] = useAtom(breakpointsAtom);
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
@@ -81,8 +81,13 @@ function RoutesPage() {
   }, []);
 
   const { data: routeData } = useRouteById(routeId);
-  const { isDrawerOpen, drawerMode, setDrawerMode, setIsDrawerOpen } =
-    useDrawerState({ routeId, addRoute });
+  const {
+    isDrawerOpen,
+    drawerMode,
+    setDrawerMode,
+    setIsDrawerOpen,
+    handleCloseDrawer,
+  } = useDrawerState({ routeId, addRoute });
 
   // show me schedules for existing route
   const {
@@ -284,6 +289,7 @@ function RoutesPage() {
             Нет данных.
           </p>
         )}
+
       {deferredSearchQuery.length !== 0 &&
         filteredData.length === 0 &&
         isNotSchedule && (
@@ -307,7 +313,8 @@ function RoutesPage() {
               {drawerMode === 'idle' && <Skeleton className='h-6 w-full' />}
             </DrawerTitle>
           </DrawerHeader>
-          <RouteForm drawerMode={drawerMode} />
+          <Separator className='mt-2 mb-4' />
+          <RouteForm onClose={handleCloseDrawer} routeId={routeId} drawerMode={drawerMode} />
         </DrawerContent>
         {/* </DrawerContent> */}
       </Drawer>

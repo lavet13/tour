@@ -1,50 +1,27 @@
-import {
-  FC,
-  forwardRef,
-  SyntheticEvent,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { FC, forwardRef, useEffect, useMemo, useState } from 'react';
 
 import { toast } from 'sonner';
 import { isPossiblePhoneNumber } from 'react-phone-number-input';
 import ru from 'react-phone-number-input/locale/ru.json';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  SubmitHandler,
-  useController,
-  useForm,
-  useFormContext,
-  useFormState,
-} from 'react-hook-form';
+import { SubmitHandler, useController, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-  useFormField,
 } from '@/components/ui/form';
 
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PhoneInput } from '@/components/phone-input';
-import { FileUploader } from '@/components/file-uploader';
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from '@/components/ui/input-otp';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
-import CircularProgress from '@/components/circular-progress';
 import { cn } from '@/lib/utils';
 import { BorderBeam } from '@/components/ui/border-beam';
-import { FormButton } from '@/components/form-button';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { useSearchParams } from 'react-router-dom';
 import { useArrivalCities } from '@/features/city/use-arrival-cities';
@@ -57,26 +34,13 @@ import {
   ArrowDown,
   ArrowRightIcon,
   CalendarIcon,
-  Check,
-  ChevronsUpDown,
   Minus,
   Plus,
 } from 'lucide-react';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { useDepartureCities } from '@/features/city/use-departure-cities';
 import { useControllableState } from '@/hooks/use-controllable-state';
-import { useRegionByName } from '@/features/region/use-region-by-name';
-import { useRegionForRoute } from '@/features/region/use-region-for-route';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
@@ -84,8 +48,8 @@ import { ru as fnsRU } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import { useCreateBooking } from '@/features/booking/use-create-booking';
 import { BookingInput } from '@/gql/graphql';
-import { ExpandableTextarea } from '@/components/expandable-textarea';
 import { AutosizeTextarea } from '@/components/autosize-textarea';
+import { ComboBox } from '@/components/combo-box';
 
 const FormSchema = z.object({
   firstName: z
@@ -374,6 +338,9 @@ const BookingBusPage: FC = () => {
                       <FormItem>
                         <FormLabel>Город отправления</FormLabel>
                         <ComboBox
+                          inputPlaceholder={'Искать город...'}
+                          emptyLabel={'Не найдено городов'}
+                          label={'Выберите откуда'}
                           isLoading={departureIsPending}
                           items={departureCities}
                           onValueChange={value => {
@@ -407,6 +374,9 @@ const BookingBusPage: FC = () => {
                       <FormItem>
                         <FormLabel>Город прибытия</FormLabel>
                         <ComboBox
+                          inputPlaceholder={'Искать город...'}
+                          emptyLabel={'Не найдено городов'}
+                          label={'Выберите куда'}
                           isLoading={arrivalIsLoading}
                           items={arrivalCities}
                           onValueChange={value => {
@@ -531,6 +501,7 @@ const BookingBusPage: FC = () => {
                     );
                   }}
                 />
+
                 <FormField
                   control={form.control}
                   name='travelDate'
@@ -604,122 +575,6 @@ const BookingBusPage: FC = () => {
     </div>
   );
 };
-
-interface ComboBoxProps {
-  value?: any;
-  onValueChange?: (value: any) => void;
-  isLoading?: boolean;
-  items: any[];
-  disabled?: boolean;
-}
-
-const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
-  (
-    {
-      value: valueProp,
-      onValueChange,
-      items,
-      isLoading,
-      disabled,
-    }: ComboBoxProps,
-    ref,
-  ) => {
-    const isDesktop = useMediaQuery('(min-width: 768px)');
-    const [value, setValue] = useControllableState({
-      prop: valueProp,
-      onChange: onValueChange,
-    });
-
-    const [open, setOpen] = useState(false);
-
-    const handleItemSelect = (item: any) => {
-      setValue(item.id);
-      setOpen(false); // Close the popover or drawer
-    };
-
-    const renderTrigger = () => {
-      return (
-        <FormControl>
-          <Button
-            ref={ref}
-            variant='outline'
-            role='combobox'
-            disabled={isLoading || disabled}
-            className={cn(
-              'flex w-full justify-between',
-              'focus:outline-none focus:ring-1 focus:ring-ring',
-              !value && 'text-muted-foreground',
-            )}
-          >
-            {isLoading ? (
-              <div className='w-full select-none flex justify-between items-center gap-2'>
-                Загрузка городов...
-                <SonnerSpinner className='bg-foreground' />
-              </div>
-            ) : value ? (
-              items.find(item => item.id === value)?.name || 'Выберите куда'
-            ) : (
-              'Выберите куда'
-            )}
-            {!isLoading && (
-              <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-            )}
-          </Button>
-        </FormControl>
-      );
-    };
-
-    const renderContent = () => {
-      return (
-        <Command>
-          {items.length >= 7 && <CommandInput placeholder='Искать город...' />}
-          <CommandList>
-            {items.length >= 7 && (
-              <CommandEmpty>Не найдено городов</CommandEmpty>
-            )}
-            <CommandGroup>
-              <ScrollArea
-                className={cn(
-                  items.length >= 7 && 'h-[calc(14rem)] -mr-px pr-3',
-                )}
-              >
-                {items.length !== 0 && items.map(item => (
-                  <CommandItem
-                    key={item.id}
-                    onSelect={() => handleItemSelect(item)}
-                  >
-                    {item.name}
-                    <Check
-                      className={cn(
-                        'ml-auto',
-                        item.id === value ? 'opacity-100' : 'opacity-0',
-                      )}
-                    />
-                  </CommandItem>
-                ))}
-                {items.length === 0 && (
-                  <p className="text-center text-sm text-muted-foreground">Нет данных</p>
-                )}
-              </ScrollArea>
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      );
-    };
-
-    return isDesktop ? (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
-        <PopoverContent className='p-0'>{renderContent()}</PopoverContent>
-      </Popover>
-    ) : (
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerTrigger asChild>{renderTrigger()}</DrawerTrigger>
-        <DrawerContent>{renderContent()}</DrawerContent>
-      </Drawer>
-    );
-  },
-);
 
 interface CounterProps {
   name: string;
@@ -858,7 +713,10 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
           locale={fnsRU}
           mode='single'
           selected={value}
-          onSelect={date => setValue(date)}
+          onSelect={date => {
+            setValue(date);
+            setOpen(false);
+          }}
           initialFocus
         />
       );

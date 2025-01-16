@@ -51,7 +51,7 @@ const DrawerContent = React.forwardRef<
         ref={ref}
         className={cn(
           isTablet &&
-            'fixed inset-x-0 bottom-2 top-2 z-50 flex flex-col h-auto mx-auto max-w-lg w-full bg-transparent rounded-[10px]',
+            'fixed inset-x-0 bottom-2 outline-none top-2 z-50 flex flex-col h-auto mx-auto max-w-lg w-full bg-transparent rounded-[10px]',
           !isTablet &&
             'fixed inset-x-0 bottom-0 outline-none z-50 mt-24 flex h-fit flex-col rounded-t-[10px] border bg-background',
           className,

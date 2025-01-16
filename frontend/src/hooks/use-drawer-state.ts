@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 export type DrawerMode = 'idle' | 'editRoute' | 'addRoute';
 
@@ -38,10 +38,16 @@ export function useDrawerState({ routeId, addRoute }: UseDrawerStateProps) {
     }
   }, [routeId, addRoute, isDrawerOpen, drawerMode]);
 
+  const handleCloseDrawer = useCallback(() => {
+    setDrawerMode('idle');
+    setIsDrawerOpen(false);
+  }, []);
+
   return {
     isDrawerOpen,
     drawerMode,
     setIsDrawerOpen,
     setDrawerMode,
+    handleCloseDrawer,
   };
 }

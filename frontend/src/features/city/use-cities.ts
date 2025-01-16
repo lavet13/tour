@@ -1,15 +1,15 @@
 import { graphql } from '@/gql';
-import { RegionsQuery } from '@/gql/graphql';
+import { GetCitiesQuery } from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
 import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
 
-export const useRegions = (
-  options?: InitialDataOptions<RegionsQuery>,
+export const useCities = (
+  options?: InitialDataOptions<GetCitiesQuery>
 ) => {
-  const regions = graphql(`
-    query Regions {
-      regions {
+  const cities = graphql(`
+    query GetCities {
+      cities {
         id
         name
       }
@@ -17,14 +17,15 @@ export const useRegions = (
   `);
 
   return useQuery({
-    queryKey: [(regions.definitions[0] as any).name.value],
+    queryKey: [(cities.definitions[0] as any).name.value],
     queryFn: async () => {
-      return await client.request(regions);
+      return await client.request(cities);
     },
     meta: {
-      toastEnabled: false,
+      toastEnabled: true,
     },
     retry: false,
     ...options,
   });
 };
+

@@ -24,17 +24,8 @@ export const useRouteById = (
           id
           name
         }
+        isActive
         departureDate
-        schedules {
-          dayOfWeek
-          travelDate
-          startTime
-          endTime
-          seatsAvailable
-          seatsBooked
-          isActive
-          price
-        }
       }
     }
   `);

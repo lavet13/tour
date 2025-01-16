@@ -17,7 +17,6 @@ function Schedules() {
         {!isMobile && (
           <Button
             variant='outline'
-            size='sm'
             onClick={() => navigate(-1)}
           >
             <ArrowLeft />
@@ -44,7 +43,7 @@ function Schedules() {
             </TooltipContent>
           </Tooltip>
         )}
-        <Button className='w-full sm:w-auto' size='sm'>
+        <Button className='w-full sm:w-auto'>
           <CalendarPlus />
           Добавить расписание
         </Button>
