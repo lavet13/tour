@@ -51,6 +51,9 @@ export default gql`
   input CreateRouteInput {
     departureCityId: ID!
     arrivalCityId: ID!
+    regionId: ID
+    isActive: Boolean!
+    departureDate: Date
   }
 
   type Route {
@@ -58,6 +61,7 @@ export default gql`
     departureCity: City
     arrivalCity: City
     region: Region
+    isActive: Boolean!
     createdAt: Date!
     updatedAt: Date!
     departureDate: Date

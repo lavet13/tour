@@ -130,7 +130,7 @@ const resolvers: Resolvers = {
     async routeById(_, args, ctx) {
       const id = args.id;
 
-      if(!id?.length) {
+      if (!id?.length) {
         return null;
       }
 
@@ -143,7 +143,9 @@ const resolvers: Resolvers = {
         .catch((err: unknown) => {
           if (err instanceof PrismaClientKnownRequestError) {
             if (err.code === 'P2025') {
-              throw new GraphQLError(`Маршрут с таким идентификатором \`${id}\` не найден.`);
+              throw new GraphQLError(
+                `Маршрут с таким идентификатором \`${id}\` не найден.`,
+              );
             }
           }
           console.log({ err });
@@ -178,13 +180,21 @@ const resolvers: Resolvers = {
   },
   Mutation: {
     async createRoute(_, args, ctx) {
-      const { arrivalCityId, departureCityId } = args.input;
-      console.log({ input: args.input });
+      const {
+        arrivalCityId,
+        departureCityId,
+        regionId,
+        isActive,
+        departureDate,
+      } = args.input;
 
       const route = await ctx.prisma.route.create({
         data: {
           arrivalCityId,
           departureCityId,
+          regionId,
+          isActive,
+          departureDate,
         },
       });
 
@@ -193,6 +203,9 @@ const resolvers: Resolvers = {
   },
   Route: {
     region(parent, _, { loaders }) {
+      if (!parent.regionId) {
+        return null;
+      }
       return loaders.regionLoader.load(parent.regionId);
     },
     arrivalCity(parent, _, { loaders }) {

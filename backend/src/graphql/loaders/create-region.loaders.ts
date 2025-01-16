@@ -2,18 +2,15 @@ import DataLoader from 'dataloader';
 import prismaClient from '@/prisma';
 
 export const createRegionLoader = (prisma: typeof prismaClient) => {
-  return new DataLoader(async (regionIds: readonly (string | null)[]) => {
-    const nonNullRegionIds = regionIds.filter((id): id is string => id !== null);
-
+  return new DataLoader(async (regionIds: readonly string[]) => {
     const regions = await prisma.region.findMany({
       where: {
-        id: { in: nonNullRegionIds },
+        id: { in: regionIds as string[] },
       },
     });
 
     const regionMap = new Map(regions.map(region => [region.id, region]));
 
-    // Map back to original order, automatically handling nulls
-    return regionIds.map(id => id === null ? null : regionMap.get(id) || null);
+    return regionIds.map(id => regionMap.get(id) || null);
   });
 };

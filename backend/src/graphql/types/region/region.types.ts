@@ -7,31 +7,6 @@ export default gql`
     regionForRoute(departureCityId: ID, arrivalCityId: ID): Region
   }
 
-  input RegionsInput {
-    take: Int
-    after: ID
-    before: ID
-
-    query: String!
-    sorting: [SortingState!]!
-  }
-
-  enum SearchTypeRegions {
-    ID
-  }
-
-  type PageInfo {
-    startCursor: ID
-    endCursor: ID
-    hasNextPage: Boolean!
-    hasPreviousPage: Boolean!
-  }
-
-  type RegionsResponse {
-    edges: [Region!]!
-    pageInfo: PageInfo!
-  }
-
   type Region {
     id: ID!
     name: String!
