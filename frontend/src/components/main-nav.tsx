@@ -133,7 +133,7 @@ const MainNav: FC = () => {
     return <NavSkeleton />;
   }
 
-  console.log({ ldnrRoutes });
+  console.log({ ldnrRoutes, coastalRoutes });
 
   return (
     <div className='hidden md:flex'>

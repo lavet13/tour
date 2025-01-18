@@ -22,6 +22,7 @@ const resolvers: Resolvers = {
         where: {
           departureCityId,
           OR: [{ departureDate: null }, { departureDate: { lte: new Date() } }],
+          isActive: true,
         },
         select: {
           arrivalCity: true,
@@ -31,6 +32,7 @@ const resolvers: Resolvers = {
 
       return routes.map(route => route.arrivalCity);
     },
+
     async departureCities(_, { regionId }, { prisma }) {
       const cities = await prisma.city.findMany({
         where: {

@@ -1,7 +1,6 @@
 import prisma from '@/prisma';
 import generatePasswordHash from '@/helpers/generate-password-hash';
 import { Role } from '@prisma/client';
-import { DaysOfWeek } from '@/graphql/__generated__/types';
 
 let countDown = 0;
 
@@ -89,34 +88,28 @@ export default async function seed() {
 
   // Создание маршрутов в Мариуполь
   for (const city of ldnrCities) {
-    const route = await prisma.route.create({
-      data: {
-        departureCityId: cityIds[city],
-        arrivalCityId: mariupol.id,
-        regionId: regions.LDNR.id,
-      },
-    });
-
-    const daysOfWeek = Object.fromEntries(
-      Object.values(DaysOfWeek).map((day, i) => [i, day]),
-    );
-
     const getRandomInteger = (min: number, max: number) => {
       min = Math.ceil(min);
       max = Math.floor(max);
       return Math.floor(Math.random() * (max - min)) + min;
     }
 
+    const route = await prisma.route.create({
+      data: {
+        departureCityId: cityIds[city],
+        arrivalCityId: mariupol.id,
+        regionId: regions.LDNR.id,
+        price: getRandomInteger(400, 1000),
+      },
+    });
+
     // Создание расписания для маршрута
     await prisma.schedule.create({
       data: {
         routeId: route.id,
-        seatsAvailable: getRandomInteger(40, 60),
         travelDate: new Date(),
-        dayOfWeek: daysOfWeek[Math.round(Math.random() * 6)],
         startTime: new Date(), // Время отправления
         endTime: new Date(), // Время прибытия
-        price: getRandomInteger(400, 1000),
       },
     });
 
@@ -136,35 +129,29 @@ export default async function seed() {
 
   // Создание маршрутов из Мариуполя в прибрежные города с 1 мая 2025
   for (const city of coastalCities) {
-    const route = await prisma.route.create({
-      data: {
-        departureCityId: mariupol.id,
-        arrivalCityId: coastalCityIds[city],
-        regionId: regions.COASTAL.id,
-        departureDate: new Date('2025-05-01'),
-      },
-    });
-
-    const daysOfWeek = Object.fromEntries(
-      Object.values(DaysOfWeek).map((day, i) => [i, day]),
-    );
-
     const getRandomInteger = (min: number, max: number) => {
       min = Math.ceil(min);
       max = Math.floor(max);
       return Math.floor(Math.random() * (max - min)) + min;
     }
 
+    const route = await prisma.route.create({
+      data: {
+        departureCityId: mariupol.id,
+        arrivalCityId: coastalCityIds[city],
+        regionId: regions.COASTAL.id,
+        departureDate: new Date('2025-05-01'),
+        price: getRandomInteger(400, 1000),
+      },
+    });
+
     // Создание расписания для маршрута
     await prisma.schedule.create({
       data: {
         routeId: route.id,
-        seatsAvailable: getRandomInteger(40, 60),
         travelDate: new Date(),
-        dayOfWeek: daysOfWeek[Math.round(Math.random() * 6)],
         startTime: new Date(), // Время отправления
         endTime: new Date(), // Время прибытия
-        price: getRandomInteger(400, 1000),
       },
     });
 

@@ -39,6 +39,8 @@ export const useInfiniteRoutes = ({
             id
             name
           }
+          price
+          isActive
           departureDate
           arrivalCity {
             id

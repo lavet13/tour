@@ -69,35 +69,20 @@ model City {
 }
 
 model Schedule {
-  id             String     @id @default(cuid())
-  route          Route      @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  routeId        String
-  dayOfWeek      DaysOfWeek
-  travelDate     DateTime // Конкретный день, для которого действует расписание
-  startTime      DateTime // Переопределение времени отправления
-  endTime        DateTime // Переопределение времени прибытия
-  seatsAvailable Int // Свободные места на этот день
-  seatsBooked    Int        @default(0) // Уже забронированные места
-  isActive       Boolean    @default(true)
-  price          Int // Перезапись базовой цены (если null, используется из Schedule)
+  id         String   @id @default(cuid())
+  route      Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  routeId    String
+  travelDate DateTime // Конкретный день, для которого действует расписание
+  startTime  DateTime // Переопределение времени отправления
+  endTime    DateTime // Переопределение времени прибытия
+  isActive   Boolean  @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([routeId, travelDate])
   @@index([routeId, travelDate, isActive])
-  @@index([dayOfWeek, isActive])
   @@map("schedules")
-}
-
-enum DaysOfWeek {
-  MONDAY
-  TUESDAY
-  WEDNESDAY
-  THURSDAY
-  FRIDAY
-  SATURDAY
-  SUNDAY
 }
 
 model Region {
@@ -120,12 +105,12 @@ model Route {
   region          Region?    @relation(fields: [regionId], references: [id])
   regionId        String?
   isActive        Boolean    @default(true)
+  price           Int
   departureDate   DateTime?
   createdAt       DateTime   @default(now())
   updatedAt       DateTime   @updatedAt
   bookings        Booking[]
 
-  @@unique([departureCityId, arrivalCityId])
   @@index([departureCityId, arrivalCityId, isActive])
   @@index([regionId])
   @@map("routes")

@@ -21,10 +21,11 @@ type DatePickerProps = {
   value?: any;
   onValueChange?: (value: any) => void;
   disabled?: boolean;
+  label?: string;
 };
 
 export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
-  ({ value: valueProp, onValueChange, name, disabled }, ref) => {
+  ({ value: valueProp, onValueChange, name, label, disabled }, ref) => {
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [value, setValue] = useControllableState({
       prop: valueProp,
@@ -65,7 +66,7 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
               </span>
             ) : (
               <span className='whitespace-pre leading-3 text-center'>
-                Выберите дату поездки
+                {label}
               </span>
             )}
           </Button>

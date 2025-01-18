@@ -43,8 +43,6 @@ const resolvers: Resolvers = {
 
       // in case where we might get cursor which points to nothing
       if (direction !== PaginationDirection.NONE) {
-        // checking if the cursor pointing to the wbOrder doesn't exist,
-        // otherwise skip
         const cursorOrder = await ctx.prisma.route.findUnique({
           where: { id: cursor?.id },
         });
@@ -61,12 +59,12 @@ const resolvers: Resolvers = {
           })
         : [{ updatedAt: 'desc' }, { id: 'asc' }];
 
-      // fetching bookings with extra one, so to determine if there's more to fetch
+      // fetching routes with extra one, so to determine if there's more to fetch
       const routes = await ctx.prisma.route.findMany({
         take:
           direction === PaginationDirection.BACKWARD ? -(take + 1) : take + 1, // Fetch one extra wbOrder for determining `hasNextPage`
         cursor,
-        skip: cursor ? 1 : undefined, // Skip the cursor wbOrder for the next/previous page
+        skip: cursor ? 1 : undefined, // Skip the cursor
         orderBy,
         where: {
           OR: [
@@ -173,7 +171,21 @@ const resolvers: Resolvers = {
         },
       });
 
-      console.log({ cities });
+      const routes = await prisma.route.findMany({
+        where: {
+          regionId,
+          OR: [{ departureDate: null }, { departureDate: { lte: new Date() } }],
+          isActive: true,
+        },
+        select: {
+          arrivalCity: true,
+        },
+        distinct: ['arrivalCityId'],
+      });
+
+      const arrivalCities = routes.map(route => route.arrivalCity);
+
+      console.log({ cities, arrivalCities });
 
       return cities;
     },
@@ -186,19 +198,72 @@ const resolvers: Resolvers = {
         regionId,
         isActive,
         departureDate,
+        price,
       } = args.input;
 
-      const route = await ctx.prisma.route.create({
-        data: {
-          arrivalCityId,
-          departureCityId,
-          regionId,
-          isActive,
-          departureDate,
-        },
-      });
+      const route = await ctx.prisma.route
+        .create({
+          data: {
+            arrivalCityId,
+            departureCityId,
+            regionId,
+            isActive,
+            departureDate,
+            price,
+          },
+        })
+        .catch(error => {
+          if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+              throw new GraphQLError(
+                `Маршрут с таким отправлением уже существует.`,
+              );
+            }
+          }
+          console.log({ error });
+          throw new GraphQLError('Unknown error!');
+        });
 
       return route;
+    },
+    async updateRoute(_, args, ctx) {
+      const routeId = args.id;
+      const {
+        departureCityId,
+        isActive,
+        departureDate,
+        arrivalCityId,
+        regionId,
+        price,
+      } = args.input;
+
+      const updatedRoute = ctx.prisma.route
+        .update({
+          where: {
+            id: routeId,
+          },
+          data: {
+            departureCityId,
+            isActive,
+            departureDate,
+            arrivalCityId,
+            regionId,
+            price,
+          },
+        })
+        .catch(error => {
+          if (error instanceof PrismaClientKnownRequestError) {
+            if (error.code === 'P2002') {
+              throw new GraphQLError(
+                `Маршрут с таким отправлением уже существует.`,
+              );
+            }
+          }
+          console.log({ error });
+          throw new GraphQLError('Unknown error!');
+        });
+
+      return updatedRoute;
     },
   },
   Route: {

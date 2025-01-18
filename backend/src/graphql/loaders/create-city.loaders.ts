@@ -3,11 +3,11 @@ import prismaClient from '@/prisma';
 
 export const createCityLoader = (prisma: typeof prismaClient) => {
   return new DataLoader(async (cityIds: readonly string[]) => {
-    const cities = await prisma.city.findMany({
-      where: {
-        id: { in: cityIds as string[] },
-      },
-    });
+    const whereCondition = {
+      id: { in: cityIds as string[] },
+    };
+
+    const cities = await prisma.city.findMany({ where: whereCondition });
 
     const cityMap = new Map(cities.map(city => [city.id, city]));
 

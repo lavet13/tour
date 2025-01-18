@@ -26,6 +26,10 @@ import { useCreateRoute } from '@/features/routes/use-create-route';
 import { toast } from 'sonner';
 import { CreateRouteInput } from '@/gql/graphql';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
+import { useUpdateRoute } from '@/features/routes/use-update-route';
+import { client } from '@/react-query';
+import { NumericFormat } from 'react-number-format';
+import { Input } from '@/components/ui/input';
 
 const FormSchema = z.object({
   arrivalCityId: z
@@ -43,7 +47,7 @@ const FormSchema = z.object({
       invalid_type_error: 'Выберите регион!',
     })
     .cuid2({ message: 'Выберите регион!' })
-    .nullable(),
+    .nullish(),
   departureDate: z
     .date({ invalid_type_error: 'Выберите корректную дату!' })
     .nullish()
@@ -68,7 +72,14 @@ const FormSchema = z.object({
       },
       { message: 'Выберите сегодняшнюю или будущую дату!' },
     ),
-  isActive: z.boolean().default(false).optional(),
+  price: z
+    .number({
+      required_error: 'Введите цену!',
+      invalid_type_error: 'Введите корректную цену!',
+    })
+    .min(0, 'Цена не может быть отрицательной!')
+    .max(1_000_000, 'Цена слишком высокая!'),
+  isActive: z.boolean().default(false),
 });
 
 type DefaultValues = z.infer<typeof FormSchema>;
@@ -79,6 +90,7 @@ const defaultValues: DefaultValues = {
   arrivalCityId: '',
   departureCityId: '',
   regionId: null,
+  price: 0,
 };
 
 interface RouteFormProps {
@@ -88,24 +100,45 @@ interface RouteFormProps {
 }
 
 function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
-  const form = useForm<DefaultValues>({
-    resolver: zodResolver(FormSchema),
-    defaultValues,
-    mode: 'onChange',
-  });
-
   const {
     data: routeData,
-    isPending: routeIsPending,
+    fetchStatus: routeFetchStatus,
+    status: routeStatus,
+    isSuccess: routeIsSuccess,
     isFetching: routeIsFetching,
   } = useRouteById(routeId, {
     enabled: !!routeId,
   });
+
+  const values = routeData?.routeById
+    ? {
+        arrivalCityId: routeData.routeById.arrivalCity?.id as string,
+        departureCityId: routeData.routeById.departureCity?.id as string,
+        regionId: routeData.routeById.region?.id,
+        departureDate: routeData.routeById.departureDate
+          ? new Date(routeData.routeById.departureDate)
+          : null,
+        isActive: routeData.routeById.isActive,
+        price: routeData.routeById.price,
+      }
+    : undefined;
+
+  const routeInitialLoading =
+    routeFetchStatus === 'fetching' && routeStatus === 'pending';
+
+  const form = useForm<DefaultValues>({
+    resolver: zodResolver(FormSchema),
+    defaultValues,
+    values,
+    mode: 'onChange',
+  });
+
   const { mutateAsync: createRoute } = useCreateRoute();
+  const { mutateAsync: updateRoute } = useUpdateRoute();
 
   const formState = form.formState;
-  const values = form.getValues();
   const isSubmitting = formState.isSubmitting;
+  const isDirty = formState.isDirty;
 
   const { data: regionsData, isPending: regionsIsPending } = useRegions();
   const regions = useMemo(() => regionsData?.regions ?? [], [regionsData]);
@@ -126,11 +159,21 @@ function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
   }, [cities, form.watch('departureCityId')]);
 
   const onSubmit: SubmitHandler<DefaultValues> = async data => {
-    if (routeData?.routeById) {
-      // editing existing route
-    } else {
-      try {
-        console.log({ data });
+    try {
+      if (routeData?.routeById) {
+        // editing existing route
+        const payload: CreateRouteInput = {
+          ...data,
+        };
+        await updateRoute({
+          id: routeId as string,
+          input: payload,
+        });
+        toast.success('Маршрут успешно обновлен!', {
+          richColors: true,
+          position: 'bottom-center',
+        });
+      } else {
         // adding a new route
         const payload: CreateRouteInput = {
           ...data,
@@ -140,36 +183,37 @@ function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
           richColors: true,
           position: 'bottom-center',
         });
+        client.invalidateQueries({ queryKey: ['InfiniteRoutes'] });
         form.reset();
-        onClose();
-      } catch (error) {
-        console.error(error);
-        if (isGraphQLRequestError(error)) {
-          toast.error(error.response.errors[0].message, {
-            position: 'bottom-center',
-            richColors: true,
-          });
-        } else if (error instanceof Error) {
-          toast.error(error.message, {
-            position: 'bottom-center',
-            richColors: true,
-          });
-        }
+      }
+      onClose();
+    } catch (error) {
+      console.error(error);
+      if (isGraphQLRequestError(error)) {
+        toast.error(error.response.errors[0].message, {
+          position: 'bottom-center',
+          richColors: true,
+        });
+      } else if (error instanceof Error) {
+        toast.error(error.message, {
+          position: 'bottom-center',
+          richColors: true,
+        });
       }
     }
   };
 
   return (
     <>
-      {routeIsFetching && (
+      {routeIsFetching && routeIsSuccess && (
         <div className='w-full sm:max-w-screen-sm mx-auto'>
-          <div className='flex items-center justify-center mt-2 mb-6 px-4 sm:px-5'>
+          <div className='flex items-center justify-center mb-6 px-4 sm:px-5'>
             <SonnerSpinner className='bg-foreground' />
           </div>
         </div>
       )}
-      {routeIsPending && <RouteFormSkeleton />}
-      {!routeIsPending && (
+      {routeInitialLoading && <RouteFormSkeleton />}
+      {!routeInitialLoading && (
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -248,8 +292,48 @@ function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
                 render={({ field: { onChange, ...field } }) => {
                   return (
                     <FormItem>
-                      <FormLabel>Дата поездки</FormLabel>
-                      <DatePicker onValueChange={onChange} {...field} />
+                      <FormLabel>Активация поездки</FormLabel>
+                      <DatePicker
+                        label={'Выберите дату поездки'}
+                        onValueChange={onChange}
+                        {...field}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+
+              <FormField
+                control={form.control}
+                name='price'
+                render={({ field: { onChange, ref, value, ...field } }) => {
+                  return (
+                    <FormItem>
+                      <FormLabel>Цена</FormLabel>
+                      <FormControl>
+                        <NumericFormat
+                          type='tel'
+                          placeholder='Введите цену для маршрута'
+                          customInput={Input}
+                          thousandSeparator=' '
+                          suffix=' ₽'
+                          decimalScale={0}
+                          allowNegative={false}
+                          isAllowed={values => {
+                            console.log(values);
+                            const floatValue = values.floatValue;
+                            return (
+                              typeof floatValue === 'undefined' ||
+                              floatValue > 0
+                            );
+                          }}
+                          onValueChange={values => onChange(values.floatValue)}
+                          value={value || ''}
+                          getInputRef={ref}
+                          {...field}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   );
@@ -281,7 +365,7 @@ function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
               />
 
               <Button
-                disabled={isSubmitting}
+                disabled={isSubmitting || !isDirty}
                 className={`w-full col-span-2`}
                 type='submit'
               >

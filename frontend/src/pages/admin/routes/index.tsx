@@ -15,11 +15,9 @@ import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import {
-  ArrowLeft,
   ArrowRight,
   Calendar,
   CalendarClock,
-  CalendarPlus,
   Edit,
   MapPin,
   MapPinPlus,
@@ -44,7 +42,6 @@ import { Input } from '@/components/ui/input';
 import { Waypoint } from 'react-waypoint';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSchedulesByRoute } from '@/features/schedule/use-schedules-by-route';
-import { useRouteById } from '@/features/routes/use-route-by-id';
 import RouteForm from '@/components/route-form';
 import { useDrawerState } from '@/hooks/use-drawer-state';
 import Schedules from '@/components/schedules';
@@ -80,13 +77,11 @@ function RoutesPage() {
     };
   }, []);
 
-  const { data: routeData } = useRouteById(routeId);
   const {
     isDrawerOpen,
     drawerMode,
     setDrawerMode,
     setIsDrawerOpen,
-    handleCloseDrawer,
   } = useDrawerState({ routeId, addRoute });
 
   // show me schedules for existing route
@@ -314,7 +309,7 @@ function RoutesPage() {
             </DrawerTitle>
           </DrawerHeader>
           <Separator className='mt-2 mb-4' />
-          <RouteForm onClose={handleCloseDrawer} routeId={routeId} drawerMode={drawerMode} />
+          <RouteForm onClose={handleClose} routeId={routeId} drawerMode={drawerMode} />
         </DrawerContent>
         {/* </DrawerContent> */}
       </Drawer>

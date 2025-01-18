@@ -11,14 +11,10 @@ export const useSchedulesByRoute = (
   const schedulesByRoute = graphql(`
     query GetSchedulesByRoute($routeId: ID!) {
       schedulesByRoute(routeId: $routeId) {
-        dayOfWeek
         travelDate
         startTime
         endTime
-        seatsAvailable
-        seatsBooked
         isActive
-        price
       }
     }
   `);

@@ -9,6 +9,7 @@ export default gql`
 
   type Mutation {
     createRoute(input: CreateRouteInput!): Route!
+    updateRoute(id: ID!, input: CreateRouteInput!): Route!
   }
 
   type Subscription {
@@ -29,13 +30,6 @@ export default gql`
     sorting: [SortingState!]!
   }
 
-  enum SearchTypeRoutes {
-    ID
-    PHONE
-    FIRST_NAME
-    LAST_NAME
-  }
-
   type PageInfo {
     startCursor: ID
     endCursor: ID
@@ -54,6 +48,7 @@ export default gql`
     regionId: ID
     isActive: Boolean!
     departureDate: Date
+    price: Int!
   }
 
   type Route {
@@ -62,6 +57,7 @@ export default gql`
     arrivalCity: City
     region: Region
     isActive: Boolean!
+    price: Int!
     createdAt: Date!
     updatedAt: Date!
     departureDate: Date
