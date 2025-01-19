@@ -1,6 +1,6 @@
 import { DrawerMode } from '@/hooks/use-drawer-state';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { SubmitHandler, useForm } from 'react-hook-form';
+import { SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import {
   Form,
   FormControl,
@@ -13,7 +13,7 @@ import {
 import { z } from 'zod';
 import { ComboBox } from '@/components/combo-box';
 import { useCities } from '@/features/city/use-cities';
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { Edit, MapPinPlus } from 'lucide-react';
@@ -31,56 +31,75 @@ import { client } from '@/react-query';
 import { NumericFormat } from 'react-number-format';
 import { Input } from '@/components/ui/input';
 
-const FormSchema = z.object({
-  arrivalCityId: z
-    .string({
-      invalid_type_error: 'Выберите город прибытия!',
-    })
-    .cuid2({ message: 'Выберите город прибытия!' }),
-  departureCityId: z
-    .string({
-      invalid_type_error: 'Выберите город отправления!',
-    })
-    .cuid2({ message: 'Выберите город отправления!' }),
-  regionId: z
-    .string({
-      invalid_type_error: 'Выберите регион!',
-    })
-    .cuid2({ message: 'Выберите регион!' })
-    .nullish(),
-  departureDate: z
-    .date({ invalid_type_error: 'Выберите корректную дату!' })
-    .nullish()
-    .refine(
-      date => {
-        if (date === null || date === undefined) {
-          return true;
-        }
+const FormSchema = z
+  .object({
+    arrivalCityId: z
+      .string({
+        invalid_type_error: 'Выберите город прибытия!',
+      })
+      .cuid2({ message: 'Выберите город прибытия!' }),
+    departureCityId: z
+      .string({
+        invalid_type_error: 'Выберите город отправления!',
+      })
+      .cuid2({ message: 'Выберите город отправления!' }),
+    regionId: z
+      .string({
+        invalid_type_error: 'Выберите регион!',
+      })
+      .cuid2({ message: 'Выберите регион!' })
+      .nullish(),
+    departureDate: z
+      .date({ invalid_type_error: 'Выберите корректную дату!' })
+      .nullish()
+      .refine(
+        date => {
+          if (date === null || date === undefined) {
+            return true;
+          }
 
-        // Ensure date is a valid Date object
-        if (!(date instanceof Date) || isNaN(date.getTime())) {
-          return false;
-        }
+          // Ensure date is a valid Date object
+          if (!(date instanceof Date) || isNaN(date.getTime())) {
+            return false;
+          }
 
-        // Reset time to start of the day for consistent comparison
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        date.setHours(0, 0, 0, 0);
+          // Reset time to start of the day for consistent comparison
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          date.setHours(0, 0, 0, 0);
 
-        // Validate that the date is today or in the future
-        return date >= today;
-      },
-      { message: 'Выберите сегодняшнюю или будущую дату!' },
-    ),
-  price: z
-    .number({
-      required_error: 'Введите цену!',
-      invalid_type_error: 'Введите корректную цену!',
-    })
-    .min(0, 'Цена не может быть отрицательной!')
-    .max(1_000_000, 'Цена слишком высокая!'),
-  isActive: z.boolean().default(false),
-});
+          // Validate that the date is today or in the future
+          return date >= today;
+        },
+        { message: 'Выберите сегодняшнюю или будущую дату!' },
+      ),
+    price: z
+      .number({
+        required_error: 'Введите цену!',
+        invalid_type_error: 'Введите корректную цену!',
+      })
+      .min(0, 'Цена не может быть отрицательной!')
+      .max(5_000, 'Цена слишком высокая!'),
+    isActive: z.boolean().default(false),
+  })
+  .superRefine((data, ctx) => {
+    if (
+      data.departureCityId &&
+      data.arrivalCityId &&
+      data.departureCityId === data.arrivalCityId
+    ) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Город отправления и прибытия не могут быть одинаковыми!',
+        path: ['departureCityId'],
+      });
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Город отправления и прибытия не могут быть одинаковыми!',
+        path: ['arrivalCityId'],
+      });
+    }
+  });
 
 type DefaultValues = z.infer<typeof FormSchema>;
 
@@ -146,17 +165,40 @@ function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
   const { data: citiesData, isPending: citiesIsPending } = useCities();
   const cities = useMemo(() => citiesData?.cities ?? [], [citiesData]);
 
+  // Watch both city fields
+  const departureCityId = useWatch({
+    control: form.control,
+    name: 'departureCityId',
+  });
+  const arrivalCityId = useWatch({
+    control: form.control,
+    name: 'arrivalCityId',
+  });
+
+  // Trigger validation when either city changes
+  useMemo(() => {
+    if (departureCityId) {
+      form.trigger('arrivalCityId');
+    }
+  }, [departureCityId, form]);
+
+  useMemo(() => {
+    if (arrivalCityId) {
+      form.trigger('departureCityId');
+    }
+  }, [arrivalCityId, form]);
+
   // Filter out selected arrival city from departure cities
-  const departureCities = useMemo(() => {
-    const selectedArrivalId = form.watch('arrivalCityId');
-    return cities.filter(city => city.id !== selectedArrivalId);
-  }, [cities, form.watch('arrivalCityId')]);
+  // const departureCities = useMemo(() => {
+  //   const selectedArrivalId = form.watch('arrivalCityId');
+  //   return cities.filter(city => city.id !== selectedArrivalId);
+  // }, [cities, form.watch('arrivalCityId')]);
 
   // Filter out selected departure city from arrival cities
-  const arrivalCities = useMemo(() => {
-    const selectedDepartureId = form.watch('departureCityId');
-    return cities.filter(city => city.id !== selectedDepartureId);
-  }, [cities, form.watch('departureCityId')]);
+  // const arrivalCities = useMemo(() => {
+  //   const selectedDepartureId = form.watch('departureCityId');
+  //   return cities.filter(city => city.id !== selectedDepartureId);
+  // }, [cities, form.watch('departureCityId')]);
 
   const onSubmit: SubmitHandler<DefaultValues> = async data => {
     try {
@@ -232,7 +274,7 @@ function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
                         emptyLabel={'Не найдено городов'}
                         label={'Выберите откуда'}
                         isLoading={citiesIsPending}
-                        items={departureCities}
+                        items={cities}
                         onValueChange={onChange}
                         {...field}
                       />
@@ -254,7 +296,7 @@ function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
                         emptyLabel={'Не найдено городов'}
                         label={'Выберите куда'}
                         isLoading={citiesIsPending}
-                        items={arrivalCities}
+                        items={cities}
                         onValueChange={onChange}
                         {...field}
                       />
