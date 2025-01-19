@@ -75,10 +75,8 @@ const FormSchema = z
       ),
     price: z
       .number({
-        required_error: 'Введите цену!',
-        invalid_type_error: 'Введите корректную цену!',
+        message: 'Введите цену!',
       })
-      .min(0, 'Цена не может быть отрицательной!')
       .max(5_000, 'Цена слишком высокая!'),
     isActive: z.boolean().default(false),
   })
@@ -97,6 +95,13 @@ const FormSchema = z
         code: z.ZodIssueCode.custom,
         message: 'Город отправления и прибытия не могут быть одинаковыми!',
         path: ['arrivalCityId'],
+      });
+    }
+    if (!data.price) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Цена обязательна!',
+        path: ['price'],
       });
     }
   });
@@ -118,7 +123,7 @@ interface RouteFormProps {
   onClose: () => void;
 }
 
-function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
+export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
   const {
     data: routeData,
     fetchStatus: routeFetchStatus,
@@ -481,5 +486,3 @@ function RouteFormSkeleton() {
     </div>
   );
 }
-
-export default RouteForm;

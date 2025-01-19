@@ -7,6 +7,7 @@ export const createDepartureTripsLoader = (prisma: typeof prismaClient) => {
     const routes = await prisma.route.findMany({
       where: {
         departureCityId: { in: cityIds as string[] },
+        isActive: true,
       },
     });
 

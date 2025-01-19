@@ -196,231 +196,233 @@ const BookingsPage: FC = () => {
   }, []);
 
   return (
-    <div
-      className={cn(
-        'relative container px-1 sm:px-4 mx-auto overflow-hidden space-y-2 flex-1 pt-2',
-        state === 'collapsed' && 'mx-0',
-      )}
-      style={{
-        maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
-      }}
-    >
-      <div className='grid md:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] items-center gap-2'>
-        <div className='grid sm:col-[1_/_-1] grid-cols-[1fr_auto] min-[940px]:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] gap-2'>
-          <HideColumns table={table} />
-          {isFullHD && (
-            <>
-              <Button size='sm' onClick={() => table.resetSorting()}>
-                <ArrowUpDown />
-                Сбросить сортировку
-              </Button>
-              <Button
-                size='sm'
-                onClick={() => {
-                  table.resetColumnFilters();
-                }}
-              >
-                <ListFilter />
-                Сбросить фильтр
-              </Button>
-            </>
-          )}
-          {!isFullHD && (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button className='size-9' variant='outline' size='icon'>
-                  <MoreHorizontal />
-                  <span className='sr-only'>Другие операции</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align={'end'}>
-                <DropdownMenuGroup>
-                  <DropdownMenuItem onClick={() => table.resetSorting()}>
-                    <ArrowUpDown />
-                    Сбросить сортировку
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => {
-                      table.resetColumnFilters();
-                    }}
-                  >
-                    <ListFilter />
-                    Сбросить фильтр
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-        </div>
-      </div>
+    <div className='container px-0'>
       <div
-        ref={tableContainerRef}
-        className='max-w-fit overflow-auto w-full relative rounded-md border'
+        className={cn(
+          'relative px-1 space-y-2 flex-1 pt-2',
+          state === 'collapsed' && 'mx-0',
+        )}
         style={{
-          maxHeight: `calc(${innerHeight}px - ${isMobile ? 8 : 7.9}rem)`,
+          maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
         }}
       >
-        {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
-        <Table
-          data-bg-fetching={isFetching && !isFetchingNextPage}
-          className='w-full caption-bottom text-sm data-[bg-fetching=true]:opacity-70'
-        >
-          <TableHeader className='grid sticky top-0 z-[1] bg-background'>
-            {table.getHeaderGroups().map(headerGroup => (
-              <TableRow
-                key={headerGroup.id}
-                style={{ display: 'flex', width: '100%' }}
-              >
-                {headerGroup.headers.map(header => {
-                  return (
-                    <TableHead
-                      key={header.id}
-                      {...{
-                        className: 'select-none',
-                        colSpan: header.colSpan,
-                        style: {
-                          display: 'flex',
-                          position: 'relative',
-                          alignItems: 'center',
-                          alignSelf: 'center',
-                          height: 'fit-content',
-                          padding: '0.2rem 1rem',
-                          width: header.getSize(),
-                        },
+        <div className='grid md:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] items-center gap-2'>
+          <div className='grid sm:col-[1_/_-1] grid-cols-[1fr_auto] min-[940px]:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] gap-2'>
+            <HideColumns table={table} />
+            {isFullHD && (
+              <>
+                <Button size='sm' onClick={() => table.resetSorting()}>
+                  <ArrowUpDown />
+                  Сбросить сортировку
+                </Button>
+                <Button
+                  size='sm'
+                  onClick={() => {
+                    table.resetColumnFilters();
+                  }}
+                >
+                  <ListFilter />
+                  Сбросить фильтр
+                </Button>
+              </>
+            )}
+            {!isFullHD && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className='size-9' variant='outline' size='icon'>
+                    <MoreHorizontal />
+                    <span className='sr-only'>Другие операции</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align={'end'}>
+                  <DropdownMenuGroup>
+                    <DropdownMenuItem onClick={() => table.resetSorting()}>
+                      <ArrowUpDown />
+                      Сбросить сортировку
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => {
+                        table.resetColumnFilters();
                       }}
                     >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                      {header.column.getCanResize() ? (
-                        <div
-                          {...{
-                            onDoubleClick: () => header.column.resetSize(),
-                            onMouseDown: header.getResizeHandler(),
-                            onTouchStart: header.getResizeHandler(),
-                            className: cn(
-                              `absolute right-0 rounded-sm top-0 w-1 h-full cursor-col-resize select-none touch-none ${
-                                table.options.columnResizeDirection
-                              } ${
-                                header.column.getIsResizing()
-                                  ? 'bg-foreground/50'
-                                  : 'hover:bg-foreground/30'
-                              }`,
-                            ),
-                            style: {
-                              transform:
-                                columnResizeModeRef.current === 'onEnd' &&
-                                header.column.getIsResizing()
-                                  ? `translateX(${
-                                      (table.options.columnResizeDirection ===
-                                      'rtl'
-                                        ? -1
-                                        : 1) *
-                                      (table.getState().columnSizingInfo
-                                        .deltaOffset ?? 0)
-                                    }px)`
-                                  : '',
-                            },
-                          }}
-                        />
-                      ) : null}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody
-            style={{
-              display: 'grid',
-              height:
-                rowVirtualizer.getTotalSize() > 0
-                  ? `${rowVirtualizer.getTotalSize()}px`
-                  : 'auto', //tells scrollbar how big the table is
-              position: 'relative',
-            }}
+                      <ListFilter />
+                      Сбросить фильтр
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
+        </div>
+        <div
+          ref={tableContainerRef}
+          className='max-w-fit overflow-auto w-full relative rounded-md border'
+          style={{
+            maxHeight: `calc(${innerHeight}px - ${isMobile ? 8 : 7.9}rem)`,
+          }}
+        >
+          {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
+          <Table
+            data-bg-fetching={isFetching && !isFetchingNextPage}
+            className='w-full caption-bottom text-sm data-[bg-fetching=true]:opacity-70'
           >
-            {rowVirtualizer.getVirtualItems().length !== 0 ? (
-              rowVirtualizer.getVirtualItems().map(virtualRow => {
-                const row = rows[virtualRow.index];
-                const isLoaderRow = virtualRow.index > rows.length - 1;
+            <TableHeader className='grid sticky top-0 z-[1] bg-background'>
+              {table.getHeaderGroups().map(headerGroup => (
+                <TableRow
+                  key={headerGroup.id}
+                  style={{ display: 'flex', width: '100%' }}
+                >
+                  {headerGroup.headers.map(header => {
+                    return (
+                      <TableHead
+                        key={header.id}
+                        {...{
+                          className: 'select-none',
+                          colSpan: header.colSpan,
+                          style: {
+                            display: 'flex',
+                            position: 'relative',
+                            alignItems: 'center',
+                            alignSelf: 'center',
+                            height: 'fit-content',
+                            padding: '0.2rem 1rem',
+                            width: header.getSize(),
+                          },
+                        }}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                        {header.column.getCanResize() ? (
+                          <div
+                            {...{
+                              onDoubleClick: () => header.column.resetSize(),
+                              onMouseDown: header.getResizeHandler(),
+                              onTouchStart: header.getResizeHandler(),
+                              className: cn(
+                                `absolute right-0 rounded-sm top-0 w-1 h-full cursor-col-resize select-none touch-none ${
+                                  table.options.columnResizeDirection
+                                } ${
+                                  header.column.getIsResizing()
+                                    ? 'bg-foreground/50'
+                                    : 'hover:bg-foreground/30'
+                                }`,
+                              ),
+                              style: {
+                                transform:
+                                  columnResizeModeRef.current === 'onEnd' &&
+                                  header.column.getIsResizing()
+                                    ? `translateX(${
+                                        (table.options.columnResizeDirection ===
+                                        'rtl'
+                                          ? -1
+                                          : 1) *
+                                        (table.getState().columnSizingInfo
+                                          .deltaOffset ?? 0)
+                                      }px)`
+                                    : '',
+                              },
+                            }}
+                          />
+                        ) : null}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody
+              style={{
+                display: 'grid',
+                height:
+                  rowVirtualizer.getTotalSize() > 0
+                    ? `${rowVirtualizer.getTotalSize()}px`
+                    : 'auto', //tells scrollbar how big the table is
+                position: 'relative',
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().length !== 0 ? (
+                rowVirtualizer.getVirtualItems().map(virtualRow => {
+                  const row = rows[virtualRow.index];
+                  const isLoaderRow = virtualRow.index > rows.length - 1;
 
-                if (isLoaderRow) {
+                  if (isLoaderRow) {
+                    return (
+                      <TableRow
+                        key='loader-row'
+                        data-index={virtualRow.index}
+                        ref={node => rowVirtualizer.measureElement(node)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          position: 'absolute',
+                          transform: `translateY(${virtualRow.start}px)`,
+                          width: '100%',
+                        }}
+                      >
+                        <TableCellSkeleton table={table} />
+                      </TableRow>
+                    );
+                  }
+
                   return (
                     <TableRow
-                      key='loader-row'
-                      data-index={virtualRow.index}
-                      ref={node => rowVirtualizer.measureElement(node)}
+                      data-index={virtualRow.index} //needed for dynamic row height measurement
+                      key={row.id}
+                      ref={node => rowVirtualizer.measureElement(node)} //measure dynamic row height
                       style={{
                         display: 'flex',
                         alignItems: 'center',
                         position: 'absolute',
-                        transform: `translateY(${virtualRow.start}px)`,
+                        transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
                         width: '100%',
                       }}
                     >
-                      <TableCellSkeleton table={table} />
+                      {row.getVisibleCells().map(cell => {
+                        return (
+                          <TableCell
+                            key={cell.id}
+                            style={{
+                              display: 'flex',
+                              width: cell.column.getSize(),
+                            }}
+                          >
+                            {flexRender(
+                              cell.column.columnDef.cell,
+                              cell.getContext(),
+                            )}
+                          </TableCell>
+                        );
+                      })}
                     </TableRow>
                   );
-                }
-
-                return (
-                  <TableRow
-                    data-index={virtualRow.index} //needed for dynamic row height measurement
-                    key={row.id}
-                    ref={node => rowVirtualizer.measureElement(node)} //measure dynamic row height
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      position: 'absolute',
-                      transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-                      width: '100%',
-                    }}
-                  >
-                    {row.getVisibleCells().map(cell => {
-                      return (
-                        <TableCell
-                          key={cell.id}
-                          style={{
-                            display: 'flex',
-                            width: cell.column.getSize(),
-                          }}
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                );
-              })
-            ) : isPending ? (
-              <TableRow
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  width: '100%',
-                }}
-              >
-                <TableCellSkeleton table={table} />
-              </TableRow>
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className='flex justify-center h-12'
+                })
+              ) : isPending ? (
+                <TableRow
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: '100%',
+                  }}
                 >
-                  Нет данных.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                  <TableCellSkeleton table={table} />
+                </TableRow>
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className='flex justify-center h-12'
+                  >
+                    Нет данных.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
       </div>
     </div>
   );

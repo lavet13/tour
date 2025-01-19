@@ -20,6 +20,7 @@ import {
   CalendarClock,
   Edit,
   MapPin,
+  MapPinOff,
   MapPinPlus,
   Trash,
 } from 'lucide-react';
@@ -42,7 +43,7 @@ import { Input } from '@/components/ui/input';
 import { Waypoint } from 'react-waypoint';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSchedulesByRoute } from '@/features/schedule/use-schedules-by-route';
-import RouteForm from '@/components/route-form';
+import { RouteForm } from '@/components/route-form';
 import { useDrawerState } from '@/hooks/use-drawer-state';
 import Schedules from '@/components/schedules';
 import { Separator } from '@/components/ui/separator';
@@ -77,12 +78,8 @@ function RoutesPage() {
     };
   }, []);
 
-  const {
-    isDrawerOpen,
-    drawerMode,
-    setDrawerMode,
-    setIsDrawerOpen,
-  } = useDrawerState({ routeId, addRoute });
+  const { isDrawerOpen, drawerMode, setDrawerMode, setIsDrawerOpen } =
+    useDrawerState({ routeId, addRoute });
 
   // show me schedules for existing route
   const {
@@ -177,142 +174,148 @@ function RoutesPage() {
   const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
 
   return (
-    <div
-      className={cn(
-        'relative container px-1 sm:px-4 mx-auto overflow-hidden space-y-2 flex-1 pt-2',
-        state === 'collapsed' && 'mx-0',
-      )}
-      style={{
-        maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
-      }}
-    >
-      {scheduleInitialLoading && (
-        <div className='flex-1 h-full flex items-center justify-center'>
-          <SonnerSpinner className='bg-foreground' />
-        </div>
-      )}
-
-      {isSchedule && <Schedules />}
-
-      {isNotSchedule && (
-        <>
-          <div className='flex items-center gap-2'>
-            <Input
-              className='max-w-full sm:max-w-[300px]'
-              placeholder='Найти маршрут...'
-              value={searchQuery}
-              onChange={e => {
-                setSearchParams(params => {
-                  const query = new URLSearchParams(params.toString());
-
-                  if (e.target.value.length === 0) {
-                    query.delete('q');
-                    return query;
-                  }
-
-                  query.set('q', e.target.value);
-                  return query;
-                });
-              }}
-            />
-            {isMobile && (
-              <Tooltip delayDuration={700}>
-                <TooltipTrigger asChild>
-                  <Button
-                    className='w-12'
-                    size={'icon'}
-                    onClick={handleAddRoute}
-                  >
-                    <MapPinPlus />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent
-                  align={state === 'collapsed' ? 'start' : 'center'}
-                  side='bottom'
-                >
-                  Добавить маршрут
-                </TooltipContent>
-              </Tooltip>
-            )}
-            {!isMobile && (
-              <Button onClick={handleAddRoute}>
-                <MapPinPlus />
-                Добавить маршрут
-              </Button>
-            )}
-          </div>
-          <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(19rem,_1fr))] gap-2 pb-2'>
-            {isPending &&
-              Array.from({ length: 8 }).map((_, idx) => (
-                <SkeletonRouteCard key={idx} />
-              ))}
-
-            {!isPending && (
-              <>
-                {filteredData.length !== 0 &&
-                  filteredData.map((route, idx, routes) => (
-                    <Fragment key={route.id}>
-                      <RouteCard
-                        key={route.id}
-                        route={route}
-                        onEdit={handleEditRoute(route.id)}
-                        onDelete={handleDeleteRoute(route.id)}
-                      />
-                      {idx === routes.length - 1 && (
-                        <Waypoint
-                          onEnter={() =>
-                            !isFetching && hasNextPage && fetchNextPage()
-                          }
-                        />
-                      )}
-                    </Fragment>
-                  ))}
-                {isFetchingNextPage &&
-                  Array.from({ length: 5 }).map((_, idx) => (
-                    <SkeletonRouteCard key={idx} />
-                  ))}
-              </>
-            )}
-          </div>
-        </>
-      )}
-
-      {deferredSearchQuery.length === 0 &&
-        filteredData.length === 0 &&
-        isNotSchedule && (
-          <p className='text-center text-sm text-muted-foreground'>
-            Нет данных.
-          </p>
+    <div className='container px-1 sm:px-2 pt-2 mx-auto overflow-hidden flex-1 flex flex-col'>
+      <div
+        className={cn(
+          'relative space-y-2 flex-1',
+          state === 'collapsed' && 'mx-0',
         )}
-
-      {deferredSearchQuery.length !== 0 &&
-        filteredData.length === 0 &&
-        isNotSchedule && (
-          <p className='text-center text-sm text-muted-foreground'>
-            Не найдено подходящего маршрута.
-          </p>
-        )}
-
-      <Drawer
-        repositionInputs
-        open={isDrawerOpen}
-        onOpenChange={setIsDrawerOpen}
-        onClose={handleClose}
+        style={{
+          maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
+        }}
       >
-        {/* <DrawerContent className="inset-x-auto right-2"> */}
-        <DrawerContent>
-          <DrawerHeader>
-            <DrawerTitle>
-              {drawerMode === 'addRoute' && 'Добавить новый маршрут'}
-              {drawerMode === 'editRoute' && 'Изменить маршрут'}
-              {drawerMode === 'idle' && <Skeleton className='h-6 w-full' />}
-            </DrawerTitle>
-          </DrawerHeader>
-          <Separator className='mt-2 mb-4' />
-          <RouteForm onClose={handleClose} routeId={routeId} drawerMode={drawerMode} />
-        </DrawerContent>
-        {/* </DrawerContent> */}
-      </Drawer>
+        {scheduleInitialLoading && (
+          <div className='flex-1 h-full flex items-center justify-center'>
+            <SonnerSpinner className='bg-foreground' />
+          </div>
+        )}
+
+        {isSchedule && <Schedules />}
+
+        {isNotSchedule && (
+          <>
+            <div className='flex items-center gap-2'>
+              <Input
+                className='max-w-full sm:max-w-[300px]'
+                placeholder='Найти маршрут...'
+                value={searchQuery}
+                onChange={e => {
+                  setSearchParams(params => {
+                    const query = new URLSearchParams(params.toString());
+
+                    if (e.target.value.length === 0) {
+                      query.delete('q');
+                      return query;
+                    }
+
+                    query.set('q', e.target.value);
+                    return query;
+                  });
+                }}
+              />
+              {isMobile && (
+                <Tooltip delayDuration={700}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      className='w-12'
+                      size={'icon'}
+                      onClick={handleAddRoute}
+                    >
+                      <MapPinPlus />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    align={state === 'collapsed' ? 'start' : 'center'}
+                    side='bottom'
+                  >
+                    Добавить маршрут
+                  </TooltipContent>
+                </Tooltip>
+              )}
+              {!isMobile && (
+                <Button onClick={handleAddRoute}>
+                  <MapPinPlus />
+                  Добавить маршрут
+                </Button>
+              )}
+            </div>
+            <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(18.5rem,_1fr))] gap-2 pb-2'>
+              {isPending &&
+                Array.from({ length: 8 }).map((_, idx) => (
+                  <SkeletonRouteCard key={idx} />
+                ))}
+
+              {!isPending && (
+                <>
+                  {filteredData.length !== 0 &&
+                    filteredData.map((route, idx, routes) => (
+                      <Fragment key={route.id}>
+                        <RouteCard
+                          key={route.id}
+                          route={route}
+                          onEdit={handleEditRoute(route.id)}
+                          onDelete={handleDeleteRoute(route.id)}
+                        />
+                        {idx === routes.length - 1 && (
+                          <Waypoint
+                            onEnter={() =>
+                              !isFetching && hasNextPage && fetchNextPage()
+                            }
+                          />
+                        )}
+                      </Fragment>
+                    ))}
+                  {isFetchingNextPage &&
+                    Array.from({ length: 5 }).map((_, idx) => (
+                      <SkeletonRouteCard key={idx} />
+                    ))}
+                </>
+              )}
+            </div>
+          </>
+        )}
+
+        {deferredSearchQuery.length === 0 &&
+          filteredData.length === 0 &&
+          isNotSchedule && (
+            <p className='text-center text-sm text-muted-foreground'>
+              Нет данных.
+            </p>
+          )}
+
+        {deferredSearchQuery.length !== 0 &&
+          filteredData.length === 0 &&
+          isNotSchedule && (
+            <p className='text-center text-sm text-muted-foreground'>
+              Не найдено подходящего маршрута.
+            </p>
+          )}
+
+        <Drawer
+          repositionInputs
+          open={isDrawerOpen}
+          onOpenChange={setIsDrawerOpen}
+          onClose={handleClose}
+        >
+          {/* <DrawerContent className="inset-x-auto right-2"> */}
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>
+                {drawerMode === 'addRoute' && 'Добавить новый маршрут'}
+                {drawerMode === 'editRoute' && 'Изменить маршрут'}
+                {drawerMode === 'idle' && <Skeleton className='h-6 w-full' />}
+              </DrawerTitle>
+            </DrawerHeader>
+            <Separator className='mt-2 mb-4' />
+            <RouteForm
+              onClose={handleClose}
+              routeId={routeId}
+              drawerMode={drawerMode}
+            />
+          </DrawerContent>
+          {/* </DrawerContent> */}
+        </Drawer>
+      </div>
     </div>
   );
 }
@@ -360,7 +363,7 @@ function LazyImageWrapper({ className, ...props }: LazyImageProps) {
             aria-busy='true'
             aria-label='Loading image'
           >
-            <SonnerSpinner />
+            <SonnerSpinner className='bg-foreground' />
           </div>
         }
       >
@@ -401,13 +404,22 @@ function RouteCard({
             {route.arrivalCity?.name}
           </h2>
           <div className='mb-2'>
-            <div className='flex items-center text-sm text-muted-foreground mb-2'>
-              <MapPin className='mr-1 h-4 w-4' />
-              {route.region?.name}
+            <div
+              className={cn(
+                'flex items-center text-sm text-muted-foreground mb-2',
+                !route.region?.name && 'text-destructive',
+              )}
+            >
+              {route.region?.name ? (
+                <MapPin className='mr-1 size-4' />
+              ) : (
+                <MapPinOff className='mr-1 size-4' />
+              )}
+              {route.region?.name ?? 'Не указан регион'}
             </div>
             {route.departureDate && (
               <div className='flex items-center text-sm text-muted-foreground mb-2'>
-                <Calendar className='mr-1 h-4 w-4' />
+                <Calendar className='mr-1 size-4' />
                 {formatDate(new Date(route.departureDate))}
               </div>
             )}
@@ -446,7 +458,7 @@ function RouteCard({
               )}
               {!isMobile && (
                 <Button
-                  className='gap-0'
+                  className='gap-0 px-2'
                   variant='outline'
                   size='sm'
                   onClick={onEdit}
@@ -474,7 +486,7 @@ function RouteCard({
               )}
               {!isMobile && (
                 <Button
-                  className='gap-0 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'
+                  className='gap-0 px-2 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'
                   variant='outline'
                   size='sm'
                   onClick={onDelete}

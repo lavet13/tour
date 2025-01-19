@@ -12,19 +12,9 @@ import { Separator } from '@/components/ui/separator';
 import { useCookies } from 'react-cookie';
 import { ModeToggle } from '@/components/mode-toggle';
 import { pagesConfig } from '@/pages/admin/layout/config/__pages';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from '@/components/ui/breadcrumb';
-import { useBreadcrumbs } from '@/hooks/use-breadcrumbs';
 
 const Layout: FC = () => {
   const [cookies] = useCookies();
-  const { breadcrumbs, path } = useBreadcrumbs();
   const location = useLocation();
   const errorLocation = useRef(location.pathname);
 
@@ -89,35 +79,6 @@ const Layout: FC = () => {
                 <div className='flex flex-1 items-center gap-2 px-2 sm:px-4'>
                   <SidebarTrigger className='-ml-1' />
                   <Separator orientation='vertical' className='mr-2 h-4' />
-                  {breadcrumbs.length > 0 && (
-                    <Breadcrumb>
-                      <BreadcrumbList>
-                        {breadcrumbs.map((crumb, idx) => (
-                          <BreadcrumbItem
-                            key={(crumb.url as string) || crumb.title}
-                          >
-                            {crumb.url &&
-                            crumb.url !== '#' &&
-                            crumb.url !== path ? (
-                              <BreadcrumbLink
-                                className='max-w-20 truncate md:max-w-none'
-                                asChild
-                              >
-                                <Link to={crumb.url}>{crumb.title}</Link>
-                              </BreadcrumbLink>
-                            ) : (
-                              <BreadcrumbPage className='max-w-20 truncate md:max-w-none'>
-                                {crumb.title}
-                              </BreadcrumbPage>
-                            )}
-                            {idx < breadcrumbs.length - 1 && (
-                              <BreadcrumbSeparator />
-                            )}
-                          </BreadcrumbItem>
-                        ))}
-                      </BreadcrumbList>
-                    </Breadcrumb>
-                  )}
 
                   <div className='ml-auto'>
                     <ModeToggle />

@@ -171,22 +171,6 @@ const resolvers: Resolvers = {
         },
       });
 
-      const routes = await prisma.route.findMany({
-        where: {
-          regionId,
-          OR: [{ departureDate: null }, { departureDate: { lte: new Date() } }],
-          isActive: true,
-        },
-        select: {
-          arrivalCity: true,
-        },
-        distinct: ['arrivalCityId'],
-      });
-
-      const arrivalCities = routes.map(route => route.arrivalCity);
-
-      console.log({ cities, arrivalCities });
-
       return cities;
     },
   },
