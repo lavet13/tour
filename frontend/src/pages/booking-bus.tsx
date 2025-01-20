@@ -31,10 +31,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import {
-  ArrowDown,
-  ArrowRightIcon,
   CalendarIcon,
   Minus,
+  MoveHorizontal,
+  MoveVertical,
   Plus,
 } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -305,9 +305,9 @@ const BookingBusPage: FC = () => {
                     )}
                   </span>
                   {isMobile ? (
-                    <ArrowDown className='size-4 mt-1.5' />
+                    <MoveVertical className='size-4 mt-1.5' />
                   ) : (
-                    <ArrowRightIcon className='size-4 self-end' />
+                    <MoveHorizontal className='size-4 self-end' />
                   )}
                   <span className='leading-5 text-center'>
                     {arrivalIsLoading ? (

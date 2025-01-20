@@ -162,13 +162,6 @@ const resolvers: Resolvers = {
             },
           },
         },
-        include: {
-          departureTrips: {
-            include: {
-              arrivalCity: true,
-            },
-          },
-        },
       });
 
       return cities;

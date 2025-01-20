@@ -22,6 +22,9 @@ import {
   MapPin,
   MapPinOff,
   MapPinPlus,
+  MoveHorizontal,
+  TicketCheck,
+  TicketX,
   Trash,
 } from 'lucide-react';
 import {
@@ -47,6 +50,7 @@ import { RouteForm } from '@/components/route-form';
 import { useDrawerState } from '@/hooks/use-drawer-state';
 import Schedules from '@/components/schedules';
 import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
 
 type Route = InfiniteRoutesQuery['routes']['edges'][number];
 
@@ -400,7 +404,7 @@ function RouteCard({
         <div className='p-4 flex flex-col flex-1 justify-between gap-2'>
           <h2 className='inline items-center gap-2 text-xl font-semibold mb-2'>
             {route.departureCity?.name}{' '}
-            <ArrowRight className='inline-block size-4' />{' '}
+            <MoveHorizontal className='inline-block size-5' />{' '}
             {route.arrivalCity?.name}
           </h2>
           <div className='mb-2'>
@@ -423,6 +427,25 @@ function RouteCard({
                 {formatDate(new Date(route.departureDate))}
               </div>
             )}
+            <div className='flex items-center gap-2'>
+              <span
+                className={cn(
+                  'text-sm text-muted-foreground inline-flex items-center gap-2',
+                  !route.isActive && 'text-destructive',
+                )}
+              >
+                {route.isActive && (
+                  <>
+                    <TicketCheck className="size-4" /> Доступен для бронирования
+                  </>
+                )}
+                {!route.isActive && (
+                  <>
+                    <TicketX className="size-4" /> Не доступен для бронирования
+                  </>
+                )}
+              </span>
+            </div>
           </div>
           <div className='flex justify-between space-x-2'>
             <Tooltip delayDuration={700}>

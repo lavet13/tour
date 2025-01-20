@@ -14,7 +14,8 @@
 - [x] add textarea from shadcn.extensions [see docs](https://shadcnui-expansions.typeart.cc/docs/autosize-textarea)
 - [x] change the color of the destructive hue in dark mode
 - [x] add breadcrumbs to admin dashboard as part of layout
-- [] create add/edit form for route
+- [x] create add/edit form for route
+- [] fix the selection for route based on regionId
 - [] create add/edit form for schedule
 
 # Other topics

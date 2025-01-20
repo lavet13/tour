@@ -71,11 +71,11 @@ const resolvers: Resolvers = {
     },
   },
   City: {
-    async arrivalTrips(parent, _, { loaders }) {
-      return loaders.arrivalTripsLoader.load(parent.id);
+    async arrivalTrips(parent, { regionId }, { loaders }) {
+      return loaders.arrivalTripsLoader(regionId).load(parent.id);
     },
-    async departureTrips(parent, _, { loaders }) {
-      return loaders.departureTripsLoader.load(parent.id);
+    async departureTrips(parent, { regionId }, { loaders }) {
+      return loaders.departureTripsLoader(regionId).load(parent.id);
     },
   },
 };

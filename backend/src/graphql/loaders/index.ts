@@ -15,6 +15,6 @@ export const createLoaders = (prisma: typeof prismaClient) => ({
   routesLoader: createRoutesLoader(prisma),
   bookingsLoader: createBookingsLoader(prisma),
   schedulesLoader: createSchedulesLoader(prisma),
-  departureTripsLoader: createDepartureTripsLoader(prisma),
-  arrivalTripsLoader: createArrivalTripsLoader(prisma),
+  departureTripsLoader: (regionId: string) => createDepartureTripsLoader(regionId)(prisma),
+  arrivalTripsLoader: (regionId: string) => createArrivalTripsLoader(regionId)(prisma),
 });

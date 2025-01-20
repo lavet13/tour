@@ -13,7 +13,7 @@ export const useRoutesByRegion = (
       routesByRegion(regionId: $regionId) {
         id
         name
-        departureTrips {
+        departureTrips(regionId: $regionId) {
           id
           arrivalCity {
             id
