@@ -22,38 +22,20 @@ const Header: FC = () => {
         <MobileNav />
         <div className='flex flex-1 items-center justify-between space-x-2 sm:justify-end'>
           <div className='w-full flex-1 sm:w-auto sm:flex-none'>
-            {isPending && (
-              <RainbowButton className='text-xs px-2 py-1 sm:text-sm w-full h-7 sm:h-9 sm:px-4 sm:py-2 animate-pulse'>
-                <Skeleton className='w-24 h-full bg-accent/20' />
-              </RainbowButton>
-            )}
-            {!me && !isPending && (
-              <RainbowButton
-                rightElement={
-                  <ChevronRightIcon className='ml-1 size-4 transition-transform duration-300 group-hover:translate-x-1' />
-                }
-                className='text-xs px-2 py-1 sm:text-sm w-full h-7 sm:h-9 sm:px-4 sm:py-2'
-                asChild
+            <RainbowButton
+              rightElement={
+                <ChevronRightIcon className='ml-1 size-4 transition-transform duration-300 group-hover:translate-x-1' />
+              }
+              className='text-xs px-2 py-1 sm:text-sm w-full h-7 sm:h-9 sm:px-4 sm:py-2'
+              asChild
+            >
+              <Link
+                onClick={() => window.scrollTo({ top: 0 })}
+                to='/booking-bus'
               >
-                <Link
-                  onClick={() => window.scrollTo({ top: 0 })}
-                  to='/booking-bus'
-                >
-                  Заказать билет
-                </Link>
-              </RainbowButton>
-            )}
-            {me && !isPending && (
-              <RainbowButton
-                rightElement={
-                  <ChevronRightIcon className='ml-1 size-4 transition-transform duration-300 group-hover:translate-x-1' />
-                }
-                className='text-xs px-2 py-1 sm:text-sm w-full h-7 sm:h-9 sm:px-4 sm:py-2'
-                asChild
-              >
-                <Link to='/admin'>Админ панелька</Link>
-              </RainbowButton>
-            )}
+                Заказать билет
+              </Link>
+            </RainbowButton>
           </div>
 
           <nav className='flex items-center'>

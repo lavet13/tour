@@ -49,6 +49,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { useGetMe } from '@/features/auth';
 
 type NavLinkProps = Omit<RouterLinkProps, 'className'> & {
   children: ReactNode;
@@ -105,6 +106,8 @@ const MainNav: FC = () => {
   const [open, setOpen] = useAtom(navigationMenuStateAtom);
   const { data: ldnrRegion } = useRegionByName('ЛДНР');
   const { data: coastalRegion } = useRegionByName('Азовское побережье');
+  const { data, isPending } = useGetMe();
+  const { me } = data ?? {};
 
   const {
     data: ldnrData,
@@ -129,11 +132,10 @@ const MainNav: FC = () => {
   const ldnrRoutes = ldnrData?.routesByRegion ?? [];
   const coastalRoutes = coastalData?.routesByRegion ?? [];
 
-  if (ldnrIsLoading || coastalIsLoading) {
+  const routesIsLoading = ldnrIsLoading || coastalIsLoading;
+  if (routesIsLoading) {
     return <NavSkeleton />;
   }
-
-  console.log({ ldnrRoutes, coastalRoutes });
 
   return (
     <div className='hidden md:flex'>
@@ -191,6 +193,23 @@ const MainNav: FC = () => {
               </RadixNavigationMenuSub>
             </NavigationMenuContent>
           </NavigationMenuItem>
+
+          {isPending && (
+            <NavigationMenuItem>
+              <div className='h-9 w-24 animate-pulse rounded-md bg-muted' />
+            </NavigationMenuItem>
+          )}
+
+          {me && !isPending && (
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                className={navigationMenuTriggerStyle()}
+                asChild
+              >
+                <Link to={'/admin'}>Админ панель</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+          )}
         </NavigationMenuList>
 
         <NavigationMenuViewport />
