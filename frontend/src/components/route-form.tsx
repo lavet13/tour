@@ -138,7 +138,7 @@ export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
     ? {
         arrivalCityId: routeData.routeById.arrivalCity?.id as string,
         departureCityId: routeData.routeById.departureCity?.id as string,
-        regionId: routeData.routeById.region?.id,
+        regionId: routeData.routeById.region?.id ?? null,
         departureDate: routeData.routeById.departureDate
           ? new Date(routeData.routeById.departureDate)
           : null,
@@ -146,6 +146,7 @@ export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
         price: routeData.routeById.price,
       }
     : undefined;
+  console.log({ values });
 
   const routeInitialLoading =
     routeFetchStatus === 'fetching' && routeStatus === 'pending';

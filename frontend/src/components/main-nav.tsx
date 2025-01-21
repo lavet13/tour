@@ -7,7 +7,7 @@ import {
   useMemo,
   useState,
 } from 'react';
-import { Link, LinkProps } from 'react-router-dom';
+import { Link, LinkProps, useNavigate } from 'react-router-dom';
 import {
   NavLink as RouterLink,
   NavLinkProps as RouterLinkProps,
@@ -30,8 +30,8 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from '@/components/ui/hover-card';
-import { Button } from './ui/button';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { Button, buttonVariants } from './ui/button';
+import { ChevronDown, ChevronRight, LogOut, Shield } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { ScrollArea } from './ui/scroll-area';
 import {
@@ -49,7 +49,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useGetMe } from '@/features/auth';
+import { useGetMe, useLogout } from '@/features/auth';
 
 type NavLinkProps = Omit<RouterLinkProps, 'className'> & {
   children: ReactNode;
@@ -106,8 +106,12 @@ const MainNav: FC = () => {
   const [open, setOpen] = useAtom(navigationMenuStateAtom);
   const { data: ldnrRegion } = useRegionByName('ЛДНР');
   const { data: coastalRegion } = useRegionByName('Азовское побережье');
-  const { data, isPending } = useGetMe();
-  const { me } = data ?? {};
+
+  const { data, isPending, refetch: refetchUser } = useGetMe();
+  const { me: user } = data || {};
+
+  const { mutateAsync: logout } = useLogout();
+  const navigate = useNavigate();
 
   const {
     data: ldnrData,
@@ -157,7 +161,9 @@ const MainNav: FC = () => {
       >
         <NavigationMenuList>
           <NavigationMenuItem>
-            <NavigationMenuTrigger className={'submenu-trigger bg-background/20'}>
+            <NavigationMenuTrigger
+              className={'submenu-trigger bg-background/20'}
+            >
               Рейсы
             </NavigationMenuTrigger>
             <NavigationMenuContent>
@@ -194,16 +200,36 @@ const MainNav: FC = () => {
             </NavigationMenuContent>
           </NavigationMenuItem>
 
-          {me && !isPending && (
+          {user && !isPending && (
             <NavigationMenuItem>
-              <NavigationMenuTrigger className="submenu-trigger bg-background/20">Админ меню</NavigationMenuTrigger>
+              <NavigationMenuTrigger className='submenu-trigger bg-background/20'>
+                Спец меню
+              </NavigationMenuTrigger>
               <NavigationMenuContent>
-                <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 p-2'>
+                <NavigationMenuList className='space-x-0 flex-col w-fit mr-1 p-2'>
                   <NavigationMenuLink
-                    className={navigationMenuTriggerStyle()}
+                    className={cn(
+                      buttonVariants({ variant: 'ghost', size: 'sm' }),
+                      'w-full justify-start',
+                    )}
                     asChild
                   >
-                    <Link to={'/admin'}>Админ панель</Link>
+                    <Link to={'/admin'}>
+                      <Shield />
+                      Админ панель
+                    </Link>
+                  </NavigationMenuLink>
+                  <NavigationMenuLink asChild
+                    onClick={async () => {
+                      await logout();
+                      await refetchUser();
+                      navigate('/');
+                    }}
+                  >
+                    <Button variant="ghost" size="sm" className={cn('w-full justify-start')}>
+                      <LogOut />
+                      Выйти из аккаунта
+                    </Button>
                   </NavigationMenuLink>
                 </NavigationMenuList>
               </NavigationMenuContent>
@@ -351,15 +377,12 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
       <NavigationMenuContent>
         <RadixNavigationMenuSub className='flex'>
           <ScrollArea
-            className={cn(
-              routes.length === 0 && 'w-32',
-              routes.length < 9 ? 'h-fit' : 'h-[22rem]',
-            )}
+            className={cn(routes.length === 0 && 'w-52', 'h-[22rem]')}
           >
             <NavigationMenuList
               className={cn(
                 routes.length === 0 ? 'w-full' : 'w-fit',
-                'space-x-0 items-start flex-col mr-2 p-2 overflow-hidden',
+                'space-x-0 items-start flex-col mr-1 p-2 overflow-hidden',
               )}
             >
               {routes.length !== 0 &&
@@ -384,10 +407,10 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                     <NavigationMenuContent>
                       <ScrollArea
                         className={cn(
-                          'h-fit min-w-[230px] min-[860px]:min-w-[300px]',
+                          'h-fit min-w-[200px] min-[860px]:min-w-[300px]',
                         )}
                       >
-                        <div className='flex flex-col p-4 pb-2'>
+                        <div className='flex flex-col p-4 px-2 pb-2'>
                           <h4 className='font-medium mb-2'>
                             Маршруты из {route.name}:
                           </h4>
@@ -413,6 +436,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                                 <Button
                                   asChild={isAvailable}
                                   key={trip.id}
+                                  size='sm'
                                   variant='ghost'
                                   className={cn('w-full justify-between')}
                                   onClick={() => setOpen('')}
@@ -428,6 +452,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                                 <Button
                                   key={trip.id}
                                   asChild={isAvailable}
+                                  size='sm'
                                   variant='ghost'
                                   className={cn(
                                     'w-full justify-between',
