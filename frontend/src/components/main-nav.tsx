@@ -157,7 +157,7 @@ const MainNav: FC = () => {
       >
         <NavigationMenuList>
           <NavigationMenuItem>
-            <NavigationMenuTrigger className={'bg-background/20'}>
+            <NavigationMenuTrigger className={'submenu-trigger bg-background/20'}>
               Рейсы
             </NavigationMenuTrigger>
             <NavigationMenuContent>
@@ -194,20 +194,19 @@ const MainNav: FC = () => {
             </NavigationMenuContent>
           </NavigationMenuItem>
 
-          {isPending && (
-            <NavigationMenuItem>
-              <div className='h-9 w-24 animate-pulse rounded-md bg-muted' />
-            </NavigationMenuItem>
-          )}
-
           {me && !isPending && (
             <NavigationMenuItem>
-              <NavigationMenuLink
-                className={navigationMenuTriggerStyle()}
-                asChild
-              >
-                <Link to={'/admin'}>Админ панель</Link>
-              </NavigationMenuLink>
+              <NavigationMenuTrigger className="submenu-trigger bg-background/20">Админ меню</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 p-2'>
+                  <NavigationMenuLink
+                    className={navigationMenuTriggerStyle()}
+                    asChild
+                  >
+                    <Link to={'/admin'}>Админ панель</Link>
+                  </NavigationMenuLink>
+                </NavigationMenuList>
+              </NavigationMenuContent>
             </NavigationMenuItem>
           )}
         </NavigationMenuList>
