@@ -2,7 +2,7 @@ import gql from 'graphql-tag';
 
 export default gql`
   type Query {
-    schedulesByRoute(routeId: ID!): [Schedule!]!
+    schedulesByRoute(routeId: ID): [Schedule!]!
   }
 
   type Mutation {

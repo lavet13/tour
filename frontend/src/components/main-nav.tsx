@@ -107,11 +107,8 @@ const MainNav: FC = () => {
   const { data: ldnrRegion } = useRegionByName('ЛДНР');
   const { data: coastalRegion } = useRegionByName('Азовское побережье');
 
-  const { data, isPending, refetch: refetchUser } = useGetMe();
+  const { data, isPending } = useGetMe();
   const { me: user } = data || {};
-
-  const { mutateAsync: logout } = useLogout();
-  const navigate = useNavigate();
 
   const {
     data: ldnrData,
@@ -162,7 +159,11 @@ const MainNav: FC = () => {
         <NavigationMenuList>
           <NavigationMenuItem>
             <NavigationMenuTrigger
-              className={'submenu-trigger bg-background/20'}
+              className={cn(
+                'submenu-trigger bg-transparent',
+                buttonVariants({ variant: 'ghost', size: 'sm' }),
+                'gap-1',
+              )}
             >
               Рейсы
             </NavigationMenuTrigger>
@@ -202,37 +203,18 @@ const MainNav: FC = () => {
 
           {user && !isPending && (
             <NavigationMenuItem>
-              <NavigationMenuTrigger className='submenu-trigger bg-background/20'>
-                Спец меню
-              </NavigationMenuTrigger>
-              <NavigationMenuContent>
-                <NavigationMenuList className='space-x-0 flex-col w-fit mr-1 p-2'>
-                  <NavigationMenuLink
-                    className={cn(
-                      buttonVariants({ variant: 'ghost', size: 'sm' }),
-                      'w-full justify-start',
-                    )}
-                    asChild
-                  >
-                    <Link to={'/admin'}>
-                      <Shield />
-                      Админ панель
-                    </Link>
-                  </NavigationMenuLink>
-                  <NavigationMenuLink asChild
-                    onClick={async () => {
-                      await logout();
-                      await refetchUser();
-                      navigate('/');
-                    }}
-                  >
-                    <Button variant="ghost" size="sm" className={cn('w-full justify-start')}>
-                      <LogOut />
-                      Выйти из аккаунта
-                    </Button>
-                  </NavigationMenuLink>
-                </NavigationMenuList>
-              </NavigationMenuContent>
+              <NavigationMenuLink
+                className={cn(
+                  buttonVariants({ variant: 'ghost', size: 'sm' }),
+                  'w-full justify-start bg-transparent',
+                )}
+                asChild
+              >
+                <Link to={'/admin'}>
+                  <Shield />
+                  Админ панель
+                </Link>
+              </NavigationMenuLink>
             </NavigationMenuItem>
           )}
         </NavigationMenuList>
@@ -365,7 +347,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
       >
         <Button
           className={cn(
-            'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto',
+            'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto gap-1',
           )}
           variant='ghost'
           size={'sm'}
@@ -395,7 +377,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                     <RadixNavigationMenuTrigger asChild>
                       <Button
                         className={cn(
-                          'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto',
+                          'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto gap-1',
                         )}
                         variant='ghost'
                         size='sm'

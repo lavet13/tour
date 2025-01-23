@@ -72,7 +72,7 @@ const processRoutes = (paths: Record<string, any>) => {
 
       const route: AppRoute = {
         name: `${routePath}/${paramName}${nestedPathToUse ? `/${nestedPathToUse}${nestedParamName}` : ''}`,
-        path: `${routePath}/:${paramName}${nestedPathToUse ? `/${nestedPathToUse}${nestedParamToUse}` : ''}`,
+        path: `/${routePath}/:${paramName}${nestedPathToUse ? `/${nestedPathToUse}${nestedParamToUse}` : ''}`,
         component: Loadable(lazy(paths[path])),
       };
 

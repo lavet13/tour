@@ -9,7 +9,7 @@ export const useSchedulesByRoute = (
   options?: InitialDataOptions<GetSchedulesByRouteQuery>,
 ) => {
   const schedulesByRoute = graphql(`
-    query GetSchedulesByRoute($routeId: ID!) {
+    query GetSchedulesByRoute($routeId: ID) {
       schedulesByRoute(routeId: $routeId) {
         travelDate
         startTime

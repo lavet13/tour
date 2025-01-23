@@ -295,30 +295,32 @@ function RoutesPage() {
             </p>
           )}
 
-        <Drawer
-          repositionInputs
-          open={isDrawerOpen}
-          onOpenChange={setIsDrawerOpen}
-          onClose={handleClose}
-        >
-          {/* <DrawerContent className="inset-x-auto right-2"> */}
-          <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>
-                {drawerMode === 'addRoute' && 'Добавить новый маршрут'}
-                {drawerMode === 'editRoute' && 'Изменить маршрут'}
-                {drawerMode === 'idle' && <Skeleton className='h-6 w-full' />}
-              </DrawerTitle>
-            </DrawerHeader>
-            <Separator className='mt-2 mb-4' />
-            <RouteForm
-              onClose={handleClose}
-              routeId={routeId}
-              drawerMode={drawerMode}
-            />
-          </DrawerContent>
-          {/* </DrawerContent> */}
-        </Drawer>
+        {isNotSchedule && (
+          <Drawer
+            repositionInputs
+            open={isDrawerOpen}
+            onOpenChange={setIsDrawerOpen}
+            onClose={handleClose}
+          >
+            {/* <DrawerContent className="inset-x-auto right-2"> */}
+            <DrawerContent>
+              <DrawerHeader>
+                <DrawerTitle>
+                  {drawerMode === 'addRoute' && 'Добавить новый маршрут'}
+                  {drawerMode === 'editRoute' && 'Изменить маршрут'}
+                  {drawerMode === 'idle' && <Skeleton className='h-6 w-full' />}
+                </DrawerTitle>
+              </DrawerHeader>
+              <Separator className='mt-2 mb-4' />
+              <RouteForm
+                onClose={handleClose}
+                routeId={routeId}
+                drawerMode={drawerMode}
+              />
+            </DrawerContent>
+            {/* </DrawerContent> */}
+          </Drawer>
+        )}
       </div>
     </div>
   );
@@ -436,12 +438,12 @@ function RouteCard({
               >
                 {route.isActive && (
                   <>
-                    <TicketCheck className="size-4" /> Доступен для бронирования
+                    <TicketCheck className='size-4' /> Доступен для бронирования
                   </>
                 )}
                 {!route.isActive && (
                   <>
-                    <TicketX className="size-4" /> Не доступен для бронирования
+                    <TicketX className='size-4' /> Не доступен для бронирования
                   </>
                 )}
               </span>

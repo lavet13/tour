@@ -7,14 +7,9 @@ import MobileNav from '@/components/mobile-nav';
 import MainNav from '@/components/main-nav';
 import { Icons } from '@/components/icons';
 import { RainbowButton } from '@/components/ui/rainbow-button';
-import { useGetMe } from '@/features/auth';
-import { Skeleton } from '@/components/ui/skeleton';
 import { ChevronRightIcon } from 'lucide-react';
 
 const Header: FC = () => {
-  const { data, isPending } = useGetMe();
-  const { me } = data ?? {};
-
   return (
     <header className='sticky top-0 z-50 w-full border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
       <div className='container h-14 flex items-center'>
@@ -26,7 +21,7 @@ const Header: FC = () => {
               rightElement={
                 <ChevronRightIcon className='ml-1 size-4 transition-transform duration-300 group-hover:translate-x-1' />
               }
-              className='text-xs px-2 py-1 sm:text-sm w-full h-7 sm:h-9 sm:px-4 sm:py-2'
+              className='text-sm w-full h-8 sm:h-9 px-4 py-2'
               asChild
             >
               <Link
