@@ -1,15 +1,105 @@
-import { useParams } from "react-router-dom";
+import { Button } from '@/components/ui/button';
+import { useSidebar } from '@/components/ui/sidebar';
+import { useSchedulesByRoute } from '@/features/schedule/use-schedules-by-route';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { ArrowLeft, CalendarPlus } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
+import { useMemo } from 'react';
+import { SonnerSpinner } from '@/components/sonner-spinner';
 
-interface SchedulesProps {}
+interface Params {
+  route_id: string;
+}
 
-function Schedules({}: SchedulesProps) {
-  const { route_id } = useParams<{ route_id: string }>();
+function Schedules() {
+  const MOBILE_BREAKPOINT = 450;
+  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+  const navigate = useNavigate();
+  const { state } = useSidebar();
+  const { route_id: routeId } = useParams<keyof Params>() as Params;
+
+  // show me schedules for existing route
+  const {
+    data: scheduleData,
+    fetchStatus: scheduleFetchStatus,
+    status: scheduleStatus,
+    error: scheduleError,
+    isFetching: scheduleIsFetching,
+    isSuccess: scheduleIsSuccess,
+    isError: scheduleIsError,
+  } = useSchedulesByRoute(routeId, { enabled: !!routeId });
+
+  const schedules = useMemo(
+    () => scheduleData?.schedulesByRoute,
+    [scheduleData],
+  );
+  console.log({ schedules });
+
+  const scheduleInitialLoading =
+    scheduleFetchStatus === 'fetching' && scheduleStatus === 'pending';
+
+  if (scheduleIsError) {
+    throw scheduleError;
+  }
 
   return (
-    <div>
-      <h1>Schedules for Route {route_id}</h1>
-      {/* Your schedule content here */}
-    </div>
+    <>
+      {scheduleInitialLoading && (
+        <div className='flex-1 h-full flex items-center justify-center'>
+          <SonnerSpinner className='bg-foreground' />
+        </div>
+      )}
+
+      {/* Background Updates */}
+      {scheduleIsFetching && scheduleIsSuccess && (
+        <div className='w-full sm:max-w-screen-sm mx-auto'>
+          <div className='flex items-center justify-center mb-6 px-4 sm:px-5'>
+            <SonnerSpinner className='bg-foreground' />
+          </div>
+        </div>
+      )}
+      {!scheduleInitialLoading && (
+        <div className='flex flex-col'>
+          <div className='flex items-center gap-2'>
+            {!isMobile && (
+              <Button variant='outline' onClick={() => navigate(-1)}>
+                <ArrowLeft />
+                Назад
+              </Button>
+            )}
+            {isMobile && (
+              <Tooltip delayDuration={700}>
+                <TooltipTrigger asChild>
+                  <Button
+                    className='h-9 min-w-9'
+                    variant='outline'
+                    size='icon'
+                    onClick={() => navigate(-1)}
+                  >
+                    <ArrowLeft />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent
+                  align={state === 'collapsed' ? 'start' : 'center'}
+                  side='bottom'
+                >
+                  Вернуться назад
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <Button className='w-full sm:w-auto'>
+              <CalendarPlus />
+              Добавить расписание
+            </Button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 

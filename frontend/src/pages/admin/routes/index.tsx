@@ -458,7 +458,7 @@ function RouteCard({
                   size='icon'
                   asChild
                 >
-                  <Link to={`/admin/routes?schedule_id=${route.id}`}>
+                  <Link to={`/admin/routes/${route.id}/schedules`}>
                     <CalendarClock />
                   </Link>
                 </Button>
