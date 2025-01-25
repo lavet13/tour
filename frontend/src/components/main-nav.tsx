@@ -206,8 +206,8 @@ const MainNav: FC = () => {
             <NavigationMenuItem>
               <NavigationMenuLink
                 className={cn(
-                  buttonVariants({ variant: 'ghost', size: 'sm' }),
-                  'w-full justify-start bg-transparent',
+                  buttonVariants({ variant: 'outline', size: 'sm' }),
+                  // 'w-full justify-start bg-transparent',
                 )}
                 asChild
               >
