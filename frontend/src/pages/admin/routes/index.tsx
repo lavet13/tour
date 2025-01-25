@@ -15,7 +15,6 @@ import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import {
-  ArrowRight,
   Calendar,
   CalendarClock,
   Edit,
@@ -45,12 +44,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Waypoint } from 'react-waypoint';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useSchedulesByRoute } from '@/features/schedule/use-schedules-by-route';
 import { RouteForm } from '@/components/route-form';
 import { useDrawerState } from '@/hooks/use-drawer-state';
-import Schedules from '@/components/schedules';
 import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
 
 type Route = InfiniteRoutesQuery['routes']['edges'][number];
 
@@ -63,7 +59,6 @@ function RoutesPage() {
   const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const routeId = searchParams.get('route_id');
-  const scheduleId = searchParams.get('schedule_id');
   const addRoute = searchParams.get('add_route');
 
   const { state } = useSidebar();
@@ -84,22 +79,6 @@ function RoutesPage() {
 
   const { isDrawerOpen, drawerMode, setDrawerMode, setIsDrawerOpen } =
     useDrawerState({ routeId, addRoute });
-
-  // show me schedules for existing route
-  const {
-    data: scheduleData,
-    fetchStatus: scheduleFetchStatus,
-    status: scheduleStatus,
-    error: scheduleError,
-    isError: scheduleIsError,
-  } = useSchedulesByRoute(scheduleId, {
-    enabled: !!scheduleId,
-  });
-
-  const scheduleBackgroundUpdate =
-    scheduleFetchStatus === 'fetching' && scheduleStatus === 'success';
-  const scheduleInitialLoading =
-    scheduleFetchStatus === 'fetching' && scheduleStatus === 'pending';
 
   const {
     data,
@@ -127,10 +106,6 @@ function RoutesPage() {
         .includes(searchQuery.toLowerCase()) ||
       route.arrivalCity?.name.toLowerCase().includes(searchQuery.toLowerCase()),
   );
-
-  if (scheduleIsError) {
-    throw scheduleError;
-  }
 
   const handleClose = () => {
     if (drawerMode === 'editRoute') {
@@ -170,10 +145,6 @@ function RoutesPage() {
 
   const handleDeleteRoute = (id: string) => () => {};
 
-  const isNotSchedule =
-    !scheduleInitialLoading && !scheduleData?.schedulesByRoute;
-  const isSchedule = !!scheduleData?.schedulesByRoute;
-
   const MOBILE_BREAKPOINT = 400;
   const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
 
@@ -188,139 +159,117 @@ function RoutesPage() {
           maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
         }}
       >
-        {scheduleInitialLoading && (
-          <div className='flex-1 h-full flex items-center justify-center'>
-            <SonnerSpinner className='bg-foreground' />
-          </div>
-        )}
+        <div className='flex items-center gap-2'>
+          <Input
+            className='max-w-full sm:max-w-[300px]'
+            placeholder='Найти маршрут...'
+            value={searchQuery}
+            onChange={e => {
+              setSearchParams(params => {
+                const query = new URLSearchParams(params.toString());
 
-        {isSchedule && <Schedules />}
+                if (e.target.value.length === 0) {
+                  query.delete('q');
+                  return query;
+                }
 
-        {isNotSchedule && (
-          <>
-            <div className='flex items-center gap-2'>
-              <Input
-                className='max-w-full sm:max-w-[300px]'
-                placeholder='Найти маршрут...'
-                value={searchQuery}
-                onChange={e => {
-                  setSearchParams(params => {
-                    const query = new URLSearchParams(params.toString());
-
-                    if (e.target.value.length === 0) {
-                      query.delete('q');
-                      return query;
-                    }
-
-                    query.set('q', e.target.value);
-                    return query;
-                  });
-                }}
-              />
-              {isMobile && (
-                <Tooltip delayDuration={700}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      className='w-12'
-                      size={'icon'}
-                      onClick={handleAddRoute}
-                    >
-                      <MapPinPlus />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    align={state === 'collapsed' ? 'start' : 'center'}
-                    side='bottom'
-                  >
-                    Добавить маршрут
-                  </TooltipContent>
-                </Tooltip>
-              )}
-              {!isMobile && (
-                <Button onClick={handleAddRoute}>
+                query.set('q', e.target.value);
+                return query;
+              });
+            }}
+          />
+          {isMobile && (
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <Button className='w-12' size={'icon'} onClick={handleAddRoute}>
                   <MapPinPlus />
-                  Добавить маршрут
                 </Button>
-              )}
-            </div>
-            <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(18.5rem,_1fr))] gap-2 pb-2'>
-              {isPending &&
-                Array.from({ length: 8 }).map((_, idx) => (
+              </TooltipTrigger>
+              <TooltipContent
+                align={state === 'collapsed' ? 'start' : 'center'}
+                side='bottom'
+              >
+                Добавить маршрут
+              </TooltipContent>
+            </Tooltip>
+          )}
+          {!isMobile && (
+            <Button onClick={handleAddRoute}>
+              <MapPinPlus />
+              Добавить маршрут
+            </Button>
+          )}
+        </div>
+        <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(18.5rem,_1fr))] gap-2 pb-2'>
+          {isPending &&
+            Array.from({ length: 8 }).map((_, idx) => (
+              <SkeletonRouteCard key={idx} />
+            ))}
+
+          {!isPending && (
+            <>
+              {filteredData.length !== 0 &&
+                filteredData.map((route, idx, routes) => (
+                  <Fragment key={route.id}>
+                    <RouteCard
+                      key={route.id}
+                      route={route}
+                      onEdit={handleEditRoute(route.id)}
+                      onDelete={handleDeleteRoute(route.id)}
+                    />
+                    {idx === routes.length - 1 && (
+                      <Waypoint
+                        onEnter={() =>
+                          !isFetching && hasNextPage && fetchNextPage()
+                        }
+                      />
+                    )}
+                  </Fragment>
+                ))}
+              {isFetchingNextPage &&
+                Array.from({ length: 5 }).map((_, idx) => (
                   <SkeletonRouteCard key={idx} />
                 ))}
+            </>
+          )}
+        </div>
 
-              {!isPending && (
-                <>
-                  {filteredData.length !== 0 &&
-                    filteredData.map((route, idx, routes) => (
-                      <Fragment key={route.id}>
-                        <RouteCard
-                          key={route.id}
-                          route={route}
-                          onEdit={handleEditRoute(route.id)}
-                          onDelete={handleDeleteRoute(route.id)}
-                        />
-                        {idx === routes.length - 1 && (
-                          <Waypoint
-                            onEnter={() =>
-                              !isFetching && hasNextPage && fetchNextPage()
-                            }
-                          />
-                        )}
-                      </Fragment>
-                    ))}
-                  {isFetchingNextPage &&
-                    Array.from({ length: 5 }).map((_, idx) => (
-                      <SkeletonRouteCard key={idx} />
-                    ))}
-                </>
-              )}
-            </div>
-          </>
+        {deferredSearchQuery.length === 0 && filteredData.length === 0 && (
+          <p className='text-center text-sm text-muted-foreground'>
+            Нет данных.
+          </p>
         )}
 
-        {deferredSearchQuery.length === 0 &&
-          filteredData.length === 0 &&
-          isNotSchedule && (
-            <p className='text-center text-sm text-muted-foreground'>
-              Нет данных.
-            </p>
-          )}
-
-        {deferredSearchQuery.length !== 0 &&
-          filteredData.length === 0 &&
-          isNotSchedule && (
-            <p className='text-center text-sm text-muted-foreground'>
-              Не найдено подходящего маршрута.
-            </p>
-          )}
-
-        {isNotSchedule && (
-          <Drawer
-            repositionInputs
-            open={isDrawerOpen}
-            onOpenChange={setIsDrawerOpen}
-            onClose={handleClose}
-          >
-            {/* <DrawerContent className="inset-x-auto right-2"> */}
-            <DrawerContent>
-              <DrawerHeader>
-                <DrawerTitle>
-                  {drawerMode === 'addRoute' && 'Добавить новый маршрут'}
-                  {drawerMode === 'editRoute' && 'Изменить маршрут'}
-                  {drawerMode === 'idle' && <Skeleton className='h-6 w-full' />}
-                </DrawerTitle>
-              </DrawerHeader>
-              <Separator className='mt-2 mb-4' />
-              <RouteForm
-                onClose={handleClose}
-                routeId={routeId}
-                drawerMode={drawerMode}
-              />
-            </DrawerContent>
-            {/* </DrawerContent> */}
-          </Drawer>
+        {deferredSearchQuery.length !== 0 && filteredData.length === 0 && (
+          <p className='text-center text-sm text-muted-foreground'>
+            Не найдено подходящего маршрута.
+          </p>
         )}
+
+        <Drawer
+          repositionInputs
+          open={isDrawerOpen}
+          onOpenChange={setIsDrawerOpen}
+          onClose={handleClose}
+        >
+          {/* <DrawerContent className="inset-x-auto right-2"> */}
+          <DrawerContent>
+            <DrawerHeader>
+              <DrawerTitle>
+                {drawerMode === 'addRoute' && 'Добавить новый маршрут'}
+                {drawerMode === 'editRoute' && 'Изменить маршрут'}
+                {drawerMode === 'idle' && <Skeleton className='h-6 w-full' />}
+              </DrawerTitle>
+            </DrawerHeader>
+            <Separator className='mt-2 mb-4' />
+            <RouteForm
+              onClose={handleClose}
+              routeId={routeId}
+              drawerMode={drawerMode}
+            />
+          </DrawerContent>
+          {/* </DrawerContent> */}
+        </Drawer>
       </div>
     </div>
   );

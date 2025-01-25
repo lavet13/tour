@@ -50,6 +50,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useGetMe, useLogout } from '@/features/auth';
+import { Input } from '@/components/ui/input';
 
 type NavLinkProps = Omit<RouterLinkProps, 'className'> & {
   children: ReactNode;
@@ -170,7 +171,7 @@ const MainNav: FC = () => {
             <NavigationMenuContent>
               <RadixNavigationMenuSub className='flex'>
                 <ScrollArea className='h-fit'>
-                  <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 p-2'>
+                  <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 pt-2 pl-2 pb-2'>
                     <Button
                       className='px-3 underline decoration-dotted hover:decoration-solid h-fit'
                       variant='link'
@@ -338,6 +339,13 @@ interface NavigationRoutesProps {
 
 const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
   const [, setOpen] = useAtom(navigationMenuStateAtom);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredRoutes = useMemo(() => {
+    return routes.filter(route =>
+      route.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [routes, searchTerm]);
 
   return (
     <>
@@ -358,17 +366,24 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
       </RadixNavigationMenuTrigger>
       <NavigationMenuContent>
         <RadixNavigationMenuSub className='flex'>
-          <ScrollArea
-            className={cn(routes.length === 0 && 'w-52', 'h-[22rem]')}
+          <NavigationMenuList
+            className={cn(
+              routes.length === 0 ? 'w-full flex-1' : 'w-fit',
+              'space-x-0 items-stretch flex-col p-2 pl-1 pr-0 overflow-hidden',
+            )}
           >
-            <NavigationMenuList
-              className={cn(
-                routes.length === 0 ? 'w-full' : 'w-fit',
-                'space-x-0 items-start flex-col mr-1 p-2 overflow-hidden',
-              )}
-            >
-              {routes.length !== 0 &&
-                routes.map(route => (
+            <>
+              <Input
+                type='text'
+                placeholder='Найти город...'
+                className='self-center max-w-[150px] mr-2 mb-2'
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+              <ScrollArea
+                className={cn(routes.length === 0 && 'w-52', 'h-[22rem]')}
+              >
+                {filteredRoutes.map(route => (
                   <NavigationMenuItem
                     className={cn('flex w-full')}
                     key={route.id}
@@ -377,7 +392,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                     <RadixNavigationMenuTrigger asChild>
                       <Button
                         className={cn(
-                          'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto gap-1',
+                          'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto gap-1 mr-2',
                         )}
                         variant='ghost'
                         size='sm'
@@ -387,16 +402,16 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                       </Button>
                     </RadixNavigationMenuTrigger>
                     <NavigationMenuContent>
-                      <ScrollArea
-                        className={cn(
-                          'h-fit min-w-[200px] min-[860px]:min-w-[300px]',
-                        )}
-                      >
-                        <div className='flex flex-col p-4 px-2 pb-2'>
-                          <h4 className='font-medium mb-2'>
-                            Маршруты из {route.name}:
-                          </h4>
-                          <Separator className='mb-4' />
+                      <div className='flex flex-col p-4 pl-1 pr-2 pb-2'>
+                        <h4 className='font-medium mb-2'>
+                          Маршруты из {route.name}:
+                        </h4>
+                        <Separator className='mb-4' />
+                        <ScrollArea
+                          className={cn(
+                            'h-[16rem] min-w-[200px] min-[860px]:min-w-[300px]',
+                          )}
+                        >
                           <div className='grid gap-2'>
                             {route.departureTrips.map(trip => {
                               const isAvailable = trip.departureDate
@@ -410,9 +425,9 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
 
                               let content: ReactNode = null;
 
-                              const handleClick = useCallback(() => {
+                              const handleClick = () => {
                                 window.scrollTo({ top: 0 });
-                              }, []);
+                              };
 
                               content = isAvailable ? (
                                 <Button
@@ -453,21 +468,22 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                               return content;
                             })}
                           </div>
-                        </div>
-                      </ScrollArea>
+                        </ScrollArea>
+                      </div>
                     </NavigationMenuContent>
                   </NavigationMenuItem>
                 ))}
+              </ScrollArea>
+            </>
 
-              {routes.length === 0 && (
-                <NavigationMenuItem className='self-center'>
-                  <span className='text-sm text-muted-foreground'>
-                    Нет данных
-                  </span>
-                </NavigationMenuItem>
-              )}
-            </NavigationMenuList>
-          </ScrollArea>
+            {routes.length === 0 && (
+              <NavigationMenuItem className='self-center'>
+                <span className='text-sm text-muted-foreground'>
+                  Нет данных
+                </span>
+              </NavigationMenuItem>
+            )}
+          </NavigationMenuList>
 
           <RadixNavigationMenuViewport
             className='overflow-hidden transform origin-top-center relative top-0 left-0 w-full overflow-hidden rounded-md bg-popover text-popover-foreground data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-105'

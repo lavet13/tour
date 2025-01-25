@@ -1,4 +1,10 @@
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import suspenseFallbackMap from './suspense-fallback-map';
 import { lazy, Suspense, useEffect, useState } from 'react';
 
@@ -65,14 +71,18 @@ const processRoutes = (paths: Record<string, any>) => {
     );
 
     if (dynamicMatch) {
-      const [, routePath, paramName, nestedPath = '', nestedParamName = ''] =
+      const [, routePath, paramName, nestedPath = ''] =
         dynamicMatch;
+
+      // Modify this part to handle index case correctly
       const nestedPathToUse = nestedPath === 'index' ? '' : nestedPath;
-      const nestedParamToUse = nestedParamName ? `:${nestedParamName}` : '';
+      const fullPath = nestedPathToUse
+        ? `/${routePath}/:${paramName}/${nestedPathToUse}`
+        : `/${routePath}/:${paramName}`;
 
       const route: AppRoute = {
-        name: `${routePath}/${paramName}${nestedPathToUse ? `/${nestedPathToUse}${nestedParamName}` : ''}`,
-        path: `/${routePath}/:${paramName}${nestedPathToUse ? `/${nestedPathToUse}${nestedParamToUse}` : ''}`,
+        name: `${routePath}/${paramName}${nestedPathToUse ? `/${nestedPathToUse}` : ''}`,
+        path: fullPath,
         component: Loadable(lazy(paths[path])),
       };
 
@@ -156,7 +166,7 @@ function RedirectUser({ children }: { children: JSX.Element }) {
   useEffect(() => {
     const storedPath = sessionStorage.getItem('redirectPath');
 
-    if(storedPath) {
+    if (storedPath) {
       setRedirectTo(storedPath);
     }
   }, []);
