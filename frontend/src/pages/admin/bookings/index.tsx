@@ -19,7 +19,7 @@ import {
   BookingColumns,
   columns,
   columnTranslations,
-} from '@/pages/admin/bookings/columns';
+} from '@/pages/admin/bookings/__columns';
 import { InfiniteBookingsQuery } from '@/gql/graphql';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {

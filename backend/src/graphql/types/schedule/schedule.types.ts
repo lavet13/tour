@@ -18,6 +18,7 @@ export default gql`
   }
 
   type Schedule {
+    id: ID!
     route: Route
     travelDate: Date!
     startTime: Date!

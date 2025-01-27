@@ -207,7 +207,6 @@ const MainNav: FC = () => {
               <NavigationMenuLink
                 className={cn(
                   buttonVariants({ variant: 'outline', size: 'sm' }),
-                  // 'w-full justify-start bg-transparent',
                 )}
                 asChild
               >
@@ -473,16 +472,22 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                     </NavigationMenuContent>
                   </NavigationMenuItem>
                 ))}
+                {routes.length !== 0 && filteredRoutes.length === 0 && (
+                  <NavigationMenuItem className='text-center self-center'>
+                    <span className='text-sm text-muted-foreground'>
+                      Не найдено.
+                    </span>
+                  </NavigationMenuItem>
+                )}
+                {routes.length === 0 && (
+                  <NavigationMenuItem className='text-center self-center'>
+                    <span className='text-sm text-muted-foreground'>
+                      Нет данных
+                    </span>
+                  </NavigationMenuItem>
+                )}
               </ScrollArea>
             </>
-
-            {routes.length === 0 && (
-              <NavigationMenuItem className='self-center'>
-                <span className='text-sm text-muted-foreground'>
-                  Нет данных
-                </span>
-              </NavigationMenuItem>
-            )}
           </NavigationMenuList>
 
           <RadixNavigationMenuViewport

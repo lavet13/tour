@@ -47,13 +47,7 @@ const resolvers: Resolvers = {
   },
   Mutation: {
     async createSchedule(_, args, ctx) {
-      const {
-        routeId,
-        endTime,
-        startTime,
-        isActive,
-        travelDate,
-      } = args.input;
+      const { routeId, endTime, startTime, isActive, travelDate } = args.input;
 
       const route = await ctx.prisma.route.findUnique({
         where: {

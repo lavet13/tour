@@ -11,15 +11,18 @@ export const useSchedulesByRoute = (
   const schedulesByRoute = graphql(`
     query GetSchedulesByRoute($routeId: ID) {
       schedulesByRoute(routeId: $routeId) {
+        id
         travelDate
         startTime
         endTime
         isActive
+        createdAt
+        updatedAt
       }
     }
   `);
 
-  return useQuery<GetSchedulesByRouteQuery>({
+  return useQuery({
     queryKey: [(schedulesByRoute.definitions[0] as any).name.value, { routeId }],
     queryFn: async () => {
       return await client.request(schedulesByRoute, { routeId });

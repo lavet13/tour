@@ -1,14 +1,4 @@
-import { SonnerSpinner } from '@/components/sonner-spinner';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from '@/components/ui/command';
-import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenuTrigger,
   DropdownMenu,
@@ -18,34 +8,20 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import {
-  useInfiniteBookings,
   useUpdateBookingStatus,
 } from '@/features/booking';
 import { InfiniteBookingsQuery, BookingStatus } from '@/gql/graphql';
 import { parseIntSafe } from '@/helpers/parse-int-safe';
-import { useControllableState } from '@/hooks/use-controllable-state';
-import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
-import { useInfiniteQuery } from '@tanstack/react-query';
 import { client } from '@/react-query';
 import { Column, ColumnDef } from '@tanstack/react-table';
-import { VariantProps } from 'class-variance-authority';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
   ArrowDown,
   ArrowUp,
-  CalendarIcon,
-  Check,
   CheckCircle2,
-  ChevronsUpDown,
   CircleFadingArrowUp,
   Edit,
   List,
@@ -54,12 +30,13 @@ import {
   Trash,
 } from 'lucide-react';
 import {
-  forwardRef,
   ForwardRefExoticComponent,
   RefAttributes,
   useState,
 } from 'react';
 import { toast } from 'sonner';
+import { ComboBox } from '@/components/combo-box-filter';
+import { DatePicker } from '@/components/date-picker-filter';
 
 type Booking = Omit<
   InfiniteBookingsQuery['bookings']['edges'][number],
@@ -325,7 +302,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     enableGlobalFilter: false,
     id: 'travelDate',
     accessorKey: 'travelDate',
-    header: ({ column }) => <Header title='Желаемая дата' column={column} />,
+    header: ({ column }) => <Header title='Дата поездки' column={column} />,
     cell: props => (
       <span className='overflow-hidden text-ellipsis'>
         {format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
@@ -427,230 +404,6 @@ function Header<TData>({ title, column, className }: HeaderProps<TData>) {
   );
 }
 
-type DatePickerProps = {
-  value?: any;
-  onValueChange?: (value: any) => void;
-  disabled?: boolean;
-};
-
-const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
-  ({ value: valueProp, onValueChange, disabled }, ref) => {
-    const isDesktop = useMediaQuery('(min-width: 768px)');
-    const [value, setValue] = useControllableState({
-      prop: valueProp,
-      onChange: onValueChange,
-    });
-
-    const [from, to] = value || [];
-    console.log({ from, to });
-
-    const [open, setOpen] = useState(false);
-
-    const renderTrigger = () => {
-      return (
-        <Button
-          ref={ref}
-          variant='outline'
-          size='sm'
-          className={cn(
-            'flex w-full',
-            'focus:outline-none focus:ring-1 focus:ring-ring',
-            'justify-start text-left font-normal',
-            !value && 'text-muted-foreground',
-          )}
-          disabled={disabled}
-        >
-          <CalendarIcon className='size-4' />
-          {value?.length ? (
-            <span>
-              {from ? (
-                to ? (
-                  <>
-                    {format(from, 'dd/MM')} - {format(to, 'dd/MM')}
-                  </>
-                ) : (
-                  format(from, 'dd/MM')
-                )
-              ) : (
-                <span className='whitespace-pre leading-3 text-center'>
-                  Дата
-                </span>
-              )}
-            </span>
-          ) : (
-            <span className='whitespace-pre leading-3 text-center'>Дата</span>
-          )}
-        </Button>
-      );
-    };
-
-    const renderContent = () => {
-      return (
-        <Calendar
-          className='w-fit mx-auto'
-          locale={ru}
-          mode='range'
-          selected={{
-            from,
-            to,
-          }}
-          onSelect={date => {
-            setValue([date?.from, date?.to]);
-          }}
-          initialFocus
-        />
-      );
-    };
-
-    return isDesktop ? (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
-        <PopoverContent className='w-auto p-0'>
-          {renderContent()}
-        </PopoverContent>
-      </Popover>
-    ) : (
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerTrigger asChild>{renderTrigger()}</DrawerTrigger>
-        <DrawerContent className='min-h-[380px]'>
-          {renderContent()}
-        </DrawerContent>
-      </Drawer>
-    );
-  },
-);
-
-interface ComboBoxProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
-  value?: any;
-  onValueChange?: (value: any) => void;
-  items: any[];
-  disabled?: boolean;
-  isLoading?: boolean;
-}
-
-const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
-  (
-    {
-      value: valueProp,
-      onValueChange,
-      items,
-      disabled,
-      variant,
-      size,
-      isLoading,
-    }: ComboBoxProps,
-    ref,
-  ) => {
-    const isDesktop = useMediaQuery('(min-width: 768px)');
-    const [value, setValue] = useControllableState({
-      prop: valueProp,
-      onChange: onValueChange,
-    });
-
-    const [open, setOpen] = useState(false);
-
-    const handleItemSelect = (item: any) => {
-      const selectedValue = item[1];
-      setValue(selectedValue);
-      setOpen(false); // Close the popover or drawer
-    };
-    const selectedItem = items.find(item => {
-      return item[1] === value;
-    });
-    const label = selectedItem?.[0] ?? 'Выбрать';
-    const Icon = selectedItem?.[2] as React.ElementType | undefined;
-    const renderTrigger = () => {
-      return (
-        <Button
-          ref={ref}
-          variant={variant || 'outline'}
-          role='combobox'
-          size={size || 'sm'}
-          disabled={disabled}
-          className={cn(
-            'flex w-full justify-between h-8',
-            'focus:outline-none focus:ring-1 focus:ring-ring',
-            !value && 'text-muted-foreground',
-          )}
-        >
-          {isLoading ? (
-            <span className='relative top-0.5'>
-              <SonnerSpinner className='bg-foreground' />
-            </span>
-          ) : (
-            Icon && <Icon />
-          )}
-          {label}
-          <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
-        </Button>
-      );
-    };
-
-    const renderContent = () => {
-      return (
-        <Command>
-          <CommandList>
-            <CommandEmpty>Не найдено</CommandEmpty>
-            <CommandGroup>
-              <ScrollArea
-                className={cn(
-                  items.length >= 7 && 'h-[calc(14rem)] -mr-px pr-3',
-                )}
-              >
-                {items.map(item => {
-                  const Icon = item[2] as React.ElementType | undefined;
-                  const label = item[0];
-                  const selectedValue = item[1];
-
-                  return (
-                    <CommandItem
-                      key={selectedValue}
-                      onSelect={() => handleItemSelect(item)}
-                      className='flex items-center gap-3'
-                    >
-                      {Icon && (
-                        <Icon
-                          className={cn(
-                            'h-4 w-4 text-muted-foreground',
-                            value === selectedValue
-                              ? 'opacity-100'
-                              : 'opacity-40',
-                          )}
-                        />
-                      )}
-                      {label}
-                      <Check
-                        className={cn(
-                          'ml-auto',
-                          selectedValue === value ? 'opacity-100' : 'opacity-0',
-                        )}
-                      />
-                    </CommandItem>
-                  );
-                })}
-              </ScrollArea>
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      );
-    };
-
-    return isDesktop ? (
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
-        <PopoverContent className='p-0 w-fit'>{renderContent()}</PopoverContent>
-      </Popover>
-    ) : (
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerTrigger asChild>{renderTrigger()}</DrawerTrigger>
-        <DrawerContent>{renderContent()}</DrawerContent>
-      </Drawer>
-    );
-  },
-);
-
 interface FilterProps<TData> {
   column: Column<TData, unknown>;
 }
@@ -662,6 +415,7 @@ function Filter<TData>({ column }: FilterProps<TData>) {
   console.log({ columnFilterValue });
   return filterVariant === 'select' ? (
     <ComboBox
+      // [label, value, icon]
       items={[['Весь список', '', List], ...statusColumn]}
       value={columnFilterValue?.toString() ?? ''}
       onValueChange={value => {
