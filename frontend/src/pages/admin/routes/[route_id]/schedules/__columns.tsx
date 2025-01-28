@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils';
 import {
   ArrowDown,
   ArrowUp,
-  Edit,
   MoreHorizontal,
   List,
   Trash,
@@ -142,12 +141,6 @@ export const columns: ColumnDef<Schedule, CustomColumnMeta>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
             <DropdownMenuLabel>Действия</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText('payment.id')}
-            >
-              <Edit />
-              Изменить
-            </DropdownMenuItem>
             <DropdownMenuItem className='text-destructive focus:text-destructive focus:bg-destructive/10'>
               <Trash />
               Удалить
@@ -175,7 +168,7 @@ function Header<TData>({ title, column, className }: HeaderProps<TData>) {
           className={cn('gap-0 [&_svg]:size-3.5', className)}
           size='sm'
           variant='ghost'
-          onClick={() => column.toggleSorting(isSorted === 'asc')}
+          onClick={column.getToggleSortingHandler()}
         >
           {title}
           {isSorted ? (

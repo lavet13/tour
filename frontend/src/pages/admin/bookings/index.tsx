@@ -210,21 +210,15 @@ const BookingsPage: FC = () => {
           <div className='grid sm:col-[1_/_-1] grid-cols-[1fr_auto] min-[940px]:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] gap-2'>
             <HideColumns table={table} />
             {isFullHD && (
-              <>
-                <Button size='sm' onClick={() => table.resetSorting()}>
-                  <ArrowUpDown />
-                  Сбросить сортировку
-                </Button>
-                <Button
-                  size='sm'
-                  onClick={() => {
-                    table.resetColumnFilters();
-                  }}
-                >
-                  <ListFilter />
-                  Сбросить фильтр
-                </Button>
-              </>
+              <Button
+                size='sm'
+                onClick={() => {
+                  table.resetColumnFilters();
+                }}
+              >
+                <ListFilter />
+                Сбросить фильтр
+              </Button>
             )}
             {!isFullHD && (
               <DropdownMenu>
@@ -236,10 +230,6 @@ const BookingsPage: FC = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={'end'}>
                   <DropdownMenuGroup>
-                    <DropdownMenuItem onClick={() => table.resetSorting()}>
-                      <ArrowUpDown />
-                      Сбросить сортировку
-                    </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => {
                         table.resetColumnFilters();

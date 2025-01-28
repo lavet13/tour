@@ -379,7 +379,7 @@ function Header<TData>({ title, column, className }: HeaderProps<TData>) {
           className={cn('gap-0 [&_svg]:size-3.5', className)}
           size='sm'
           variant='ghost'
-          onClick={() => column.toggleSorting(isSorted === 'asc')}
+          onClick={column.getToggleSortingHandler()}
         >
           {title}
           {isSorted ? (
