@@ -13,7 +13,7 @@
 - [x] create add/edit form for route
 - [x] fix the selection for route based on regionId
 - [] create bookings page where you could find the route you want
-- [] fix the way we sorting columns and then delete the button 'Сбросить сортировку'
+- [x] fix the way we sorting columns and then delete the button 'Сбросить сортировку'
 - [] create add/edit form for schedule
 
 # Other topics
