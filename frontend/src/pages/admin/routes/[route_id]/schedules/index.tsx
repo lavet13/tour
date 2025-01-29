@@ -28,6 +28,7 @@ import {
   SortingState,
   useReactTable,
   Table as ReactTable,
+  PaginationState,
 } from '@tanstack/react-table';
 import { GetSchedulesByRouteQuery } from '@/gql/graphql';
 import { rankItem } from '@tanstack/match-sorter-utils';
@@ -57,6 +58,10 @@ function Schedules() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [pagination, setPagination] = useState<PaginationState>({
+    pageIndex: 0,
+    pageSize: 10,
+  });
 
   const MOBILE_BREAKPOINT = 450;
   const navigate = useNavigate();
@@ -118,10 +123,12 @@ function Schedules() {
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
     getFilteredRowModel: getFilteredRowModel(), // client side filtering
     onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
     state: {
+      pagination,
       sorting,
       columnVisibility,
       columnFilters,
@@ -138,7 +145,7 @@ function Schedules() {
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 73, //measure dynamic row height, except in firefox because it measures table border height incorrectly
+    estimateSize: () => 73, // measure dynamic row height, except in firefox because it measures table border height incorrectly
     measureElement:
       typeof window !== 'undefined' &&
       navigator.userAgent.indexOf('Firefox') === -1
@@ -203,6 +210,7 @@ function Schedules() {
                         onClick={() => navigate(-1)}
                       >
                         <ArrowLeft />
+                        <span className="sr-only">Назад</span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent
