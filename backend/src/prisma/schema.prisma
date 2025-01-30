@@ -68,21 +68,43 @@ model City {
   @@map("cities")
 }
 
+enum DaysOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
 model Schedule {
-  id         String   @id @default(cuid())
-  route      Route    @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  routeId    String
-  travelDate DateTime // Конкретный день, для которого действует расписание
-  startTime  DateTime // Переопределение времени отправления
-  endTime    DateTime // Переопределение времени прибытия
-  isActive   Boolean  @default(true)
+  id        String         @id @default(cuid())
+  route     Route          @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  routeId   String
+  days      ScheduleDays[]
+  startTime DateTime
+  endTime   DateTime
+  isActive  Boolean        @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([routeId, travelDate])
-  @@index([routeId, travelDate, isActive])
+  @@index([routeId, isActive])
   @@map("schedules")
+}
+
+model ScheduleDays {
+  id         String     @id @default(cuid())
+  schedule   Schedule   @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+  scheduleId String
+  dayOfWeek  DaysOfWeek
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([scheduleId, dayOfWeek])
+  @@map("schedule_days")
 }
 
 model Region {

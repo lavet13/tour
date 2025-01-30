@@ -376,7 +376,7 @@ function Header<TData>({ title, column, className }: HeaderProps<TData>) {
     <div className='flex flex-1 flex-col space-y-1'>
       {column.getCanSort() ? (
         <Button
-          className={cn('gap-0 [&_svg]:size-3.5', className)}
+          className={cn('gap-0 [&_svg]:size-3.5 h-7', className)}
           size='sm'
           variant='ghost'
           onClick={column.getToggleSortingHandler()}

@@ -245,10 +245,9 @@ const resolvers: Resolvers = {
   },
   Route: {
     region(parent, _, { loaders }) {
-      if (!parent.regionId) {
-        return null;
-      }
-      return loaders.regionLoader.load(parent.regionId);
+      return parent.regionId
+        ? loaders.regionLoader.load(parent.regionId)
+        : null;
     },
     arrivalCity(parent, _, { loaders }) {
       return loaders.cityLoader.load(parent.arrivalCityId);

@@ -20,11 +20,30 @@ export default gql`
   type Schedule {
     id: ID!
     route: Route
-    travelDate: Date!
+    days: [ScheduleDays!]!
     startTime: Date!
     endTime: Date!
     isActive: Boolean!
     createdAt: Date!
     updatedAt: Date!
+  }
+
+  type ScheduleDays {
+    id: ID!
+    schedule: Schedule
+    dayOfWeek: DaysOfWeek!
+
+    createdAt: Date!
+    updatedAt: Date!
+  }
+
+  enum DaysOfWeek {
+    MONDAY
+    TUESDAY
+    WEDNESDAY
+    THURSDAY
+    FRIDAY
+    SATURDAY
+    SUNDAY
   }
 `;

@@ -43,7 +43,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
-import { DataTablePagination } from '@/components/data-table-pagination';
 
 interface Params {
   route_id: string;
@@ -210,7 +209,7 @@ function Schedules() {
                         onClick={() => navigate(-1)}
                       >
                         <ArrowLeft />
-                        <span className="sr-only">Назад</span>
+                        <span className='sr-only'>Назад</span>
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent
@@ -379,7 +378,14 @@ function Schedules() {
                 </TableBody>
               </Table>
             </div>
-            <DataTablePagination table={table} />
+            {/* <DataTablePagination table={table} /> */}
+            <div className='flex flex-col gap-4 items-start justify-between px-2 py-4'>
+              {/* Selected rows info */}
+              <div className='text-sm text-muted-foreground order-last sm:order-first w-full sm:w-auto text-center sm:text-left'>
+                {table.getFilteredSelectedRowModel().rows.length} из{' '}
+                {table.getFilteredRowModel().rows.length} строк(и) выбрано.
+              </div>
+            </div>
           </>
         )}
       </div>

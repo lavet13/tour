@@ -12,7 +12,6 @@ export const useSchedulesByRoute = (
     query GetSchedulesByRoute($routeId: ID) {
       schedulesByRoute(routeId: $routeId) {
         id
-        travelDate
         startTime
         endTime
         isActive

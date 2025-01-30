@@ -7,6 +7,8 @@ import { createDepartureTripsLoader } from '@/graphql/loaders/create-departure-t
 import { createArrivalTripsLoader } from '@/graphql/loaders/create-arrival-trips.loaders';
 import { createRegionLoader } from '@/graphql/loaders/create-region.loaders';
 import { createRoutesLoader } from '@/graphql/loaders/create-routes.loaders';
+import { createScheduleDaysLoader } from './create-schedule-days.loaders';
+import { createScheduleLoader } from './create-schedule.loaders';
 
 export const createLoaders = (prisma: typeof prismaClient) => ({
   regionLoader: createRegionLoader(prisma),
@@ -14,7 +16,9 @@ export const createLoaders = (prisma: typeof prismaClient) => ({
   routeLoader: createRouteLoader(prisma),
   routesLoader: createRoutesLoader(prisma),
   bookingsLoader: createBookingsLoader(prisma),
+  scheduleDaysLoader: createScheduleDaysLoader(prisma),
   schedulesLoader: createSchedulesLoader(prisma),
+  scheduleLoader: createScheduleLoader(prisma),
   departureTripsLoader: (regionId: string) => createDepartureTripsLoader(regionId)(prisma),
   arrivalTripsLoader: (regionId: string) => createArrivalTripsLoader(regionId)(prisma),
 });

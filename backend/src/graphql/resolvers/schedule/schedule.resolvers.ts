@@ -64,7 +64,6 @@ const resolvers: Resolvers = {
           routeId,
           startTime,
           endTime,
-          travelDate,
           isActive,
         },
       });
@@ -74,7 +73,17 @@ const resolvers: Resolvers = {
   },
   Schedule: {
     route(parent, _, { loaders }) {
-      return loaders.routeLoader.load(parent.routeId);
+      return parent.routeId ? loaders.routeLoader.load(parent.routeId) : null;
+    },
+    days(parent, _, { loaders }) {
+      return loaders.scheduleDaysLoader.load(parent.id);
+    },
+  },
+  ScheduleDays: {
+    schedule(parent, _, { loaders }) {
+      return parent.scheduleId
+        ? loaders.scheduleLoader.load(parent.scheduleId)
+        : null;
     },
   },
 };

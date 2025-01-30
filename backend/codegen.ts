@@ -21,6 +21,7 @@ const config: CodegenConfig = {
       Route: '../../../node_modules/.prisma/client#Route as RouteModel',
       Region: '../../../node_modules/.prisma/client#Region as RegionModel',
       Schedule: '../../../node_modules/.prisma/client#Schedule as ScheduleModel',
+      ScheduleDays: '../../../node_modules/.prisma/client#ScheduleDays as ScheduleDaysModel',
       Role: '../../../node_modules/.prisma/client#Role as RoleModel',
     },
     inputMaybeValue: 'undefined | T',

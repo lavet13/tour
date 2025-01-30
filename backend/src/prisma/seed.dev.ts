@@ -1,6 +1,6 @@
 import prisma from '@/prisma';
 import generatePasswordHash from '@/helpers/generate-password-hash';
-import { Role } from '@prisma/client';
+import { DaysOfWeek, Role } from '@prisma/client';
 
 let countDown = 0;
 
@@ -88,12 +88,6 @@ export default async function seed() {
 
   // Создание маршрутов в Мариуполь
   for (const city of ldnrCities) {
-    const getRandomInteger = (min: number, max: number) => {
-      min = Math.ceil(min);
-      max = Math.floor(max);
-      return Math.floor(Math.random() * (max - min)) + min;
-    }
-
     const route = await prisma.route.create({
       data: {
         departureCityId: cityIds[city],
@@ -104,13 +98,20 @@ export default async function seed() {
     });
 
     // Создание расписания для маршрута
-    await prisma.schedule.create({
+    const schedule = await prisma.schedule.create({
       data: {
         routeId: route.id,
-        travelDate: new Date(),
-        startTime: new Date(), // Время отправления
-        endTime: new Date(), // Время прибытия
+        startTime: getRandomTime(), // Время отправления
+        endTime: getRandomTime(), // Время прибытия
       },
+    });
+
+    const daysOfWeek = getRandomDaysOfWeek();
+    await prisma.scheduleDays.createMany({
+      data: daysOfWeek.map(day => ({
+        scheduleId: schedule.id,
+        dayOfWeek: day,
+      })),
     });
 
     // Создание бронирования для маршрута
@@ -129,12 +130,6 @@ export default async function seed() {
 
   // Создание маршрутов из Мариуполя в прибрежные города с 1 мая 2025
   for (const city of coastalCities) {
-    const getRandomInteger = (min: number, max: number) => {
-      min = Math.ceil(min);
-      max = Math.floor(max);
-      return Math.floor(Math.random() * (max - min)) + min;
-    }
-
     const route = await prisma.route.create({
       data: {
         departureCityId: mariupol.id,
@@ -146,13 +141,20 @@ export default async function seed() {
     });
 
     // Создание расписания для маршрута
-    await prisma.schedule.create({
+    const schedule = await prisma.schedule.create({
       data: {
         routeId: route.id,
-        travelDate: new Date(),
-        startTime: new Date(), // Время отправления
-        endTime: new Date(), // Время прибытия
+        startTime: getRandomTime(), // Время отправления
+        endTime: getRandomTime(), // Время прибытия
       },
+    });
+
+    const daysOfWeek = getRandomDaysOfWeek();
+    await prisma.scheduleDays.createMany({
+      data: daysOfWeek.map(day => ({
+        scheduleId: schedule.id,
+        dayOfWeek: day,
+      })),
     });
 
     // Создание бронирования для маршрута
@@ -221,6 +223,24 @@ export default async function seed() {
   });
 
   console.log('Seed completed successfully');
+}
+
+function getRandomTime() {
+  const now = new Date();
+  const randomHours = Math.floor(Math.random() * 5) + 5; // Random time 5–10 hours from now
+  return new Date(now.setHours(now.getHours() + randomHours));
+}
+
+function getRandomInteger(min: number, max: number) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function getRandomDaysOfWeek() {
+  const allDays = Object.values(DaysOfWeek);
+  const shuffled = allDays.sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, Math.floor(Math.random() * 3) + 2); // 2–4 случайных дня
 }
 
 seed().catch(error => console.error('Error seeding database: ', error));

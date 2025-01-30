@@ -14,9 +14,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { parseIntSafe } from '@/helpers/parse-int-safe';
 import { useControllableState } from '@/hooks/use-controllable-state';
-import { NumberFormatValues, NumericFormat } from 'react-number-format';
+import { NumericFormat } from 'react-number-format';
 
 interface DataTablePaginationProps<TData> {
   table: Table<TData>;

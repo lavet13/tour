@@ -1,13 +1,7 @@
 import { Column, ColumnDef } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import {
-  ArrowDown,
-  ArrowUp,
-  MoreHorizontal,
-  List,
-  Trash,
-} from 'lucide-react';
+import { ArrowDown, ArrowUp, MoreHorizontal, List, Trash } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 import {
@@ -27,6 +21,38 @@ interface CustomColumnMeta {
 }
 
 export const columns: ColumnDef<Schedule, CustomColumnMeta>[] = [
+  {
+    minSize: 160,
+    size: 160,
+    enableGlobalFilter: false,
+    id: 'travelDate',
+    accessorKey: 'travelDate',
+    header: ({ column }) => <Header title='Желаемая дата' column={column} />,
+    cell: props => (
+      <span className='overflow-hidden text-ellipsis'>
+        {format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
+          locale: ru,
+        })}
+      </span>
+    ),
+    sortingFn: (rowA, rowB) => {
+      return rowA.original.travelDate - rowB.original.travelDate;
+    },
+    filterFn: (row, columnId, filterValue) => {
+      const rowValue = new Date(row.getValue(columnId));
+      const [startDate, endDate] = filterValue || [];
+      if (!startDate && !endDate) return true; // No filter applied
+      if (startDate && endDate) {
+        return rowValue >= new Date(startDate) && rowValue <= new Date(endDate);
+      }
+      if (startDate) return rowValue >= new Date(startDate);
+      if (endDate) return rowValue <= new Date(endDate);
+      return true;
+    },
+    meta: {
+      filterVariant: 'dateRange',
+    },
+  },
   {
     minSize: 160,
     size: 160,
@@ -91,38 +117,6 @@ export const columns: ColumnDef<Schedule, CustomColumnMeta>[] = [
     },
   },
   {
-    minSize: 160,
-    size: 160,
-    enableGlobalFilter: false,
-    id: 'travelDate',
-    accessorKey: 'travelDate',
-    header: ({ column }) => <Header title='Желаемая дата' column={column} />,
-    cell: props => (
-      <span className='overflow-hidden text-ellipsis'>
-        {format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
-          locale: ru,
-        })}
-      </span>
-    ),
-    sortingFn: (rowA, rowB) => {
-      return rowA.original.travelDate - rowB.original.travelDate;
-    },
-    filterFn: (row, columnId, filterValue) => {
-      const rowValue = new Date(row.getValue(columnId));
-      const [startDate, endDate] = filterValue || [];
-      if (!startDate && !endDate) return true; // No filter applied
-      if (startDate && endDate) {
-        return rowValue >= new Date(startDate) && rowValue <= new Date(endDate);
-      }
-      if (startDate) return rowValue >= new Date(startDate);
-      if (endDate) return rowValue <= new Date(endDate);
-      return true;
-    },
-    meta: {
-      filterVariant: 'dateRange',
-    },
-  },
-  {
     enableResizing: false,
     id: 'actions',
     size: 70,
@@ -165,7 +159,7 @@ function Header<TData>({ title, column, className }: HeaderProps<TData>) {
     <div className='flex flex-1 flex-col space-y-1'>
       {column.getCanSort() ? (
         <Button
-          className={cn('gap-0 [&_svg]:size-3.5', className)}
+          className={cn('gap-0 [&_svg]:size-3.5 h-7', className)}
           size='sm'
           variant='ghost'
           onClick={column.getToggleSortingHandler()}
