@@ -12,6 +12,17 @@ export const useSchedulesByRoute = (
     query GetSchedulesByRoute($routeId: ID) {
       schedulesByRoute(routeId: $routeId) {
         id
+        route {
+          departureCity {
+            id
+            name
+          }
+          arrivalCity {
+            id
+            name
+          }
+        }
+        dayOfWeek
         startTime
         endTime
         isActive
@@ -22,7 +33,10 @@ export const useSchedulesByRoute = (
   `);
 
   return useQuery({
-    queryKey: [(schedulesByRoute.definitions[0] as any).name.value, { routeId }],
+    queryKey: [
+      (schedulesByRoute.definitions[0] as any).name.value,
+      { routeId },
+    ],
     queryFn: async () => {
       return await client.request(schedulesByRoute, { routeId });
     },

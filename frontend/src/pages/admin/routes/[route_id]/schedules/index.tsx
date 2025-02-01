@@ -44,7 +44,7 @@ import {
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface Params {
+export interface ScheduleParams {
   route_id: string;
 }
 
@@ -86,7 +86,9 @@ function Schedules() {
     };
   }, []);
 
-  const { route_id: routeId } = useParams<keyof Params>() as Params;
+  const { route_id: routeId } = useParams<
+    keyof ScheduleParams
+  >() as ScheduleParams;
 
   // show me schedules for existing route
   const {
@@ -107,6 +109,8 @@ function Schedules() {
     () => scheduleData?.schedulesByRoute ?? [],
     [scheduleData],
   );
+
+  console.log({ schedules });
 
   const columnResizeModeRef = useRef<ColumnResizeMode>('onChange');
 

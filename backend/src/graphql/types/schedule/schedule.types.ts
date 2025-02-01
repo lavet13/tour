@@ -7,11 +7,18 @@ export default gql`
 
   type Mutation {
     createSchedule(input: ScheduleInput!): Schedule!
+    updateSchedule(input: UpdateScheduleInput!): Schedule!
+  }
+
+  input UpdateScheduleInput {
+    id: ID!
+    routeId: ID!
+    isActive: Boolean!
   }
 
   input ScheduleInput {
     routeId: ID!
-    travelDate: Date!
+    dayOfWeek: DaysOfWeek!
     startTime: Date!
     endTime: Date!
     isActive: Boolean!
@@ -20,19 +27,10 @@ export default gql`
   type Schedule {
     id: ID!
     route: Route
-    days: [ScheduleDays!]!
+    dayOfWeek: DaysOfWeek!
     startTime: Date!
     endTime: Date!
     isActive: Boolean!
-    createdAt: Date!
-    updatedAt: Date!
-  }
-
-  type ScheduleDays {
-    id: ID!
-    schedule: Schedule
-    dayOfWeek: DaysOfWeek!
-
     createdAt: Date!
     updatedAt: Date!
   }

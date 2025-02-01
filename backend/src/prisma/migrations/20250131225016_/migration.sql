@@ -4,6 +4,9 @@ CREATE TYPE "Role" AS ENUM ('ADMIN', 'MANAGER', 'USER');
 -- CreateEnum
 CREATE TYPE "BookingStatus" AS ENUM ('PENDING', 'CONFIRMED');
 
+-- CreateEnum
+CREATE TYPE "DaysOfWeek" AS ENUM ('MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY');
+
 -- CreateTable
 CREATE TABLE "user_roles" (
     "id" TEXT NOT NULL,
@@ -49,7 +52,7 @@ CREATE TABLE "cities" (
 CREATE TABLE "schedules" (
     "id" TEXT NOT NULL,
     "routeId" TEXT NOT NULL,
-    "travelDate" TIMESTAMP(3) NOT NULL,
+    "dayOfWeek" "DaysOfWeek" NOT NULL,
     "startTime" TIMESTAMP(3) NOT NULL,
     "endTime" TIMESTAMP(3) NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
@@ -120,10 +123,7 @@ CREATE INDEX "refresh_tokens_userId_token_idx" ON "refresh_tokens"("userId", "to
 CREATE INDEX "cities_name_idx" ON "cities"("name");
 
 -- CreateIndex
-CREATE INDEX "schedules_routeId_travelDate_isActive_idx" ON "schedules"("routeId", "travelDate", "isActive");
-
--- CreateIndex
-CREATE UNIQUE INDEX "schedules_routeId_travelDate_key" ON "schedules"("routeId", "travelDate");
+CREATE INDEX "schedules_routeId_isActive_idx" ON "schedules"("routeId", "isActive");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "regions_name_key" ON "regions"("name");
@@ -133,9 +133,6 @@ CREATE INDEX "routes_departureCityId_arrivalCityId_isActive_idx" ON "routes"("de
 
 -- CreateIndex
 CREATE INDEX "routes_regionId_idx" ON "routes"("regionId");
-
--- CreateIndex
-CREATE UNIQUE INDEX "routes_departureCityId_arrivalCityId_key" ON "routes"("departureCityId", "arrivalCityId");
 
 -- CreateIndex
 CREATE INDEX "bookings_status_routeId_travelDate_phoneNumber_idx" ON "bookings"("status", "routeId", "travelDate", "phoneNumber");

@@ -47,7 +47,7 @@ const resolvers: Resolvers = {
   },
   Mutation: {
     async createSchedule(_, args, ctx) {
-      const { routeId, endTime, startTime, isActive, travelDate } = args.input;
+      const { routeId, endTime, startTime, isActive, dayOfWeek } = args.input;
 
       const route = await ctx.prisma.route.findUnique({
         where: {
@@ -61,9 +61,25 @@ const resolvers: Resolvers = {
 
       const schedule = await ctx.prisma.schedule.create({
         data: {
+          dayOfWeek,
           routeId,
           startTime,
           endTime,
+          isActive,
+        },
+      });
+
+      return schedule;
+    },
+    async updateSchedule(_, args, ctx) {
+      const { isActive, routeId, id } = args.input;
+
+      const schedule = await ctx.prisma.schedule.update({
+        where: {
+          id,
+          routeId,
+        },
+        data: {
           isActive,
         },
       });
@@ -74,16 +90,6 @@ const resolvers: Resolvers = {
   Schedule: {
     route(parent, _, { loaders }) {
       return parent.routeId ? loaders.routeLoader.load(parent.routeId) : null;
-    },
-    days(parent, _, { loaders }) {
-      return loaders.scheduleDaysLoader.load(parent.id);
-    },
-  },
-  ScheduleDays: {
-    schedule(parent, _, { loaders }) {
-      return parent.scheduleId
-        ? loaders.scheduleLoader.load(parent.scheduleId)
-        : null;
     },
   },
 };

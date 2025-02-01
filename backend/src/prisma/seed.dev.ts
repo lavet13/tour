@@ -56,13 +56,7 @@ export default async function seed() {
   ];
 
   // Добавление городов
-  const cityIds: { [name: string]: string } = {};
-  for (const city of ldnrCities) {
-    const newCity = await prisma.city.create({
-      data: { name: city },
-    });
-    cityIds[city] = newCity.id;
-  }
+  const cityIds = await createCities(ldnrCities);
 
   // Добавление Мариуполя и прибрежных городов
   const mariupol = await prisma.city.create({
@@ -78,13 +72,7 @@ export default async function seed() {
     'Мангуш',
   ];
 
-  const coastalCityIds: { [name: string]: string } = {};
-  for (const city of coastalCities) {
-    const newCity = await prisma.city.create({
-      data: { name: city },
-    });
-    coastalCityIds[city] = newCity.id;
-  }
+  const coastalCityIds = await createCities(coastalCities);
 
   // Создание маршрутов в Мариуполь
   for (const city of ldnrCities) {
@@ -97,22 +85,25 @@ export default async function seed() {
       },
     });
 
-    // Создание расписания для маршрута
-    const schedule = await prisma.schedule.create({
-      data: {
+    const dayOfWeek = getRandomDayOfWeek();
+    // Проверяем, существует ли уже расписание с таким routeId и dayOfWeek
+    const existingSchedule = await prisma.schedule.findFirst({
+      where: {
         routeId: route.id,
-        startTime: getRandomTime(), // Время отправления
-        endTime: getRandomTime(), // Время прибытия
+        dayOfWeek,
       },
     });
 
-    const daysOfWeek = getRandomDaysOfWeek();
-    await prisma.scheduleDays.createMany({
-      data: daysOfWeek.map(day => ({
-        scheduleId: schedule.id,
-        dayOfWeek: day,
-      })),
-    });
+    if (!existingSchedule) {
+      await prisma.schedule.create({
+        data: {
+          routeId: route.id,
+          dayOfWeek,
+          startTime: getRandomTime(),
+          endTime: getRandomTime(),
+        },
+      });
+    }
 
     // Создание бронирования для маршрута
     await prisma.booking.create({
@@ -140,22 +131,26 @@ export default async function seed() {
       },
     });
 
-    // Создание расписания для маршрута
-    const schedule = await prisma.schedule.create({
-      data: {
+    const dayOfWeek = getRandomDayOfWeek();
+
+    // Проверяем, существует ли уже расписание с таким routeId и dayOfWeek
+    const existingSchedule = await prisma.schedule.findFirst({
+      where: {
         routeId: route.id,
-        startTime: getRandomTime(), // Время отправления
-        endTime: getRandomTime(), // Время прибытия
+        dayOfWeek,
       },
     });
 
-    const daysOfWeek = getRandomDaysOfWeek();
-    await prisma.scheduleDays.createMany({
-      data: daysOfWeek.map(day => ({
-        scheduleId: schedule.id,
-        dayOfWeek: day,
-      })),
-    });
+    if (!existingSchedule) {
+      await prisma.schedule.create({
+        data: {
+          routeId: route.id,
+          dayOfWeek,
+          startTime: getRandomTime(),
+          endTime: getRandomTime(),
+        },
+      });
+    }
 
     // Создание бронирования для маршрута
     await prisma.booking.create({
@@ -174,53 +169,7 @@ export default async function seed() {
   console.log('Маршруты и данные успешно добавлены');
 
   // Create users with different role combinations
-  await prisma.user.create({
-    data: {
-      name: 'Regular User',
-      email: 'user@mail.com',
-      password: hashedPassword,
-      roles: {
-        create: { role: Role.USER },
-      },
-    },
-  });
-
-  await prisma.user.create({
-    data: {
-      name: 'Admin User',
-      email: 'admin@mail.com',
-      password: hashedPassword,
-      roles: {
-        create: [{ role: Role.USER }, { role: Role.ADMIN }],
-      },
-    },
-  });
-
-  await prisma.user.create({
-    data: {
-      name: 'Manager User',
-      email: 'manager@mail.com',
-      password: hashedPassword,
-      roles: {
-        create: [{ role: Role.USER }, { role: Role.MANAGER }],
-      },
-    },
-  });
-
-  await prisma.user.create({
-    data: {
-      name: 'Super User',
-      email: 'super@mail.com',
-      password: hashedPassword,
-      roles: {
-        create: [
-          { role: Role.USER },
-          { role: Role.ADMIN },
-          { role: Role.MANAGER },
-        ],
-      },
-    },
-  });
+  await createUsers(hashedPassword);
 
   console.log('Seed completed successfully');
 }
@@ -237,10 +186,56 @@ function getRandomInteger(min: number, max: number) {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-function getRandomDaysOfWeek() {
+function getRandomDayOfWeek() {
   const allDays = Object.values(DaysOfWeek);
-  const shuffled = allDays.sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, Math.floor(Math.random() * 3) + 2); // 2–4 случайных дня
+  return allDays[Math.floor(Math.random() * allDays.length)];
+}
+
+async function createUsers(hashedPassword: string) {
+  const users = [
+    { name: 'Regular User', email: 'user@mail.com', roles: [Role.USER] },
+    {
+      name: 'Admin User',
+      email: 'admin@mail.com',
+      roles: [Role.USER, Role.ADMIN],
+    },
+    {
+      name: 'Manager User',
+      email: 'manager@mail.com',
+      roles: [Role.USER, Role.MANAGER],
+    },
+    {
+      name: 'Super User',
+      email: 'super@mail.com',
+      roles: [Role.USER, Role.ADMIN, Role.MANAGER],
+    },
+  ];
+
+  for (const user of users) {
+    await prisma.user.create({
+      data: {
+        name: user.name,
+        email: user.email,
+        password: hashedPassword,
+        roles: {
+          create: user.roles.map(role => ({
+            role,
+          })),
+        },
+      },
+    });
+  }
+}
+
+async function createCities(names: string[]) {
+  const cityIds: { [name: string]: string } = {};
+
+  for (const name of names) {
+    const city = await prisma.city.create({ data: { name } });
+    cityIds[name] = city.id;
+  }
+
+  return cityIds;
 }
 
 seed().catch(error => console.error('Error seeding database: ', error));

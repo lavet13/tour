@@ -375,7 +375,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
               <Input
                 type='text'
                 placeholder='Найти город...'
-                className='self-center max-w-[150px] mr-2 mb-2'
+                className='self-center max-w-[150px] mr-2 ml-1 mb-2'
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />

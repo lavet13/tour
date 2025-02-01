@@ -79,32 +79,20 @@ enum DaysOfWeek {
 }
 
 model Schedule {
-  id        String         @id @default(cuid())
-  route     Route          @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  id        String     @id @default(cuid())
+  route     Route      @relation(fields: [routeId], references: [id], onDelete: Cascade)
   routeId   String
-  days      ScheduleDays[]
+  dayOfWeek DaysOfWeek
   startTime DateTime
   endTime   DateTime
-  isActive  Boolean        @default(true)
+  isActive  Boolean    @default(true)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  @@unique([routeId, dayOfWeek])
   @@index([routeId, isActive])
   @@map("schedules")
-}
-
-model ScheduleDays {
-  id         String     @id @default(cuid())
-  schedule   Schedule   @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
-  scheduleId String
-  dayOfWeek  DaysOfWeek
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([scheduleId, dayOfWeek])
-  @@map("schedule_days")
 }
 
 model Region {

@@ -7,9 +7,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import {
-  useUpdateBookingStatus,
-} from '@/features/booking';
+import { useUpdateBookingStatus } from '@/features/booking';
 import { InfiniteBookingsQuery, BookingStatus } from '@/gql/graphql';
 import { parseIntSafe } from '@/helpers/parse-int-safe';
 import { cn } from '@/lib/utils';
@@ -29,11 +27,7 @@ import {
   MoreHorizontal,
   Trash,
 } from 'lucide-react';
-import {
-  ForwardRefExoticComponent,
-  RefAttributes,
-  useState,
-} from 'react';
+import { ForwardRefExoticComponent, RefAttributes, useState } from 'react';
 import { toast } from 'sonner';
 import { ComboBox } from '@/components/combo-box-filter';
 import { DatePicker } from '@/components/date-picker-filter';
@@ -185,8 +179,11 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
                 const data = await mutateAsync({
                   input: { id, status: value },
                 });
+                await client.invalidateQueries({
+                  queryKey: ['InfiniteBookings'],
+                });
+
                 resolve(data);
-                client.invalidateQueries({ queryKey: ['InfiniteBookings'] });
               } catch (error) {
                 reject(error);
               }
@@ -201,9 +198,10 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
                     await mutateAsync({
                       input: { id, status: previousStatus },
                     });
-                    client.invalidateQueries({
+                    await client.invalidateQueries({
                       queryKey: ['InfiniteBookings'],
                     });
+
                     toast.success('Отмена статуса выполнена успешно!');
                   } catch (error) {
                     toast.error('Не удалось отменить изменения статуса!');
