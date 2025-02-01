@@ -15,6 +15,7 @@ import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import {
+    ArrowLeft,
   Calendar,
   CalendarClock,
   Edit,
@@ -35,7 +36,7 @@ import {
   useState,
 } from 'react';
 import { useImage } from 'react-image';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Tooltip,
   TooltipContent,
@@ -51,6 +52,7 @@ import { Separator } from '@/components/ui/separator';
 type Route = InfiniteRoutesQuery['routes']['edges'][number];
 
 function RoutesPage() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [{ md }] = useAtom(breakpointsAtom);
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
@@ -160,8 +162,27 @@ function RoutesPage() {
         }}
       >
         <div className='flex items-center gap-2'>
+          <Tooltip delayDuration={700}>
+            <TooltipTrigger asChild>
+              <Button
+                className={cn('h-10 min-w-10', isMobile && 'h-9 min-w-9')}
+                variant='outline'
+                size='icon'
+                onClick={() => navigate('../home')}
+              >
+                <ArrowLeft />
+                <span className='sr-only'>Назад</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent
+              align={state === 'collapsed' ? 'start' : 'center'}
+              side='bottom'
+            >
+              Вернуться назад
+            </TooltipContent>
+          </Tooltip>
           <Input
-            className='max-w-full sm:max-w-[300px]'
+            className={cn('max-w-full sm:max-w-[300px]', isMobile && 'h-9')}
             placeholder='Найти маршрут...'
             value={searchQuery}
             onChange={e => {
@@ -181,7 +202,7 @@ function RoutesPage() {
           {isMobile && (
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
-                <Button className='w-12' size={'icon'} onClick={handleAddRoute}>
+                <Button className='h-9 min-w-9' size={'icon'} onClick={handleAddRoute}>
                   <MapPinPlus />
                 </Button>
               </TooltipTrigger>

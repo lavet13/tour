@@ -45,6 +45,7 @@ import {
   CommandSeparator,
 } from '@/components/ui/command';
 import {
+  ArrowLeft,
   ArrowUpDown,
   Check,
   ChevronDown,
@@ -66,10 +67,18 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import { useAtom } from 'jotai';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { useNavigate } from 'react-router-dom';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
 
 const BookingsPage: FC = () => {
+  const navigate = useNavigate();
+
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -173,7 +182,8 @@ const BookingsPage: FC = () => {
   }
 
   const [{ md, xl }] = useAtom(breakpointsAtom);
-  const isMobile = useMediaQuery(`(max-width: ${400}px)`);
+  const MOBILE_BREAKPOINT = 400;
+  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
   const isFullHD = useMediaQuery(`(min-width: ${xl}px)`);
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
   const { state } = useSidebar();
@@ -207,8 +217,30 @@ const BookingsPage: FC = () => {
         }}
       >
         <div className='grid md:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] items-center gap-2'>
-          <div className='grid sm:col-[1_/_-1] grid-cols-[1fr_auto] min-[940px]:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] gap-2'>
-            <HideColumns table={table} />
+          <div className='flex items-center sm:col-[1_/_-1] min-[940px]:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] gap-2'>
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <Button
+                  className={cn(
+                    'h-10 w-10 min-w-10',
+                    isMobile && 'h-9 w-9 min-w-9',
+                  )}
+                  variant='outline'
+                  size='icon'
+                  onClick={() => navigate('../home')}
+                >
+                  <ArrowLeft />
+                  <span className='sr-only'>Назад</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                align={state === 'collapsed' ? 'start' : 'center'}
+                side='bottom'
+              >
+                Вернуться назад
+              </TooltipContent>
+            </Tooltip>
+            <HideColumns table={table} isMobile={isMobile} />
             {isFullHD && (
               <Button
                 size='sm'
@@ -223,7 +255,14 @@ const BookingsPage: FC = () => {
             {!isFullHD && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className='size-9' variant='outline' size='icon'>
+                  <Button
+                    className={cn(
+                      'h-10 w-10 min-w-10',
+                      isMobile && 'h-9 w-9 min-w-9',
+                    )}
+                    variant='outline'
+                    size='icon'
+                  >
                     <MoreHorizontal />
                     <span className='sr-only'>Другие операции</span>
                   </Button>
@@ -454,9 +493,10 @@ function TableCellSkeleton({ table }: TableCellSkeletonProps<Booking>) {
 
 interface HideColumnsProps<TData> {
   table: ReactTable<TData>;
+  isMobile: boolean;
 }
 
-function HideColumns({ table }: HideColumnsProps<Booking>) {
+function HideColumns({ table, isMobile }: HideColumnsProps<Booking>) {
   const isDesktop = useMediaQuery('(min-width: 768px)');
 
   const allColumns = table
@@ -472,7 +512,11 @@ function HideColumns({ table }: HideColumnsProps<Booking>) {
 
   const renderTrigger = () => {
     return (
-      <Button size='sm' variant='outline'>
+      <Button
+        className='grow sm:grow-0'
+        size={isMobile ? 'sm' : 'default'}
+        variant='outline'
+      >
         <ListCollapse />
         Скрыть столбцы
         <ChevronDown />

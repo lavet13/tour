@@ -3,7 +3,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useSchedulesByRoute } from '@/features/schedule/use-schedules-by-route';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { ArrowLeft, CalendarPlus } from 'lucide-react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Tooltip,
   TooltipTrigger,
@@ -43,6 +43,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { Separator } from '@/components/ui/separator';
+import { useDrawerState } from '@/hooks/use-drawer-state';
 
 export interface ScheduleParams {
   route_id: string;
@@ -52,6 +60,8 @@ export type Schedule = Omit<
   GetSchedulesByRouteQuery['schedulesByRoute'][number],
   '__typename'
 >;
+
+export type DrawerMode = 'idle' | 'editSchedule' | 'addSchedule';
 
 function Schedules() {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -86,9 +96,69 @@ function Schedules() {
     };
   }, []);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const addSchedule = searchParams.get('add_schedule');
+  const scheduleId = searchParams.get('schedule_id');
+
   const { route_id: routeId } = useParams<
     keyof ScheduleParams
   >() as ScheduleParams;
+
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [drawerMode, setDrawerMode] = useState<DrawerMode>('idle');
+
+  // Only set up edit drawerMode when route_id is present
+  useEffect(() => {
+    if (scheduleId) {
+      setDrawerMode('editSchedule');
+    } else if (addSchedule) {
+      setDrawerMode('addSchedule');
+    } else if (!isDrawerOpen) {
+      setDrawerMode('idle');
+    }
+  }, [scheduleId, addSchedule, isDrawerOpen]);
+
+  // Handle drawer state based on route_id
+  useEffect(() => {
+    if (!addSchedule && isDrawerOpen && drawerMode === 'addSchedule') {
+      setIsDrawerOpen(false);
+    }
+    if (addSchedule && !isDrawerOpen && drawerMode === 'addSchedule') {
+      setIsDrawerOpen(true);
+    }
+    if (!scheduleId && isDrawerOpen && drawerMode === 'editSchedule') {
+      setIsDrawerOpen(false);
+    }
+    if (scheduleId && !isDrawerOpen && drawerMode === 'editSchedule') {
+      setIsDrawerOpen(true);
+    }
+  }, [scheduleId, addSchedule, isDrawerOpen, drawerMode]);
+
+  const handleAddSchedule = () => {
+    setDrawerMode('addSchedule');
+    setIsDrawerOpen(true);
+    setSearchParams(params => {
+      const query = new URLSearchParams(params.toString());
+      query.set('add_schedule', 'true');
+      return query;
+    });
+  };
+  const handleClose = () => {
+    if (drawerMode === 'editSchedule') {
+      setSearchParams(params => {
+        const query = new URLSearchParams(params.toString());
+        query.delete('schedule_id');
+        return query;
+      });
+    } else if (drawerMode === 'addSchedule') {
+      setSearchParams(params => {
+        const query = new URLSearchParams(params.toString());
+        query.delete('add_schedule');
+        return query;
+      });
+    }
+  };
 
   // show me schedules for existing route
   const {
@@ -109,8 +179,6 @@ function Schedules() {
     () => scheduleData?.schedulesByRoute ?? [],
     [scheduleData],
   );
-
-  console.log({ schedules });
 
   const columnResizeModeRef = useRef<ColumnResizeMode>('onChange');
 
@@ -142,7 +210,6 @@ function Schedules() {
   });
 
   const { rows } = table.getRowModel();
-  console.log({ rows });
 
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
   const rowVirtualizer = useVirtualizer({
@@ -197,34 +264,26 @@ function Schedules() {
           <>
             <div className='flex flex-col'>
               <div className='flex items-center gap-2'>
-                {!isMobile && (
-                  <Button variant='outline' onClick={() => navigate(-1)}>
-                    <ArrowLeft />
-                    Назад
-                  </Button>
-                )}
-                {isMobile && (
-                  <Tooltip delayDuration={700}>
-                    <TooltipTrigger asChild>
-                      <Button
-                        className='h-9 min-w-9'
-                        variant='outline'
-                        size='icon'
-                        onClick={() => navigate(-1)}
-                      >
-                        <ArrowLeft />
-                        <span className='sr-only'>Назад</span>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent
-                      align={state === 'collapsed' ? 'start' : 'center'}
-                      side='bottom'
+                <Tooltip delayDuration={700}>
+                  <TooltipTrigger asChild>
+                    <Button
+                      className={cn('h-10 w-10 min-w-10', isMobile && 'h-9 w-9 min-w-9')}
+                      variant='outline'
+                      size='icon'
+                      onClick={() => navigate('../routes')}
                     >
-                      Вернуться назад
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                <Button className='w-full sm:w-auto'>
+                      <ArrowLeft />
+                      <span className='sr-only'>Назад</span>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent
+                    align={state === 'collapsed' ? 'start' : 'center'}
+                    side='bottom'
+                  >
+                    Вернуться назад
+                  </TooltipContent>
+                </Tooltip>
+                <Button size={isMobile ? 'sm' : 'default'} onClick={handleAddSchedule} className='w-full sm:w-auto'>
                   <CalendarPlus />
                   Добавить расписание
                 </Button>
@@ -274,6 +333,7 @@ function Schedules() {
                                   header.column.columnDef.header,
                                   header.getContext(),
                                 )}
+
                             {header.column.getCanResize() ? (
                               <div
                                 {...{
@@ -348,6 +408,10 @@ function Schedules() {
                                   display: 'flex',
                                   width: cell.column.getSize(),
                                 }}
+                                className={cn(
+                                  cell.column.id === 'isActive' &&
+                                    'justify-center',
+                                )}
                               >
                                 {flexRender(
                                   cell.column.columnDef.cell,
@@ -383,6 +447,7 @@ function Schedules() {
               </Table>
             </div>
             {/* <DataTablePagination table={table} /> */}
+
             <div className='flex flex-col gap-4 items-start justify-between px-2 py-4'>
               {/* Selected rows info */}
               <div className='text-sm text-muted-foreground order-last sm:order-first w-full sm:w-auto text-center sm:text-left'>
@@ -393,6 +458,26 @@ function Schedules() {
           </>
         )}
       </div>
+
+      <Drawer
+        repositionInputs
+        open={isDrawerOpen}
+        onOpenChange={setIsDrawerOpen}
+        onClose={handleClose}
+      >
+        {/* <DrawerContent className="inset-x-auto right-2"> */}
+        <DrawerContent>
+          <DrawerHeader>
+            <DrawerTitle>
+              {drawerMode === 'addSchedule' && 'Добавить новое расписание'}
+              {drawerMode === 'editSchedule' && 'Изменить расписание'}
+              {drawerMode === 'idle' && <Skeleton className='h-6 w-full' />}
+            </DrawerTitle>
+          </DrawerHeader>
+          <Separator className='mt-2 mb-4' />
+        </DrawerContent>
+        {/* </DrawerContent> */}
+      </Drawer>
     </div>
   );
 }
