@@ -11,12 +11,14 @@ import { X } from 'lucide-react';
 const Drawer = ({
   shouldScaleBackground = true,
   ...props
-}: React.ComponentProps<typeof DrawerPrimitive.Root>) => (
-  <DrawerPrimitive.Root
-    shouldScaleBackground={shouldScaleBackground}
-    {...props}
-  />
-);
+}: React.ComponentProps<typeof DrawerPrimitive.Root>) => {
+  return (
+    <DrawerPrimitive.Root
+      shouldScaleBackground={shouldScaleBackground}
+      {...props}
+    />
+  );
+};
 Drawer.displayName = 'Drawer';
 
 const DrawerTrigger = DrawerPrimitive.Trigger;
@@ -43,44 +45,44 @@ const DrawerContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const [{ md }] = useAtom(breakpointsAtom);
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
+    const isTabletRef = React.useRef(isTablet);
+
+  // Фиксируем `isTablet`, если он был `true`
+  isTabletRef.current = isTablet || isTabletRef.current;
+
+  const contentClassName = React.useMemo(() => {
+    return cn(
+      isTabletRef.current
+            ? "fixed inset-x-0 bottom-2 top-2 z-50 mx-auto flex h-auto w-full max-w-lg flex-col rounded-[10px] bg-transparent outline-none"
+            : "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[80%] lg:h-[320px] flex-col rounded-t-[10px] border bg-background outline-none",
+      className,
+    );
+  }, [isTabletRef.current, className]);
 
   return (
     <DrawerPortal>
       <DrawerOverlay />
       <DrawerPrimitive.Content
         ref={ref}
-        className={cn(
-          isTablet &&
-            'fixed inset-x-0 bottom-2 outline-none top-2 z-50 flex flex-col h-auto mx-auto max-w-lg w-full bg-transparent rounded-[10px]',
-          !isTablet &&
-            'fixed inset-x-0 bottom-0 outline-none z-50 mt-24 flex h-fit flex-col rounded-t-[10px] border bg-background',
-          className,
-        )}
+        className={contentClassName}
         {...props}
       >
-        {isTablet && (
-          <>
-            <div className='bg-background border h-full w-full grow flex flex-col rounded-[16px]'>
-              <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
-              <DrawerClose asChild>
-                <Button
-                  className='absolute top-3 right-3 w-6 h-6'
-                  variant='ghost'
-                  size='icon'
-                >
-                  <X />
-                  <span className='sr-only'>Закрыть модальное окно</span>
-                </Button>
-              </DrawerClose>
-              {children}
-            </div>
-          </>
-        )}
-        {!isTablet && (
-          <>
-            <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
-            {children}
-          </>
+        {isTabletRef.current ? (
+          <div className="bg-background border h-full w-full flex flex-col rounded-[16px] overflow-y-auto">
+            <div className="mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted" />
+            <DrawerClose asChild>
+              <Button className="absolute top-3 right-3 w-6 h-6" variant="ghost" size="icon">
+                <X />
+                <span className="sr-only">Закрыть модальное окно</span>
+              </Button>
+            </DrawerClose>
+            <div className="flex-1 overflow-y-auto">{children}</div>
+          </div>
+        ) : (
+          <div className="flex flex-col flex-1 overflow-y-auto">
+            <div className="mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted" />
+            <div className="flex-1 overflow-y-auto">{children}</div>
+          </div>
         )}
       </DrawerPrimitive.Content>
     </DrawerPortal>
@@ -94,7 +96,7 @@ const DrawerHeader = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn(
-      'grid gap-1.5 p-4 md:pt-7 md:px-5 text-center sm:text-left',
+      'grid gap-1.5 p-4 px-5 md:pt-7 md:px-5 text-center sm:text-left sm:max-w-screen-sm mx-auto',
       className,
     )}
     {...props}

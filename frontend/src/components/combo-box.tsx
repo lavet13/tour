@@ -95,36 +95,30 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     const renderContent = () => {
       return (
         <Command>
-          {items.length >= 7 && <CommandInput placeholder={inputPlaceholder} />}
+          <CommandInput placeholder={inputPlaceholder} />
           <CommandList>
-            {items.length >= 7 && <CommandEmpty>{emptyLabel}</CommandEmpty>}
+            <CommandEmpty>{emptyLabel}</CommandEmpty>
             <CommandGroup>
-              <ScrollArea
-                className={cn(
-                  items.length >= 7 && 'h-[calc(14rem)] -mr-px pr-3',
-                )}
-              >
-                {items.length !== 0 &&
-                  items.map(item => (
-                    <CommandItem
-                      key={item.id}
-                      onSelect={() => handleItemSelect(item)}
-                    >
-                      {item.name}
-                      <Check
-                        className={cn(
-                          'ml-auto',
-                          item.id === value ? 'opacity-100' : 'opacity-0',
-                        )}
-                      />
-                    </CommandItem>
-                  ))}
-                {items.length === 0 && (
-                  <p className='text-center text-sm text-muted-foreground'>
-                    Нет данных
-                  </p>
-                )}
-              </ScrollArea>
+              {items.length !== 0 &&
+                items.map(item => (
+                  <CommandItem
+                    key={item.id}
+                    onSelect={() => handleItemSelect(item)}
+                  >
+                    {item.name}
+                    <Check
+                      className={cn(
+                        'ml-auto',
+                        item.id === value ? 'opacity-100' : 'opacity-0',
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              {items.length === 0 && (
+                <p className='text-center text-sm text-muted-foreground'>
+                  Нет данных
+                </p>
+              )}
             </CommandGroup>
           </CommandList>
         </Command>

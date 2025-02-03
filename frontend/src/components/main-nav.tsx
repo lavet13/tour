@@ -391,7 +391,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                     <RadixNavigationMenuTrigger asChild>
                       <Button
                         className={cn(
-                          'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto gap-1 mr-2',
+                          'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto gap-1 mr-2 ml-2',
                         )}
                         variant='ghost'
                         size='sm'

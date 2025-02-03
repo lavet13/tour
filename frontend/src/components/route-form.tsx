@@ -267,7 +267,7 @@ export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
             onSubmit={form.handleSubmit(onSubmit)}
             className='w-full sm:max-w-screen-sm space-y-6 mx-auto pb-3'
           >
-            <div className='sm:grid sm:grid-cols-[repeat(auto-fill,_minmax(14rem,_1fr))] space-y-3 sm:space-y-0 sm:gap-y-4 sm:gap-x-2 px-4 sm:px-5'>
+            <div className='sm:grid sm:grid-cols-[repeat(auto-fit,_minmax(14rem,_1fr))] space-y-3 sm:space-y-0 sm:gap-y-4 sm:gap-x-2 px-4 sm:px-5'>
               <FormField
                 control={form.control}
                 name='departureCityId'
