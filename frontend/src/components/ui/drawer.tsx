@@ -45,7 +45,7 @@ const DrawerContent = React.forwardRef<
 >(({ className, children, ...props }, ref) => {
   const [{ md }] = useAtom(breakpointsAtom);
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
-    const isTabletRef = React.useRef(isTablet);
+  const isTabletRef = React.useRef(isTablet);
 
   // Фиксируем `isTablet`, если он был `true`
   isTabletRef.current = isTablet || isTabletRef.current;
@@ -53,8 +53,8 @@ const DrawerContent = React.forwardRef<
   const contentClassName = React.useMemo(() => {
     return cn(
       isTabletRef.current
-            ? "fixed inset-x-0 bottom-2 top-2 z-50 mx-auto flex h-auto w-full max-w-lg flex-col rounded-[10px] bg-transparent outline-none"
-            : "fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[80%] lg:h-[320px] flex-col rounded-t-[10px] border bg-background outline-none",
+        ? 'fixed inset-x-0 bottom-2 top-2 z-50 mx-auto flex h-auto w-full max-w-lg flex-col rounded-[10px] bg-transparent outline-none'
+        : 'fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[80%] lg:h-[320px] flex-col rounded-t-[10px] border bg-background outline-none',
       className,
     );
   }, [isTabletRef.current, className]);
@@ -68,20 +68,24 @@ const DrawerContent = React.forwardRef<
         {...props}
       >
         {isTabletRef.current ? (
-          <div className="bg-background border h-full w-full flex flex-col rounded-[16px] overflow-y-auto">
-            <div className="mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted" />
+          <div className='bg-background border h-full w-full flex flex-col rounded-[16px] overflow-y-auto'>
+            <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
             <DrawerClose asChild>
-              <Button className="absolute top-3 right-3 w-6 h-6" variant="ghost" size="icon">
+              <Button
+                className='absolute top-3 right-3 w-6 h-6'
+                variant='ghost'
+                size='icon'
+              >
                 <X />
-                <span className="sr-only">Закрыть модальное окно</span>
+                <span className='sr-only'>Закрыть модальное окно</span>
               </Button>
             </DrawerClose>
-            <div className="flex-1 overflow-y-auto">{children}</div>
+            <div className='flex-1 overflow-y-auto'>{children}</div>
           </div>
         ) : (
-          <div className="flex flex-col flex-1 overflow-y-auto">
-            <div className="mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted" />
-            <div className="flex-1 overflow-y-auto">{children}</div>
+          <div className='flex flex-col flex-1 overflow-y-auto'>
+            <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
+            <div className='flex-1 overflow-y-auto'>{children}</div>
           </div>
         )}
       </DrawerPrimitive.Content>

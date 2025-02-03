@@ -112,6 +112,9 @@
   * {
     @apply border-border;
   }
+  html, body {
+    overscroll-behavior: auto;
+  }
   html {
     @apply scroll-smooth;
   }

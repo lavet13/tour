@@ -93,34 +93,44 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     };
 
     const renderContent = () => {
+      const commandList = (
+        <CommandList onWheelCapture={(e) => e.stopPropagation()}>
+          {items.length >= 7 && <CommandEmpty>{emptyLabel}</CommandEmpty>}
+          <CommandGroup>
+            {items.length !== 0 &&
+              items.map(item => (
+                <CommandItem
+                  key={item.id}
+                  onSelect={() => handleItemSelect(item)}
+                >
+                  {item.name}
+                  <Check
+                    className={cn(
+                      'ml-auto',
+                      item.id === value ? 'opacity-100' : 'opacity-0',
+                    )}
+                  />
+                </CommandItem>
+              ))}
+            {items.length === 0 && (
+              <p className='py-2 text-center text-sm text-muted-foreground'>
+                Нет данных
+              </p>
+            )}
+          </CommandGroup>
+        </CommandList>
+      );
+
       return (
         <Command>
-          <CommandInput placeholder={inputPlaceholder} />
-          <CommandList>
-            <CommandEmpty>{emptyLabel}</CommandEmpty>
-            <CommandGroup>
-              {items.length !== 0 &&
-                items.map(item => (
-                  <CommandItem
-                    key={item.id}
-                    onSelect={() => handleItemSelect(item)}
-                  >
-                    {item.name}
-                    <Check
-                      className={cn(
-                        'ml-auto',
-                        item.id === value ? 'opacity-100' : 'opacity-0',
-                      )}
-                    />
-                  </CommandItem>
-                ))}
-              {items.length === 0 && (
-                <p className='text-center text-sm text-muted-foreground'>
-                  Нет данных
-                </p>
-              )}
-            </CommandGroup>
-          </CommandList>
+          {items.length >= 7 && <CommandInput placeholder={inputPlaceholder} />}
+          {isDesktop ? (
+            <ScrollArea className="max-h-fit overflow-y-auto h-[30vh] pr-1">
+              {commandList}
+            </ScrollArea>
+          ) : (
+            commandList
+          )}
         </Command>
       );
     };
