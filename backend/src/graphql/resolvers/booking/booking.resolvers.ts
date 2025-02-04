@@ -1,4 +1,4 @@
-import { Resolvers, } from '@/graphql/__generated__/types';
+import { Resolvers } from '@/graphql/__generated__/types';
 import { Prisma, Role } from '@prisma/client';
 
 import {
@@ -135,7 +135,7 @@ const resolvers: Resolvers = {
 
       const orderBy: Prisma.BookingOrderByWithRelationInput[] = sorting.length
         ? sorting.flatMap((sort): Prisma.BookingOrderByWithRelationInput[] => {
-            if (sort.id === 'status' || sort.id === 'commentary') {
+            if (sort.id === 'status') {
               return [{ [sort.id]: sort.desc ? 'asc' : 'desc' }, { id: 'asc' }];
             }
             return [{ [sort.id]: sort.desc ? 'desc' : 'asc' }, { id: 'asc' }];

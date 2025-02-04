@@ -1,5 +1,5 @@
 import { useInfiniteBookings } from '@/features/booking/use-infinite-bookings';
-import { FC, useEffect, useMemo, useRef, useState } from 'react';
+import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -13,6 +13,7 @@ import {
   ColumnResizeMode,
   Row,
   FilterMeta,
+  ColumnDef,
 } from '@tanstack/react-table';
 import { rankItem } from '@tanstack/match-sorter-utils';
 import {
@@ -73,6 +74,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
+import { Input } from '@/components/ui/input';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
 
@@ -95,7 +97,6 @@ const BookingsPage: FC = () => {
     isError,
     error,
   } = useInfiniteBookings({
-    take: import.meta.env.DEV ? 5 : 30,
     sorting,
     columnFilters,
   });
@@ -109,29 +110,44 @@ const BookingsPage: FC = () => {
 
   const columnResizeModeRef = useRef<ColumnResizeMode>('onChange');
 
+  const defaultColumn: Partial<ColumnDef<Booking>> = {
+    cell: props => (
+      <span className='overflow-hidden text-ellipsis'>
+        {String(props.getValue() ?? '')}
+      </span>
+    ),
+  };
+
   const table = useReactTable({
     data: flatData,
     columns,
+    defaultColumn,
     filterFns: {
       fuzzy: fuzzyFilter,
     },
     columnResizeMode: columnResizeModeRef.current,
     columnResizeDirection: 'ltr',
     getCoreRowModel: getCoreRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     getFilteredRowModel: getFilteredRowModel(), // client side filtering
     onColumnFiltersChange: setColumnFilters,
+    onSortingChange: setSorting,
     state: {
       sorting,
       columnVisibility,
       columnFilters,
     },
+    manualSorting: true,
     manualPagination: true,
+    manualFiltering: true,
     debugTable: true,
     debugHeaders: true,
     debugColumns: true,
+    meta: {
+      updateData(rowIndex, columnId, value) {
+        console.log({ rowIndex, columnId, value });
+      },
+    },
   });
 
   const { rows } = table.getRowModel();
@@ -243,7 +259,6 @@ const BookingsPage: FC = () => {
             <HideColumns table={table} isMobile={isMobile} />
             {isFullHD && (
               <Button
-                size='sm'
                 onClick={() => {
                   table.resetColumnFilters();
                 }}

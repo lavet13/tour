@@ -11,7 +11,7 @@ interface ExpandableTextareaProps extends React.ComponentProps<typeof Textarea> 
 export const ExpandableTextarea = forwardRef<
   HTMLTextAreaElement,
   ExpandableTextareaProps
->(({ value: valueProp, onValueChange, className, ...rest }, ref) => {
+>(({ value: valueProp, onValueChange, style, className, ...rest }, ref) => {
   const [value, setValue] = useControllableState({
     prop: valueProp,
     onChange: onValueChange,
@@ -45,7 +45,7 @@ export const ExpandableTextarea = forwardRef<
       value={value}
       onChange={handleChange}
       className={cn('w-full resize-none overflow-hidden', className)}
-      style={{ minHeight: '80px' }} // Set a minimum height
+      style={{ minHeight: '80px', ...style }} // Set a minimum height
       {...rest}
     />
   );

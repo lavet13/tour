@@ -27,10 +27,15 @@ import {
   MoreHorizontal,
   Trash,
 } from 'lucide-react';
-import { ForwardRefExoticComponent, RefAttributes, useState } from 'react';
+import React, {
+  ForwardRefExoticComponent,
+  RefAttributes,
+  useState,
+} from 'react';
 import { toast } from 'sonner';
 import { ComboBox } from '@/components/combo-box-filter';
 import { DatePicker } from '@/components/date-picker-filter';
+import { AutosizeTextarea } from '@/components/autosize-textarea';
 
 type Booking = Omit<
   InfiniteBookingsQuery['bookings']['edges'][number],
@@ -82,11 +87,6 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
   {
     id: 'lastName',
     accessorKey: 'lastName',
-    cell: props => (
-      <span className='overflow-hidden text-ellipsis'>
-        {String(props.getValue() ?? '')}
-      </span>
-    ),
     header: ({ column }) => {
       return <Header title='Фамилия' column={column} />;
     },
@@ -96,11 +96,6 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
   {
     size: 140,
     minSize: 120,
-    cell: props => (
-      <span className='overflow-hidden text-ellipsis'>
-        {String(props.getValue() ?? '')}
-      </span>
-    ),
     id: 'firstName',
     accessorKey: 'firstName',
     header: ({ column }) => {
@@ -110,11 +105,6 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
   {
     size: 150,
     minSize: 140,
-    cell: props => (
-      <span className='overflow-hidden text-ellipsis'>
-        {String(props.getValue() ?? '')}
-      </span>
-    ),
     id: 'phoneNumber',
     accessorKey: 'phoneNumber',
     header: ({ column }) => {
@@ -124,11 +114,6 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
   {
     size: 160,
     minSize: 160,
-    cell: props => (
-      <span className='overflow-hidden text-ellipsis'>
-        {String(props.getValue() ?? '')}
-      </span>
-    ),
     id: 'seatsCount',
     accessorKey: 'seatsCount',
     header: ({ column }) => {
@@ -142,16 +127,14 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
   {
     size: 160,
     minSize: 160,
-    cell: props => (
-      <span className='overflow-hidden text-ellipsis'>
-        {String(props.getValue() ?? '')}
-      </span>
-    ),
     id: 'commentary',
     accessorKey: 'commentary',
+    // @ts-ignore
     header: ({ column }) => {
       return <Header title='Комментарий' column={column} />;
     },
+    sortDescFirst: true,
+    sortingFn: 'text',
   },
   {
     id: 'status',
@@ -235,6 +218,38 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     minSize: 160,
     size: 160,
     enableGlobalFilter: false,
+    id: 'travelDate',
+    accessorKey: 'travelDate',
+    header: ({ column }) => <Header title='Дата поездки' column={column} />,
+    cell: props => (
+      <span className='overflow-hidden text-ellipsis'>
+        {format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
+          locale: ru,
+        })}
+      </span>
+    ),
+    sortingFn: (rowA, rowB) => {
+      return rowA.original.travelDate - rowB.original.travelDate;
+    },
+    filterFn: (row, columnId, filterValue) => {
+      const rowValue = new Date(row.getValue(columnId));
+      const [startDate, endDate] = filterValue || [];
+      if (!startDate && !endDate) return true; // No filter applied
+      if (startDate && endDate) {
+        return rowValue >= new Date(startDate) && rowValue <= new Date(endDate);
+      }
+      if (startDate) return rowValue >= new Date(startDate);
+      if (endDate) return rowValue <= new Date(endDate);
+      return true;
+    },
+    meta: {
+      filterVariant: 'dateRange',
+    },
+  },
+  {
+    minSize: 160,
+    size: 160,
+    enableGlobalFilter: false,
     id: 'createdAt',
     accessorKey: 'createdAt',
     header: ({ column }) => <Header title='Создано' column={column} />,
@@ -295,38 +310,6 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     },
   },
   {
-    minSize: 160,
-    size: 160,
-    enableGlobalFilter: false,
-    id: 'travelDate',
-    accessorKey: 'travelDate',
-    header: ({ column }) => <Header title='Дата поездки' column={column} />,
-    cell: props => (
-      <span className='overflow-hidden text-ellipsis'>
-        {format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
-          locale: ru,
-        })}
-      </span>
-    ),
-    sortingFn: (rowA, rowB) => {
-      return rowA.original.travelDate - rowB.original.travelDate;
-    },
-    filterFn: (row, columnId, filterValue) => {
-      const rowValue = new Date(row.getValue(columnId));
-      const [startDate, endDate] = filterValue || [];
-      if (!startDate && !endDate) return true; // No filter applied
-      if (startDate && endDate) {
-        return rowValue >= new Date(startDate) && rowValue <= new Date(endDate);
-      }
-      if (startDate) return rowValue >= new Date(startDate);
-      if (endDate) return rowValue <= new Date(endDate);
-      return true;
-    },
-    meta: {
-      filterVariant: 'dateRange',
-    },
-  },
-  {
     enableResizing: false,
     id: 'actions',
     size: 70,
@@ -368,7 +351,7 @@ interface HeaderProps<TData> {
 }
 
 function Header<TData>({ title, column, className }: HeaderProps<TData>) {
-  const isSorted = column.getIsSorted() as 'asc' | 'desc' | false;
+  const isSorted = column.getIsSorted();
 
   return (
     <div className='flex flex-1 flex-col space-y-1'>
@@ -378,14 +361,23 @@ function Header<TData>({ title, column, className }: HeaderProps<TData>) {
           size='sm'
           variant='ghost'
           onClick={column.getToggleSortingHandler()}
+          title={
+            column.getCanSort()
+              ? column.getNextSortingOrder() === 'asc'
+                ? 'Сортировать по возростанию'
+                : column.getNextSortingOrder() === 'desc'
+                  ? 'Сортировать по убыванию'
+                  : 'Очистить сортировку'
+              : undefined
+          }
         >
           {title}
           {isSorted ? (
             isSorted === 'asc' ? (
               <ArrowUp className='ml-2 h-4 w-4' />
-            ) : (
+            ) : isSorted === 'desc' ? (
               <ArrowDown className='ml-2 h-4 w-4' />
-            )
+            ) : null
           ) : null}
         </Button>
       ) : (
@@ -410,7 +402,6 @@ function Filter<TData>({ column }: FilterProps<TData>) {
   const columnFilterValue = column.getFilterValue();
   const { filterVariant } = column.columnDef.meta ?? {};
 
-  console.log({ columnFilterValue });
   return filterVariant === 'select' ? (
     <ComboBox
       // [label, value, icon]

@@ -101,6 +101,7 @@ export const AutosizeTextarea = forwardRef<
         value={value}
         ref={textAreaRef}
         className={cn(
+          'bg-background',
           className
         )}
         onChange={handleChange}

@@ -12,7 +12,7 @@ type TPageParam = {
 };
 
 type UseInfiniteBookingsProps = {
-  take: number;
+  take?: number;
   sorting?: SortingState;
   columnFilters?: ColumnFiltersState;
   options?: InitialDataInfiniteOptions<InfiniteBookingsQuery, TPageParam>;

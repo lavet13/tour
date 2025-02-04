@@ -25,7 +25,6 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
     });
 
     const [from, to] = value || [];
-    console.log({ from, to });
 
     const [open, setOpen] = useState(false);
 
