@@ -5,10 +5,8 @@ import {
   getCoreRowModel,
   Table as ReactTable,
   SortingState,
-  getSortedRowModel,
   useReactTable,
   ColumnFiltersState,
-  getFilteredRowModel,
   FilterFn,
   ColumnResizeMode,
   Row,
@@ -129,7 +127,6 @@ const BookingsPage: FC = () => {
     columnResizeDirection: 'ltr',
     getCoreRowModel: getCoreRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    getFilteredRowModel: getFilteredRowModel(), // client side filtering
     onColumnFiltersChange: setColumnFilters,
     onSortingChange: setSorting,
     state: {
@@ -143,11 +140,6 @@ const BookingsPage: FC = () => {
     debugTable: true,
     debugHeaders: true,
     debugColumns: true,
-    meta: {
-      updateData(rowIndex, columnId, value) {
-        console.log({ rowIndex, columnId, value });
-      },
-    },
   });
 
   const { rows } = table.getRowModel();
@@ -156,7 +148,8 @@ const BookingsPage: FC = () => {
   const rowVirtualizer = useVirtualizer({
     count: hasNextPage ? rows.length + 1 : rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 73, //measure dynamic row height, except in firefox because it measures table border height incorrectly
+    estimateSize: () => 80, //measure dynamic row height, except in firefox because it measures table border height incorrectly
+    overscan: 5,
     measureElement:
       typeof window !== 'undefined' &&
       navigator.userAgent.indexOf('Firefox') === -1

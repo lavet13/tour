@@ -30,12 +30,15 @@ import {
 import React, {
   ForwardRefExoticComponent,
   RefAttributes,
+  useCallback,
   useState,
 } from 'react';
 import { toast } from 'sonner';
 import { ComboBox } from '@/components/combo-box-filter';
 import { DatePicker } from '@/components/date-picker-filter';
 import { AutosizeTextarea } from '@/components/autosize-textarea';
+import { ExpandableTextarea } from '@/components/expandable-textarea';
+import { useControllableState } from '@/hooks/use-controllable-state';
 
 type Booking = Omit<
   InfiniteBookingsQuery['bookings']['edges'][number],
@@ -130,11 +133,42 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     id: 'commentary',
     accessorKey: 'commentary',
     // @ts-ignore
+    accessorFn: row => row.commentary ?? '',
     header: ({ column }) => {
       return <Header title='Комментарий' column={column} />;
     },
-    sortDescFirst: true,
-    sortingFn: 'text',
+    cell: props => {
+      const initialValue = props.getValue() ?? '';
+      const [isEditing, setIsEditing] = useState(false);
+      const [value, setValue] = useControllableState({ prop: initialValue });
+
+      const onBlur = () => {
+        setIsEditing(false);
+      };
+
+      if (isEditing) {
+        return (
+          <AutosizeTextarea
+            minHeight={32}
+            maxHeight={120}
+            className='p-1 px-2 h-8'
+            value={value}
+            onValueChange={setValue}
+            onBlur={onBlur}
+            autoFocus
+          />
+        );
+      }
+
+      return (
+        <div
+          className='flex items-center overflow-hidden cursor-text'
+          onClick={() => setIsEditing(true)}
+        >
+          <span className='truncate'>{value}</span>
+        </div>
+      );
+    },
   },
   {
     id: 'status',
