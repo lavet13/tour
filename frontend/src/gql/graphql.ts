@@ -118,8 +118,14 @@ export type SortingState = {
 };
 
 export type UpdateBookingInput = {
+  commentary?: InputMaybe<Scalars['String']['input']>;
+  firstName?: InputMaybe<Scalars['String']['input']>;
   id: Scalars['ID']['input'];
-  status: BookingStatus;
+  lastName?: InputMaybe<Scalars['String']['input']>;
+  phoneNumber?: InputMaybe<Scalars['String']['input']>;
+  seatsCount?: InputMaybe<Scalars['Int']['input']>;
+  status?: InputMaybe<BookingStatus>;
+  travelDate?: InputMaybe<Scalars['Date']['input']>;
 };
 
 export type UpdateScheduleInput = {

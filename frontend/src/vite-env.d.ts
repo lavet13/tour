@@ -22,6 +22,6 @@ declare module '@tanstack/react-table' {
     fuzzy: FilterFnOption<TData>;
   }
   interface TableMeta<TData extends RowData> {
-    updateData: (rowIndex: number, columnId: string, value: unknown) => void;
+    updateData: (originalId: string, columnId: string, value: unknown) => void;
   }
 }

@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { useUpdateBookingStatus } from '@/features/booking';
+import { useUpdateBooking } from '@/features/booking';
 import { InfiniteBookingsQuery, BookingStatus } from '@/gql/graphql';
 import { parseIntSafe } from '@/helpers/parse-int-safe';
 import { cn } from '@/lib/utils';
@@ -15,7 +15,8 @@ import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-er
 import { client } from '@/react-query';
 import { Column, ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
-import { ru } from 'date-fns/locale';
+import { ru as fnsRU } from 'date-fns/locale';
+import ru from 'react-phone-number-input/locale/ru.json';
 import {
   ArrowDown,
   ArrowUp,
@@ -23,14 +24,17 @@ import {
   CircleFadingArrowUp,
   Edit,
   List,
+  Loader2,
   LucideProps,
   MoreHorizontal,
   Trash,
 } from 'lucide-react';
 import React, {
   ForwardRefExoticComponent,
+  KeyboardEvent,
   RefAttributes,
   useCallback,
+  useEffect,
   useState,
 } from 'react';
 import { toast } from 'sonner';
@@ -39,6 +43,8 @@ import { DatePicker } from '@/components/date-picker-filter';
 import { AutosizeTextarea } from '@/components/autosize-textarea';
 import { ExpandableTextarea } from '@/components/expandable-textarea';
 import { useControllableState } from '@/hooks/use-controllable-state';
+import { NumberFormatValues, NumericFormat } from 'react-number-format';
+import { PhoneInput } from '@/components/phone-input';
 
 type Booking = Omit<
   InfiniteBookingsQuery['bookings']['edges'][number],
@@ -113,6 +119,90 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     header: ({ column }) => {
       return <Header title='Телефон' column={column} />;
     },
+    cell: ({
+      getValue,
+      row: {
+        original: { id: originalId },
+      },
+      column: { id: columnId },
+    }) => {
+      const initialValue = getValue() as string;
+      const [isEditing, setIsEditing] = useState(false);
+      const [value, setValue] = useState(initialValue);
+
+      useEffect(() => {
+        setValue(initialValue);
+      }, [initialValue]);
+
+      const { mutate: updateBooking, isPending } = useUpdateBooking();
+
+      const handleUpdate = (newValue: string) => {
+        if (newValue !== initialValue) {
+          updateBooking(
+            { input: { id: originalId, [columnId]: newValue } },
+            {
+              onSuccess: () => {
+                client.invalidateQueries({
+                  queryKey: ['InfiniteBookings'],
+                });
+              },
+            },
+          );
+        }
+        setIsEditing(false);
+      };
+
+      const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+          e.preventDefault();
+          if (value !== undefined) {
+            handleUpdate(value);
+          }
+        }
+      };
+
+      if (isEditing) {
+        return (
+          <PhoneInput
+            labels={ru}
+            className='p-1'
+            countryCallingCodeEditable={false}
+            international
+            value={value}
+            onChange={setValue}
+            onKeyDown={onKeyDown}
+            autoFocus
+          />
+        );
+      }
+
+      return (
+        <>
+          {initialValue.length ? (
+            <div
+              className='flex items-center overflow-hidden cursor-text gap-1'
+              onClick={() => setIsEditing(true)}
+            >
+              {isPending && (
+                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+              )}
+              <span className='truncate'>{initialValue}</span>
+            </div>
+          ) : (
+            <Button
+              className='size-8'
+              variant='outline'
+              onClick={() => setIsEditing(true)}
+            >
+              {!isPending && <Edit />}
+              {isPending && (
+                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+              )}
+            </Button>
+          )}
+        </>
+      );
+    },
   },
   {
     size: 160,
@@ -121,6 +211,87 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     accessorKey: 'seatsCount',
     header: ({ column }) => {
       return <Header title='Кол-во мест' column={column} />;
+    },
+    cell: ({
+      getValue,
+      row: {
+        original: { id: originalId },
+      },
+      column: { id: columnId },
+    }) => {
+      const initialValue = getValue() as number;
+      const [isEditing, setIsEditing] = useState(false);
+      const [value, setValue] = useState<number | undefined>(initialValue);
+
+      useEffect(() => {
+        setValue(initialValue);
+      }, [initialValue]);
+
+      const { mutate: updateBooking, isPending } = useUpdateBooking();
+
+      const handleValueChange = (values: NumberFormatValues) => {
+        setValue(values.floatValue);
+      };
+
+      const handleUpdate = (newValue: number) => {
+        if (newValue !== initialValue) {
+          updateBooking(
+            { input: { id: originalId, [columnId]: newValue } },
+            {
+              onSuccess: () => {
+                client.invalidateQueries({
+                  queryKey: ['InfiniteBookings'],
+                });
+              },
+            },
+          );
+        }
+        setIsEditing(false);
+      };
+
+      const onBlur = () => {
+        if (value !== undefined) {
+          handleUpdate(value);
+        }
+      };
+
+      const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+          e.preventDefault();
+          if (value !== undefined) {
+            handleUpdate(value);
+          }
+        }
+      };
+
+      if (isEditing) {
+        return (
+          <NumericFormat
+            type="tel"
+            customInput={Input}
+            className='p-1 px-2 h-8'
+            value={value}
+            onValueChange={handleValueChange}
+            onBlur={onBlur}
+            allowNegative={false}
+            decimalScale={0}
+            onKeyDown={onKeyDown}
+            autoFocus
+          />
+        );
+      }
+
+      return (
+        <div
+          className='flex items-center overflow-hidden cursor-text gap-1'
+          onClick={() => setIsEditing(true)}
+        >
+          {isPending && (
+            <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+          )}
+          <span className='truncate'>{initialValue}</span>
+        </div>
+      );
     },
     meta: {
       filterVariant: 'range',
@@ -137,13 +308,43 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     header: ({ column }) => {
       return <Header title='Комментарий' column={column} />;
     },
-    cell: props => {
-      const initialValue = props.getValue() ?? '';
+    cell: ({
+      getValue,
+      row: {
+        original: { id: originalId },
+      },
+      column: { id: columnId },
+    }) => {
+      const initialValue = getValue() as string;
       const [isEditing, setIsEditing] = useState(false);
-      const [value, setValue] = useControllableState({ prop: initialValue });
 
-      const onBlur = () => {
+      const { mutate: updateBooking, isPending } = useUpdateBooking();
+
+      const handleUpdate = (newValue: string) => {
+        if (newValue !== initialValue) {
+          updateBooking(
+            { input: { id: originalId, [columnId]: newValue } },
+            {
+              onSuccess: () => {
+                client.invalidateQueries({
+                  queryKey: ['InfiniteBookings'],
+                });
+              },
+            },
+          );
+        }
         setIsEditing(false);
+      };
+
+      const onBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+        handleUpdate(e.target.value);
+      };
+
+      const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+          e.preventDefault();
+          handleUpdate(e.currentTarget.value);
+        }
       };
 
       if (isEditing) {
@@ -152,21 +353,39 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
             minHeight={32}
             maxHeight={120}
             className='p-1 px-2 h-8'
-            value={value}
-            onValueChange={setValue}
+            defaultValue={initialValue}
             onBlur={onBlur}
+            onKeyDown={onKeyDown}
             autoFocus
           />
         );
       }
 
       return (
-        <div
-          className='flex items-center overflow-hidden cursor-text'
-          onClick={() => setIsEditing(true)}
-        >
-          <span className='truncate'>{value}</span>
-        </div>
+        <>
+          {initialValue.length ? (
+            <div
+              className='flex items-center overflow-hidden cursor-text gap-1'
+              onClick={() => setIsEditing(true)}
+            >
+              {isPending && (
+                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+              )}
+              <span className='truncate'>{initialValue}</span>
+            </div>
+          ) : (
+            <Button
+              className='size-8'
+              variant='outline'
+              onClick={() => setIsEditing(true)}
+            >
+              {!isPending && <Edit />}
+              {isPending && (
+                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+              )}
+            </Button>
+          )}
+        </>
       );
     },
   },
@@ -178,7 +397,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     cell: props => {
       const id = props.row.original.id;
       const status = props.row.original.status;
-      const { mutateAsync, isPending } = useUpdateBookingStatus();
+      const { mutate, isPending } = useUpdateBooking();
       const [previousStatus, setPreviousStatus] =
         useState<BookingStatus>(status);
 
@@ -191,44 +410,49 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
           onValueChange={async value => {
             setPreviousStatus(status);
 
-            const promise = new Promise(async (resolve, reject) => {
-              try {
-                const data = await mutateAsync({
-                  input: { id, status: value },
-                });
-                await client.invalidateQueries({
-                  queryKey: ['InfiniteBookings'],
-                });
-
-                resolve(data);
-              } catch (error) {
-                reject(error);
-              }
+            const promise = new Promise((resolve, reject) => {
+              mutate(
+                { input: { id, status: value } },
+                {
+                  async onSuccess(data) {
+                    await client.invalidateQueries({
+                      queryKey: ['InfiniteBookings'],
+                    });
+                    resolve(data);
+                  },
+                  onError(error) {
+                    reject(error);
+                  },
+                },
+              );
             });
+
             toast.promise(promise, {
               loading: 'Обновление статуса...',
               duration: 10000,
               action: {
                 label: 'Отменить',
-                onClick: async () => {
-                  try {
-                    await mutateAsync({
-                      input: { id, status: previousStatus },
-                    });
-                    await client.invalidateQueries({
-                      queryKey: ['InfiniteBookings'],
-                    });
-
-                    toast.success('Отмена статуса выполнена успешно!');
-                  } catch (error) {
-                    toast.error('Не удалось отменить изменения статуса!');
-                  }
+                onClick() {
+                  mutate(
+                    { input: { id, status: previousStatus } },
+                    {
+                      async onSuccess() {
+                        await client.invalidateQueries({
+                          queryKey: ['InfiniteBookings'],
+                        });
+                        toast.success('Отмена статуса выполнена успешно!');
+                      },
+                      onError() {
+                        toast.error('Не удалось отменить изменения статуса!');
+                      },
+                    },
+                  );
                 },
               },
-              success: () => {
-                return `Статус изменен!`;
+              success() {
+                return 'Статус изменён!';
               },
-              error: error => {
+              error(error) {
                 if (isGraphQLRequestError(error)) {
                   return error.response.errors[0].message;
                 } else if (error instanceof Error) {
@@ -258,7 +482,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     cell: props => (
       <span className='overflow-hidden text-ellipsis'>
         {format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
-          locale: ru,
+          locale: fnsRU,
         })}
       </span>
     ),
@@ -290,7 +514,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     cell: props => (
       <span className='overflow-hidden text-ellipsis'>
         {format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
-          locale: ru,
+          locale: fnsRU,
         })}
       </span>
     ),
@@ -321,7 +545,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     cell: props => (
       <span className='overflow-hidden text-ellipsis'>
         {format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
-          locale: ru,
+          locale: fnsRU,
         })}
       </span>
     ),
@@ -455,7 +679,7 @@ function Filter<TData>({ column }: FilterProps<TData>) {
   ) : filterVariant === 'range' ? (
     <div className='flex flex-1 gap-1 items-center'>
       <Input
-        className='p-1 w-16 h-8 flex-1'
+        className='text-foreground p-1 w-16 h-8 flex-1'
         type='number'
         value={(columnFilterValue as [string, string])?.[0] ?? ''}
         onChange={e => {
@@ -466,7 +690,7 @@ function Filter<TData>({ column }: FilterProps<TData>) {
         placeholder={`Мин`}
       />
       <Input
-        className='p-1 w-16 h-8 flex-1'
+        className='text-foreground p-1 w-16 h-8 flex-1'
         type='number'
         value={(columnFilterValue as [string, string])?.[1] ?? ''}
         onChange={e => {
@@ -479,7 +703,7 @@ function Filter<TData>({ column }: FilterProps<TData>) {
     </div>
   ) : (
     <Input
-      className='p-1 px-2 h-8'
+      className='text-foreground p-1 px-2 h-8'
       placeholder={'Искать...'}
       value={(columnFilterValue ?? '') as string}
       onChange={e => {

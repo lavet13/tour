@@ -13,7 +13,13 @@ export default gql`
 
   input UpdateBookingInput {
     id: ID!
-    status: BookingStatus!
+    status: BookingStatus
+    firstName: String
+    lastName: String
+    phoneNumber: String
+    travelDate: Date
+    seatsCount: Int
+    commentary: String
   }
 
   type Subscription {

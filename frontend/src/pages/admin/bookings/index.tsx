@@ -1,5 +1,5 @@
 import { useInfiniteBookings } from '@/features/booking/use-infinite-bookings';
-import React, { FC, useEffect, useMemo, useRef, useState } from 'react';
+import React, { FC, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -50,6 +50,7 @@ import {
   ChevronDown,
   ListCollapse,
   ListFilter,
+  Loader2,
   MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -72,7 +73,9 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
-import { Input } from '@/components/ui/input';
+import { Waypoint } from 'react-waypoint';
+import { useUpdateBooking } from '@/features/booking';
+import { AutosizeTextarea } from '@/components/autosize-textarea';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
 
@@ -83,8 +86,6 @@ const BookingsPage: FC = () => {
   const [columnVisibility, setColumnVisibility] = useState({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
-  console.log({ columnFilters });
-
   const {
     data,
     hasNextPage,
@@ -94,6 +95,7 @@ const BookingsPage: FC = () => {
     isPending,
     isError,
     error,
+    refetch: refetchBookings,
   } = useInfiniteBookings({
     sorting,
     columnFilters,
@@ -109,11 +111,70 @@ const BookingsPage: FC = () => {
   const columnResizeModeRef = useRef<ColumnResizeMode>('onChange');
 
   const defaultColumn: Partial<ColumnDef<Booking>> = {
-    cell: props => (
-      <span className='overflow-hidden text-ellipsis'>
-        {String(props.getValue() ?? '')}
-      </span>
-    ),
+    cell: ({
+      getValue,
+      row: {
+        original: { id: originalId },
+      },
+      column: { id: columnId },
+    }) => {
+      const initialValue = getValue() as string;
+      const [isEditing, setIsEditing] = useState(false);
+
+      const { mutate: updateBooking, isPending: bookingIsPending } =
+        useUpdateBooking();
+
+      const handleUpdate = (newValue: string) => {
+        if (newValue !== initialValue) {
+          updateBooking(
+            { input: { id: originalId, [columnId]: newValue } },
+            {
+              onSuccess: () => {
+                refetchBookings();
+              },
+            },
+          );
+        }
+        setIsEditing(false);
+      };
+
+      const onBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+        handleUpdate(e.target.value);
+      };
+
+      const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+          e.preventDefault();
+          handleUpdate(e.currentTarget.value);
+        }
+      };
+
+      if (isEditing) {
+        return (
+          <AutosizeTextarea
+            minHeight={32}
+            maxHeight={120}
+            className='p-1 px-2 h-8'
+            defaultValue={initialValue}
+            onBlur={onBlur}
+            onKeyDown={onKeyDown}
+            autoFocus
+          />
+        );
+      }
+
+      return (
+        <div
+          className='flex items-center overflow-hidden cursor-text gap-1'
+          onClick={() => setIsEditing(true)}
+        >
+          {bookingIsPending && (
+            <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+          )}
+          <span className='truncate'>{initialValue}</span>
+        </div>
+      );
+    },
   };
 
   const table = useReactTable({
@@ -145,17 +206,6 @@ const BookingsPage: FC = () => {
   const { rows } = table.getRowModel();
 
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
-  const rowVirtualizer = useVirtualizer({
-    count: hasNextPage ? rows.length + 1 : rows.length,
-    getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 80, //measure dynamic row height, except in firefox because it measures table border height incorrectly
-    overscan: 5,
-    measureElement:
-      typeof window !== 'undefined' &&
-      navigator.userAgent.indexOf('Firefox') === -1
-        ? element => element?.getBoundingClientRect().height
-        : undefined,
-  });
 
   // Scroll to top when sorting changes
   useEffect(() => {
@@ -163,28 +213,6 @@ const BookingsPage: FC = () => {
       tableContainerRef.current.scrollTo({ top: 0 });
     }
   }, [sorting, columnFilters]); // Dependency: re-run when sorting changes
-
-  useEffect(() => {
-    const [lastItem] = [...rowVirtualizer.getVirtualItems()].reverse();
-
-    if (!lastItem) {
-      return;
-    }
-
-    if (
-      lastItem.index >= rows.length - 1 &&
-      hasNextPage &&
-      !isFetchingNextPage
-    ) {
-      fetchNextPage();
-    }
-  }, [
-    hasNextPage,
-    fetchNextPage,
-    rows.length,
-    isFetchingNextPage,
-    rowVirtualizer.getVirtualItems(),
-  ]);
 
   if (isError) {
     throw error;
@@ -303,26 +331,18 @@ const BookingsPage: FC = () => {
             data-bg-fetching={isFetching && !isFetchingNextPage}
             className='w-full caption-bottom text-sm data-[bg-fetching=true]:opacity-70'
           >
-            <TableHeader className='grid sticky top-0 z-[1] bg-background'>
+            <TableHeader className='sticky top-0 z-[1] bg-background'>
               {table.getHeaderGroups().map(headerGroup => (
-                <TableRow
-                  key={headerGroup.id}
-                  style={{ display: 'flex', width: '100%' }}
-                >
+                <TableRow key={headerGroup.id} className='relative flex w-full'>
                   {headerGroup.headers.map(header => {
                     return (
                       <TableHead
                         key={header.id}
                         {...{
-                          className: 'select-none',
+                          className:
+                            'select-none flex items-center self-center relative h-fit',
                           colSpan: header.colSpan,
                           style: {
-                            display: 'flex',
-                            position: 'relative',
-                            alignItems: 'center',
-                            alignSelf: 'center',
-                            height: 'fit-content',
-                            padding: '0.2rem 1rem',
                             width: header.getSize(),
                           },
                         }}
@@ -371,59 +391,16 @@ const BookingsPage: FC = () => {
                 </TableRow>
               ))}
             </TableHeader>
-            <TableBody
-              style={{
-                display: 'grid',
-                height:
-                  rowVirtualizer.getTotalSize() > 0
-                    ? `${rowVirtualizer.getTotalSize()}px`
-                    : 'auto', //tells scrollbar how big the table is
-                position: 'relative',
-              }}
-            >
-              {rowVirtualizer.getVirtualItems().length !== 0 ? (
-                rowVirtualizer.getVirtualItems().map(virtualRow => {
-                  const row = rows[virtualRow.index];
-                  const isLoaderRow = virtualRow.index > rows.length - 1;
-
-                  if (isLoaderRow) {
-                    return (
-                      <TableRow
-                        key='loader-row'
-                        data-index={virtualRow.index}
-                        ref={node => rowVirtualizer.measureElement(node)}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          position: 'absolute',
-                          transform: `translateY(${virtualRow.start}px)`,
-                          width: '100%',
-                        }}
-                      >
-                        <TableCellSkeleton table={table} />
-                      </TableRow>
-                    );
-                  }
-
+            <TableBody>
+              {rows.length !== 0 ? (
+                rows.map((row, rowIndex) => {
                   return (
-                    <TableRow
-                      data-index={virtualRow.index} //needed for dynamic row height measurement
-                      key={row.id}
-                      ref={node => rowVirtualizer.measureElement(node)} //measure dynamic row height
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        position: 'absolute',
-                        transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-                        width: '100%',
-                      }}
-                    >
+                    <TableRow key={row.id}>
                       {row.getVisibleCells().map(cell => {
                         return (
                           <TableCell
                             key={cell.id}
                             style={{
-                              display: 'flex',
                               width: cell.column.getSize(),
                             }}
                           >
@@ -434,27 +411,35 @@ const BookingsPage: FC = () => {
                           </TableCell>
                         );
                       })}
+                      {rowIndex === rows.length - 1 && hasNextPage && (
+                        <Waypoint
+                          onEnter={() => {
+                            if (!isFetchingNextPage) {
+                              fetchNextPage();
+                            }
+                          }}
+                        />
+                      )}
                     </TableRow>
                   );
                 })
               ) : isPending ? (
-                <TableRow
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    width: '100%',
-                  }}
-                >
+                <TableRow>
                   <TableCellSkeleton table={table} />
                 </TableRow>
               ) : (
                 <TableRow>
                   <TableCell
                     colSpan={columns.length}
-                    className='flex justify-center h-12'
+                    className='flex w-full items-center justify-center h-12'
                   >
                     Нет данных.
                   </TableCell>
+                </TableRow>
+              )}
+              {isFetchingNextPage && (
+                <TableRow>
+                  <TableCellSkeleton table={table} />
                 </TableRow>
               )}
             </TableBody>

@@ -6,7 +6,7 @@ import {
 import { graphql } from '@/gql';
 import { client } from '@/graphql/graphql-request';
 
-export const useUpdateBookingStatus = (
+export const useUpdateBooking = (
   options: UseMutationOptions<
     UpdateBookingMutation,
     Error,

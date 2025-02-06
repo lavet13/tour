@@ -244,8 +244,16 @@ const resolvers: Resolvers = {
       return booking;
     },
     async updateBooking(_, args, ctx) {
-      const id = args.input.id;
-      const status = args.input.status;
+      const {
+        id,
+        status,
+        lastName,
+        firstName,
+        commentary,
+        seatsCount,
+        travelDate,
+        phoneNumber,
+      } = args.input;
 
       const isBookingExist = await ctx.prisma.booking.findUnique({
         where: {
@@ -260,6 +268,12 @@ const resolvers: Resolvers = {
       const updatedBooking = await ctx.prisma.booking.update({
         data: {
           status,
+          phoneNumber,
+          travelDate,
+          seatsCount,
+          commentary,
+          firstName,
+          lastName,
         },
         where: {
           id,

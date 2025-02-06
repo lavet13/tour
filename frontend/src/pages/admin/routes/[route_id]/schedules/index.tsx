@@ -314,16 +314,11 @@ function Schedules() {
                           <TableHead
                             key={header.id}
                             {...{
-                              className: 'select-none',
+                              className: 'select-none flex items-center self-center h-fit relative',
                               colSpan: header.colSpan,
                               style: {
-                                display: 'flex',
-                                position: 'relative',
-                                alignItems: 'center',
-                                alignSelf: 'center',
-                                height: 'fit-content',
-                                padding: '0.2rem 1rem',
                                 width: header.getSize(),
+                                padding: '0.2rem 1rem',
                               },
                             }}
                           >
@@ -393,11 +388,8 @@ function Schedules() {
                           key={row.id}
                           ref={node => rowVirtualizer.measureElement(node)} //measure dynamic row height
                           style={{
-                            display: 'flex',
-                            alignItems: 'center',
                             position: 'absolute',
                             transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-                            width: '100%',
                           }}
                         >
                           {row.getVisibleCells().map(cell => {
@@ -424,20 +416,14 @@ function Schedules() {
                       );
                     })
                   ) : scheduleIsPending ? (
-                    <TableRow
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        width: '100%',
-                      }}
-                    >
+                    <TableRow>
                       <TableCellSkeleton table={table} />
                     </TableRow>
                   ) : (
                     <TableRow>
                       <TableCell
                         colSpan={columns.length}
-                        className='flex justify-center h-12'
+                        className='flex w-full items-center justify-center h-12'
                       >
                         Нет данных.
                       </TableCell>

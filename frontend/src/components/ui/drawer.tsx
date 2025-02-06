@@ -72,7 +72,7 @@ const DrawerContent = React.forwardRef<
             <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
             <DrawerClose asChild>
               <Button
-                className='absolute top-3 right-3 w-6 h-6'
+                className='absolute bg-background top-3 right-3 w-6 h-6'
                 variant='ghost'
                 size='icon'
               >

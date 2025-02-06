@@ -42,16 +42,18 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
           )}
           disabled={disabled}
         >
-          <CalendarIcon className='size-4' />
+          <CalendarIcon className={cn('size-4', (from || to) && 'text-foreground')} />
           {value?.length ? (
             <span>
               {from ? (
                 to ? (
-                  <>
+                  <span className="text-foreground">
                     {format(from, 'dd/MM')} - {format(to, 'dd/MM')}
-                  </>
+                  </span>
                 ) : (
-                  format(from, 'dd/MM')
+                  <span className="text-foreground">
+                    {format(from, 'dd/MM')}
+                  </span>
                 )
               ) : (
                 <span className='whitespace-pre leading-3 text-center'>
