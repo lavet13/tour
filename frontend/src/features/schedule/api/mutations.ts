@@ -17,6 +17,12 @@ export const useUpdateSchedule = (
     mutation UpdateSchedule($input: UpdateScheduleInput!) {
       updateSchedule(input: $input) {
         id
+        isActive
+        dayOfWeek
+        startTime
+        endTime
+        createdAt
+        updatedAt
       }
     }
   `);

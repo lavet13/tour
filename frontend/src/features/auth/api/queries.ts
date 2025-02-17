@@ -47,7 +47,8 @@ export const useGetMe = (options?: InitialDataOptions<MeQuery>) => {
 
           if (errorCode === 'UNAUTHENTICATED') {
             queryClient.setQueryData(['Me'], null);
-            isAdminRoute && sessionStorage.setItem('redirectPath', location.pathname);
+            isAdminRoute &&
+              sessionStorage.setItem('redirectPath', location.pathname);
             import.meta.env.DEV && console.warn('Unauthenticated!');
           }
         }

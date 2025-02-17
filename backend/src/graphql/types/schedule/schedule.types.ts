@@ -12,8 +12,10 @@ export default gql`
 
   input UpdateScheduleInput {
     id: ID!
-    routeId: ID!
-    isActive: Boolean!
+    dayOfWeek: DaysOfWeek
+    startTime: Time
+    endTime: Time
+    isActive: Boolean
   }
 
   input ScheduleInput {
@@ -28,8 +30,8 @@ export default gql`
     id: ID!
     route: Route
     dayOfWeek: DaysOfWeek!
-    startTime: Date!
-    endTime: Date!
+    startTime: Time!
+    endTime: Time!
     isActive: Boolean!
     createdAt: Date!
     updatedAt: Date!

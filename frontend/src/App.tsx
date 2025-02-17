@@ -9,7 +9,7 @@ import suspenseFallbackMap from './suspense-fallback-map';
 import { lazy, Suspense, useEffect, useState } from 'react';
 
 import { SonnerSpinner } from '@/components/sonner-spinner';
-import { useGetMe } from './features/auth';
+import { useGetMe } from '@/features/auth/api/queries';
 
 type RouteComponent = (props: JSX.IntrinsicAttributes) => JSX.Element;
 type AppRoute = {

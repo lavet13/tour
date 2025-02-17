@@ -18,7 +18,8 @@ import { Input } from '@/components/ui/input';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { FormButton } from '@/components/form-button';
 import { SonnerSpinner } from '@/components/sonner-spinner';
-import { useGetMe, useLogin } from '@/features/auth';
+import { useLogin } from '@/features/auth/api/mutations';
+import { useGetMe } from '@/features/auth/api/queries';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 
 const FormSchema = z.object({

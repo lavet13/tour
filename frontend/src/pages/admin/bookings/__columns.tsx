@@ -7,7 +7,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { useUpdateBooking } from '@/features/booking';
+import { useUpdateBooking } from '@/features/booking/api/mutations';
 import { InfiniteBookingsQuery, BookingStatus } from '@/gql/graphql';
 import { parseIntSafe } from '@/helpers/parse-int-safe';
 import { cn } from '@/lib/utils';
@@ -16,6 +16,9 @@ import { client } from '@/react-query';
 import { Column, ColumnDef } from '@tanstack/react-table';
 import { format } from 'date-fns';
 import { ru as fnsRU } from 'date-fns/locale';
+import RPNInput, {
+  isPossiblePhoneNumber,
+} from 'react-phone-number-input/input';
 import ru from 'react-phone-number-input/locale/ru.json';
 import {
   ArrowDown,
@@ -33,7 +36,6 @@ import React, {
   ForwardRefExoticComponent,
   KeyboardEvent,
   RefAttributes,
-  useCallback,
   useEffect,
   useState,
 } from 'react';
@@ -41,10 +43,7 @@ import { toast } from 'sonner';
 import { ComboBox } from '@/components/combo-box-filter';
 import { DatePicker } from '@/components/date-picker-filter';
 import { AutosizeTextarea } from '@/components/autosize-textarea';
-import { ExpandableTextarea } from '@/components/expandable-textarea';
-import { useControllableState } from '@/hooks/use-controllable-state';
 import { NumberFormatValues, NumericFormat } from 'react-number-format';
-import { PhoneInput } from '@/components/phone-input';
 
 type Booking = Omit<
   InfiniteBookingsQuery['bookings']['edges'][number],
@@ -82,29 +81,29 @@ const statusIcons = {
   >
 >;
 
-const statusColumn = Object.entries(BookingStatus).map(([key, value]) => [
+const statusOptions = Object.entries(BookingStatus).map(([key, value]) => [
   statusTranslation[key as StatusColumns],
   value,
   statusIcons[key as StatusColumns],
 ]);
 
-interface CustomColumnMeta {
-  filterVariant?: 'text' | 'range' | 'select';
-}
+const allStatusOptions = [['Весь список', '', List], ...statusOptions] as Array<
+  [string, BookingStatus, typeof List]
+>;
 
-export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
+export const columns: ColumnDef<Booking, unknown>[] = [
   {
     id: 'lastName',
     accessorKey: 'lastName',
     header: ({ column }) => {
       return <Header title='Фамилия' column={column} />;
     },
-    minSize: 145,
+    minSize: 120,
     size: 150,
   },
   {
     size: 140,
-    minSize: 120,
+    minSize: 110,
     id: 'firstName',
     accessorKey: 'firstName',
     header: ({ column }) => {
@@ -112,8 +111,8 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     },
   },
   {
-    size: 150,
-    minSize: 140,
+    size: 160,
+    minSize: 120,
     id: 'phoneNumber',
     accessorKey: 'phoneNumber',
     header: ({ column }) => {
@@ -129,6 +128,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
       const initialValue = getValue() as string;
       const [isEditing, setIsEditing] = useState(false);
       const [value, setValue] = useState(initialValue);
+      const [previousValue, setPreviousValue] = useState(initialValue);
 
       useEffect(() => {
         setValue(initialValue);
@@ -136,19 +136,72 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
 
       const { mutate: updateBooking, isPending } = useUpdateBooking();
 
-      const handleUpdate = (newValue: string) => {
-        if (newValue !== initialValue) {
+      const handleUpdate = async (newValue: string) => {
+        if (newValue === initialValue) {
+          return setIsEditing(false);
+        }
+
+        if (newValue.length && !isPossiblePhoneNumber(newValue)) {
+          return toast.error('Проверьте правильность ввода телефона!');
+        }
+
+        setPreviousValue(initialValue);
+
+        const promise = new Promise((resolve, reject) => {
           updateBooking(
             { input: { id: originalId, [columnId]: newValue } },
             {
-              onSuccess: () => {
-                client.invalidateQueries({
+              onSuccess: async data => {
+                await client.invalidateQueries({
                   queryKey: ['InfiniteBookings'],
                 });
+                resolve(data);
+              },
+              onError(error) {
+                reject(error);
               },
             },
           );
-        }
+        });
+
+        toast.promise(promise, {
+          loading: `Обновление поля \`${columnTranslations[columnId as BookingColumns]}\`...`,
+          duration: 10000,
+          action: {
+            label: 'Отменить',
+            onClick() {
+              updateBooking(
+                { input: { id: originalId, [columnId]: previousValue } },
+                {
+                  async onSuccess() {
+                    await client.invalidateQueries({
+                      queryKey: ['InfiniteBookings'],
+                    });
+                    toast.success(
+                      `Отмена изменения поля \`${columnTranslations[columnId as BookingColumns]}\` выполненo успешно!`,
+                    );
+                  },
+                  onError() {
+                    toast.error(
+                      `Не удалось отменить изменения поля \`${columnTranslations[columnId as BookingColumns]}\`!`,
+                    );
+                  },
+                },
+              );
+            },
+          },
+          success() {
+            return `\`${columnTranslations[columnId as BookingColumns]}\` изменёно ${initialValue} → ${newValue}!`;
+          },
+          error(error) {
+            if (isGraphQLRequestError(error)) {
+              return error.response.errors[0].message;
+            } else if (error instanceof Error) {
+              return error.message;
+            }
+            return 'Произошла ошибка!';
+          },
+        });
         setIsEditing(false);
       };
 
@@ -161,16 +214,25 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
         }
       };
 
+      const onBlur = () => {
+        if (value !== undefined) {
+          handleUpdate(value);
+        }
+      };
+
       if (isEditing) {
         return (
-          <PhoneInput
+          <RPNInput
+            className='p-1 px-2 h-8'
+            inputComponent={Input}
             labels={ru}
-            className='p-1'
+            placeholder='Номер телефона'
             countryCallingCodeEditable={false}
             international
             value={value}
-            onChange={setValue}
+            onChange={value => setValue(value || '')}
             onKeyDown={onKeyDown}
+            onBlur={onBlur}
             autoFocus
           />
         );
@@ -206,7 +268,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
   },
   {
     size: 160,
-    minSize: 160,
+    minSize: 140,
     id: 'seatsCount',
     accessorKey: 'seatsCount',
     header: ({ column }) => {
@@ -222,6 +284,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
       const initialValue = getValue() as number;
       const [isEditing, setIsEditing] = useState(false);
       const [value, setValue] = useState<number | undefined>(initialValue);
+      const [previousValue, setPreviousValue] = useState(initialValue);
 
       useEffect(() => {
         setValue(initialValue);
@@ -235,39 +298,87 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
 
       const handleUpdate = (newValue: number) => {
         if (newValue !== initialValue) {
-          updateBooking(
-            { input: { id: originalId, [columnId]: newValue } },
-            {
-              onSuccess: () => {
-                client.invalidateQueries({
-                  queryKey: ['InfiniteBookings'],
-                });
+          setPreviousValue(initialValue);
+          const promise = new Promise((resolve, reject) => {
+            updateBooking(
+              { input: { id: originalId, [columnId]: newValue } },
+              {
+                onSuccess: async data => {
+                  await client.invalidateQueries({
+                    queryKey: ['InfiniteBookings'],
+                  });
+                  resolve(data);
+                },
+                onError(error) {
+                  reject(error);
+                },
+              },
+            );
+          });
+
+          toast.promise(promise, {
+            loading: `Обновление поля \`${columnTranslations[columnId as BookingColumns]}\`...`,
+            duration: 10000,
+            action: {
+              label: 'Отменить',
+              onClick() {
+                updateBooking(
+                  { input: { id: originalId, [columnId]: previousValue } },
+                  {
+                    async onSuccess() {
+                      await client.invalidateQueries({
+                        queryKey: ['InfiniteBookings'],
+                      });
+                      toast.success(
+                        `Отмена изменения поля \`${columnTranslations[columnId as BookingColumns]}\` выполненo успешно!`,
+                      );
+                    },
+                    onError() {
+                      toast.error(
+                        `Не удалось отменить изменения поля \`${columnTranslations[columnId as BookingColumns]}\`!`,
+                      );
+                    },
+                  },
+                );
               },
             },
-          );
+            success() {
+              return `\`${columnTranslations[columnId as BookingColumns]}\` изменёно ${initialValue} → ${newValue}!`;
+            },
+            error(error) {
+              if (isGraphQLRequestError(error)) {
+                return error.response.errors[0].message;
+              } else if (error instanceof Error) {
+                return error.message;
+              }
+              return 'Произошла ошибка!';
+            },
+          });
         }
         setIsEditing(false);
       };
 
       const onBlur = () => {
-        if (value !== undefined) {
-          handleUpdate(value);
+        if (value === undefined) {
+          return toast.error('Укажите кол-во мест!');
         }
+        handleUpdate(value);
       };
 
       const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
           e.preventDefault();
-          if (value !== undefined) {
-            handleUpdate(value);
+          if (value === undefined) {
+            return toast.error('Укажите кол-во мест!');
           }
+          handleUpdate(value);
         }
       };
 
       if (isEditing) {
         return (
           <NumericFormat
-            type="tel"
+            type='tel'
             customInput={Input}
             className='p-1 px-2 h-8'
             value={value}
@@ -277,6 +388,10 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
             decimalScale={0}
             onKeyDown={onKeyDown}
             autoFocus
+            isAllowed={values => {
+              const floatValue = values.floatValue;
+              return typeof floatValue === 'undefined' || floatValue > 0;
+            }}
           />
         );
       }
@@ -317,21 +432,69 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     }) => {
       const initialValue = getValue() as string;
       const [isEditing, setIsEditing] = useState(false);
+      const [previousValue, setPreviousValue] = useState(initialValue);
 
       const { mutate: updateBooking, isPending } = useUpdateBooking();
 
       const handleUpdate = (newValue: string) => {
         if (newValue !== initialValue) {
-          updateBooking(
-            { input: { id: originalId, [columnId]: newValue } },
-            {
-              onSuccess: () => {
-                client.invalidateQueries({
-                  queryKey: ['InfiniteBookings'],
-                });
+          setPreviousValue(initialValue);
+
+          const promise = new Promise((resolve, reject) => {
+            updateBooking(
+              { input: { id: originalId, [columnId]: newValue } },
+              {
+                onSuccess: async data => {
+                  await client.invalidateQueries({
+                    queryKey: ['InfiniteBookings'],
+                  });
+                  resolve(data);
+                },
+                onError(error) {
+                  reject(error);
+                },
+              },
+            );
+          });
+
+          toast.promise(promise, {
+            loading: `Обновление поля \`${columnTranslations[columnId as BookingColumns]}\`...`,
+            duration: 10000,
+            action: {
+              label: 'Отменить',
+              onClick() {
+                updateBooking(
+                  { input: { id: originalId, [columnId]: previousValue } },
+                  {
+                    async onSuccess() {
+                      await client.invalidateQueries({
+                        queryKey: ['InfiniteBookings'],
+                      });
+                      toast.success(
+                        `Отмена изменения поля \`${columnTranslations[columnId as BookingColumns]}\` выполненo успешно!`,
+                      );
+                    },
+                    onError() {
+                      toast.error(
+                        `Не удалось отменить изменения поля \`${columnTranslations[columnId as BookingColumns]}\`!`,
+                      );
+                    },
+                  },
+                );
               },
             },
-          );
+            success() {
+              return `\`${columnTranslations[columnId as BookingColumns]}\` изменёно ${initialValue} → ${newValue}!`;
+            },
+            error(error) {
+              if (isGraphQLRequestError(error)) {
+                return error.response.errors[0].message;
+              } else if (error instanceof Error) {
+                return error.message;
+              }
+              return 'Произошла ошибка!';
+            },
+          });
         }
         setIsEditing(false);
       };
@@ -405,7 +568,7 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
         <ComboBox
           isLoading={isPending}
           size={'lg'}
-          items={statusColumn}
+          items={statusOptions}
           value={props.getValue() ?? ''}
           onValueChange={async value => {
             setPreviousStatus(status);
@@ -469,12 +632,13 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
       return <Header title='Статус' column={column} />;
     },
     meta: {
-      filterVariant: 'select',
+      filterVariant: 'combobox',
+      items: allStatusOptions,
     },
   },
   {
-    minSize: 160,
-    size: 160,
+    minSize: 155,
+    size: 155,
     enableGlobalFilter: false,
     id: 'travelDate',
     accessorKey: 'travelDate',
@@ -505,8 +669,8 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     },
   },
   {
-    minSize: 160,
-    size: 160,
+    minSize: 140,
+    size: 140,
     enableGlobalFilter: false,
     id: 'createdAt',
     accessorKey: 'createdAt',
@@ -536,8 +700,8 @@ export const columns: ColumnDef<Booking, CustomColumnMeta>[] = [
     },
   },
   {
-    minSize: 160,
-    size: 160,
+    minSize: 140,
+    size: 140,
     enableGlobalFilter: false,
     id: 'updatedAt',
     accessorKey: 'updatedAt',
@@ -658,12 +822,12 @@ interface FilterProps<TData> {
 
 function Filter<TData>({ column }: FilterProps<TData>) {
   const columnFilterValue = column.getFilterValue();
-  const { filterVariant } = column.columnDef.meta ?? {};
+  const { filterVariant, items } = column.columnDef.meta ?? {};
 
-  return filterVariant === 'select' ? (
+  return filterVariant === 'combobox' ? (
     <ComboBox
       // [label, value, icon]
-      items={[['Весь список', '', List], ...statusColumn]}
+      items={items ?? []}
       value={columnFilterValue?.toString() ?? ''}
       onValueChange={value => {
         column.setFilterValue(value);

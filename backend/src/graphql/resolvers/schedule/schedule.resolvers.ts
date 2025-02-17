@@ -72,15 +72,17 @@ const resolvers: Resolvers = {
       return schedule;
     },
     async updateSchedule(_, args, ctx) {
-      const { isActive, routeId, id } = args.input;
+      const { isActive, id, endTime, startTime, dayOfWeek } = args.input;
 
       const schedule = await ctx.prisma.schedule.update({
         where: {
           id,
-          routeId,
         },
         data: {
           isActive,
+          dayOfWeek,
+          startTime,
+          endTime,
         },
       });
 

@@ -24,7 +24,9 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from '@/components/ui/sidebar';
-import { useGetMe, useLogout } from '@/features/auth';
+import { useLogout } from '@/features/auth/api/mutations';
+import { useGetMe } from '@/features/auth/api/queries';
+
 import { Skeleton } from './ui/skeleton';
 import { Link, useNavigate } from 'react-router-dom';
 

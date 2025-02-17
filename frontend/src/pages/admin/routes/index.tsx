@@ -8,14 +8,14 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { useSidebar } from '@/components/ui/sidebar';
-import { useInfiniteRoutes } from '@/features/routes';
+import { useInfiniteRoutes } from '@/features/routes/api/queries';
 import { InfiniteRoutesQuery } from '@/gql/graphql';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import { cn } from '@/lib/utils';
 import { useAtom } from 'jotai';
 import {
-    ArrowLeft,
+  ArrowLeft,
   Calendar,
   CalendarClock,
   Edit,
@@ -45,8 +45,8 @@ import {
 import { Input } from '@/components/ui/input';
 import { Waypoint } from 'react-waypoint';
 import { Skeleton } from '@/components/ui/skeleton';
-import { RouteForm } from '@/components/route-form';
-import { useDrawerState } from '@/hooks/use-drawer-state';
+import { RouteForm } from '@/features/routes/components';
+import { useDrawerState } from '@/features/routes/hooks';
 import { Separator } from '@/components/ui/separator';
 
 type Route = InfiniteRoutesQuery['routes']['edges'][number];

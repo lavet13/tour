@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { useSearchParams } from 'react-router-dom';
-import { useArrivalCities } from '@/features/city/use-arrival-cities';
+import { useArrivalCities, useDepartureCities } from '@/features/city/api/queries';
 import {
   Popover,
   PopoverContent,
@@ -39,17 +39,17 @@ import {
 } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
-import { useDepartureCities } from '@/features/city/use-departure-cities';
 import { useControllableState } from '@/hooks/use-controllable-state';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ru as fnsRU } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
-import { useCreateBooking } from '@/features/booking/use-create-booking';
+import { useCreateBooking } from '@/features/booking/api/mutations';
 import { BookingInput } from '@/gql/graphql';
 import { AutosizeTextarea } from '@/components/autosize-textarea';
 import { ComboBox } from '@/components/combo-box';
+import { NumericFormat } from 'react-number-format';
 
 const FormSchema = z.object({
   firstName: z
@@ -63,7 +63,7 @@ const FormSchema = z.object({
   phoneNumber: z
     .string({ required_error: 'Телефон обязателен к заполнению!' })
     .refine(
-      value => isPossiblePhoneNumber(value),
+      isPossiblePhoneNumber,
       'Проверьте правильность ввода телефона!',
     ),
   seatsCount: z
@@ -580,10 +580,11 @@ interface CounterProps {
   name: string;
   value?: any;
   onValueChange?: (value: any) => void;
+  onBlur?: () => void;
   disabled?: boolean;
 }
 
-const Counter = forwardRef<HTMLButtonElement, CounterProps>(
+const Counter = forwardRef<HTMLInputElement, CounterProps>(
   ({ name, value: valueProp, onValueChange }, ref) => {
     const [value, setValue] = useControllableState({
       prop: valueProp,
@@ -594,57 +595,70 @@ const Counter = forwardRef<HTMLButtonElement, CounterProps>(
       fieldState: { error },
     } = useController({ name });
 
+    const isAllowed = (values: { floatValue?: number }) => {
+      const { floatValue } = values;
+
+      return floatValue === undefined || (floatValue >= 1 && floatValue <= 20);
+    };
+
     return (
-      <div
-        className={cn(
-          'flex items-center justify-center space-x-2',
-          value === 0 && 'text-muted-foreground',
-        )}
-      >
-        <Button
-          variant='outline'
-          size='icon'
-          className={cn('h-8 w-8 shrink-0 rounded-full')}
-          type='button'
-          onClick={() => setValue(value - 1)}
-          disabled={value <= 0}
+      <FormControl>
+        <div
+          className={cn(
+            'flex items-center justify-center space-x-2',
+            value === 0 && 'text-muted-foreground',
+            'focus:outline-none focus:ring-1 focus:ring-ring',
+          )}
         >
-          <Minus />
-          <span className='sr-only'>Уменьшить</span>
-        </Button>
-        <div className='flex-1 text-center'>
-          <div
-            className={cn(
-              'text-4xl font-bold tracking-tighter',
-              error && 'text-destructive',
-            )}
-          >
-            {value}
-          </div>
-          <div
-            className={cn(
-              'text-[0.70rem] uppercase text-muted-foreground',
-              error && 'text-destructive',
-            )}
-          >
-            Кол-во мест
-          </div>
-        </div>
-        <FormControl>
           <Button
-            ref={ref}
+            variant='outline'
+            size='icon'
+            className={cn('h-8 w-8 shrink-0 rounded-full')}
+            type='button'
+            onClick={() => setValue(value - 1)}
+            disabled={value <= 0}
+            tabIndex={-1}
+          >
+            <Minus />
+            <span className='sr-only'>Уменьшить</span>
+          </Button>
+          <div className='flex-1 text-center'>
+            <NumericFormat
+              getInputRef={ref}
+              type='tel'
+              value={value || 0}
+              allowNegative={false}
+              onValueChange={({ floatValue }) => setValue(floatValue || 0)}
+              isAllowed={isAllowed}
+              className={cn(
+                'focus:outline-none focus:ring-1 focus:ring-ring',
+                'text-4xl font-bold tracking-tighter text-center bg-background',
+                error && 'text-destructive',
+              )}
+            />
+            <div
+              className={cn(
+                'text-[0.70rem] uppercase text-muted-foreground',
+                error && 'text-destructive',
+              )}
+            >
+              Кол-во мест
+            </div>
+          </div>
+          <Button
             variant='outline'
             size='icon'
             className={cn('h-8 w-8 shrink-0 rounded-full')}
             type='button'
             onClick={() => setValue(value + 1)}
             disabled={value >= 20}
+            tabIndex={-1}
           >
             <Plus />
             <span className='sr-only'>Увеличить</span>
           </Button>
-        </FormControl>
-      </div>
+        </div>
+      </FormControl>
     );
   },
 );

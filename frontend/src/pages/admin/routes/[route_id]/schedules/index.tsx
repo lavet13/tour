@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { useSidebar } from '@/components/ui/sidebar';
-import { useSchedulesByRoute } from '@/features/schedule/use-schedules-by-route';
+import { useSchedulesByRoute } from '@/features/schedule/api/queries';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { ArrowLeft, CalendarPlus } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -33,7 +33,6 @@ import {
 import { GetSchedulesByRouteQuery } from '@/gql/graphql';
 import { rankItem } from '@tanstack/match-sorter-utils';
 import { columns } from '@/pages/admin/routes/[route_id]/schedules/__columns';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   Table,
   TableBody,
@@ -50,7 +49,7 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Separator } from '@/components/ui/separator';
-import { useDrawerState } from '@/hooks/use-drawer-state';
+import { DataTablePagination } from '@/components/data-table-pagination';
 
 export interface ScheduleParams {
   route_id: string;
@@ -195,7 +194,7 @@ function Schedules() {
     getSortedRowModel: getSortedRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     onPaginationChange: setPagination,
-    getFilteredRowModel: getFilteredRowModel(), // client side filtering
+    getFilteredRowModel: getFilteredRowModel(),
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     state: {
@@ -212,16 +211,6 @@ function Schedules() {
   const { rows } = table.getRowModel();
 
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
-  const rowVirtualizer = useVirtualizer({
-    count: rows.length,
-    getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 73, // measure dynamic row height, except in firefox because it measures table border height incorrectly
-    measureElement:
-      typeof window !== 'undefined' &&
-      navigator.userAgent.indexOf('Firefox') === -1
-        ? element => element?.getBoundingClientRect().height
-        : undefined,
-  });
 
   // Scroll to top when sorting changes
   useEffect(() => {
@@ -251,15 +240,6 @@ function Schedules() {
           </div>
         )}
 
-        {/* Background Updates */}
-        {scheduleIsFetching && scheduleIsSuccess && (
-          <div className='w-full sm:max-w-screen-sm mx-auto'>
-            <div className='flex items-center justify-center mb-6 px-4 sm:px-5'>
-              <SonnerSpinner className='bg-foreground' />
-            </div>
-          </div>
-        )}
-
         {!scheduleInitialLoading && (
           <>
             <div className='flex flex-col'>
@@ -267,7 +247,10 @@ function Schedules() {
                 <Tooltip delayDuration={700}>
                   <TooltipTrigger asChild>
                     <Button
-                      className={cn('h-10 w-10 min-w-10', isMobile && 'h-9 w-9 min-w-9')}
+                      className={cn(
+                        'h-10 w-10 min-w-10',
+                        isMobile && 'h-9 w-9 min-w-9',
+                      )}
                       variant='outline'
                       size='icon'
                       onClick={() => navigate('../routes')}
@@ -283,7 +266,11 @@ function Schedules() {
                     Вернуться назад
                   </TooltipContent>
                 </Tooltip>
-                <Button size={isMobile ? 'sm' : 'default'} onClick={handleAddSchedule} className='w-full sm:w-auto'>
+                <Button
+                  size={isMobile ? 'sm' : 'default'}
+                  onClick={handleAddSchedule}
+                  className='w-full sm:w-auto'
+                >
                   <CalendarPlus />
                   Добавить расписание
                 </Button>
@@ -300,25 +287,28 @@ function Schedules() {
             >
               {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
               <Table
-                data-bg-fetching={scheduleIsFetching}
+                data-bg-fetching={
+                  scheduleIsFetching ||
+                  (scheduleIsFetching && scheduleIsSuccess)
+                }
                 className='w-full caption-bottom text-sm data-[bg-fetching=true]:opacity-70'
               >
-                <TableHeader className='grid sticky top-0 z-[1] bg-background'>
+                <TableHeader className='sticky top-0 z-[1] bg-background'>
                   {table.getHeaderGroups().map(headerGroup => (
                     <TableRow
                       key={headerGroup.id}
-                      style={{ display: 'flex', width: '100%' }}
+                      className='relative flex w-full'
                     >
                       {headerGroup.headers.map(header => {
                         return (
                           <TableHead
                             key={header.id}
                             {...{
-                              className: 'select-none flex items-center self-center h-fit relative',
+                              className:
+                                'select-none flex items-center self-center h-fit relative',
                               colSpan: header.colSpan,
                               style: {
                                 width: header.getSize(),
-                                padding: '0.2rem 1rem',
                               },
                             }}
                           >
@@ -368,41 +358,21 @@ function Schedules() {
                     </TableRow>
                   ))}
                 </TableHeader>
-                <TableBody
-                  style={{
-                    display: 'grid',
-                    height:
-                      rowVirtualizer.getTotalSize() > 0
-                        ? `${rowVirtualizer.getTotalSize()}px`
-                        : 'auto', //tells scrollbar how big the table is
-                    position: 'relative',
-                  }}
-                >
-                  {rowVirtualizer.getVirtualItems().length !== 0 ? (
-                    rowVirtualizer.getVirtualItems().map(virtualRow => {
-                      const row = rows[virtualRow.index];
-
+                <TableBody>
+                  {rows.length !== 0 ? (
+                    rows.map(row => {
                       return (
-                        <TableRow
-                          data-index={virtualRow.index} //needed for dynamic row height measurement
-                          key={row.id}
-                          ref={node => rowVirtualizer.measureElement(node)} //measure dynamic row height
-                          style={{
-                            position: 'absolute',
-                            transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-                          }}
-                        >
+                        <TableRow key={row.id}>
                           {row.getVisibleCells().map(cell => {
                             return (
                               <TableCell
                                 key={cell.id}
                                 style={{
-                                  display: 'flex',
                                   width: cell.column.getSize(),
                                 }}
                                 className={cn(
                                   cell.column.id === 'isActive' &&
-                                    'justify-center',
+                                    'flex justify-center',
                                 )}
                               >
                                 {flexRender(
@@ -435,7 +405,6 @@ function Schedules() {
             {/* <DataTablePagination table={table} /> */}
 
             <div className='flex flex-col gap-4 items-start justify-between px-2 py-4'>
-              {/* Selected rows info */}
               <div className='text-sm text-muted-foreground order-last sm:order-first w-full sm:w-auto text-center sm:text-left'>
                 {table.getFilteredSelectedRowModel().rows.length} из{' '}
                 {table.getFilteredRowModel().rows.length} строк(и) выбрано.

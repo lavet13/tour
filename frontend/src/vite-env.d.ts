@@ -13,10 +13,12 @@ declare module 'tailwind-config' {
 }
 
 import '@tanstack/react-table'; //or vue, svelte, solid, qwik, etc.
+import { List } from 'lucide-react';
 
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
-    filterVariant?: 'text' | 'select' | 'dateRange' | 'range';
+    filterVariant?: 'text' | 'select' | 'combobox' | 'dateRange' | 'range';
+    items?: Array<any>;
   }
   interface FilterFns<TData extends RowData> {
     fuzzy: FilterFnOption<TData>;

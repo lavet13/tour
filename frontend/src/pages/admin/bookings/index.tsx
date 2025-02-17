@@ -1,5 +1,11 @@
-import { useInfiniteBookings } from '@/features/booking/use-infinite-bookings';
-import React, { FC, KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  FC,
+  KeyboardEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import {
   flexRender,
   getCoreRowModel,
@@ -48,6 +54,7 @@ import {
   ArrowUpDown,
   Check,
   ChevronDown,
+  Edit,
   ListCollapse,
   ListFilter,
   Loader2,
@@ -74,8 +81,11 @@ import {
 } from '@/components/ui/tooltip';
 import { useNavigate } from 'react-router-dom';
 import { Waypoint } from 'react-waypoint';
-import { useUpdateBooking } from '@/features/booking';
+import { useUpdateBooking } from '@/features/booking/api/mutations';
+import { useInfiniteBookings } from '@/features/booking/api/queries';
 import { AutosizeTextarea } from '@/components/autosize-textarea';
+import { toast } from 'sonner';
+import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
 
@@ -120,20 +130,66 @@ const BookingsPage: FC = () => {
     }) => {
       const initialValue = getValue() as string;
       const [isEditing, setIsEditing] = useState(false);
+      const [previousValue, setPreviousValue] = useState(initialValue);
 
       const { mutate: updateBooking, isPending: bookingIsPending } =
         useUpdateBooking();
 
       const handleUpdate = (newValue: string) => {
         if (newValue !== initialValue) {
-          updateBooking(
-            { input: { id: originalId, [columnId]: newValue } },
-            {
-              onSuccess: () => {
-                refetchBookings();
+          setPreviousValue(initialValue);
+
+          const promise = new Promise((resolve, reject) => {
+            updateBooking(
+              { input: { id: originalId, [columnId]: newValue } },
+              {
+                onSuccess: async data => {
+                  await refetchBookings();
+                  resolve(data);
+                },
+                onError(error) {
+                  reject(error);
+                },
+              },
+            );
+          });
+
+          toast.promise(promise, {
+            loading: `Обновление поля \`${columnTranslations[columnId as BookingColumns]}\`...`,
+            duration: 10000,
+            action: {
+              label: 'Отменить',
+              onClick() {
+                updateBooking(
+                  { input: { id: originalId, [columnId]: previousValue } },
+                  {
+                    async onSuccess() {
+                      refetchBookings();
+                      toast.success(
+                        `Отмена изменения поля \`${columnTranslations[columnId as BookingColumns]}\` выполненo успешно!`,
+                      );
+                    },
+                    onError() {
+                      toast.error(
+                        `Не удалось отменить изменения поля \`${columnTranslations[columnId as BookingColumns]}\`!`,
+                      );
+                    },
+                  },
+                );
               },
             },
-          );
+            success() {
+              return `\`${columnTranslations[columnId as BookingColumns]}\` изменёно ${initialValue} → ${newValue}!`;
+            },
+            error(error) {
+              if (isGraphQLRequestError(error)) {
+                return error.response.errors[0].message;
+              } else if (error instanceof Error) {
+                return error.message;
+              }
+              return 'Произошла ошибка!';
+            },
+          });
         }
         setIsEditing(false);
       };
@@ -164,15 +220,30 @@ const BookingsPage: FC = () => {
       }
 
       return (
-        <div
-          className='flex items-center overflow-hidden cursor-text gap-1'
-          onClick={() => setIsEditing(true)}
-        >
-          {bookingIsPending && (
-            <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+        <>
+          {initialValue.length ? (
+            <div
+              className='flex items-center overflow-hidden cursor-text gap-1'
+              onClick={() => setIsEditing(true)}
+            >
+              {bookingIsPending && (
+                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+              )}
+              <span className='truncate'>{initialValue}</span>
+            </div>
+          ) : (
+            <Button
+              className='size-8'
+              variant='outline'
+              onClick={() => setIsEditing(true)}
+            >
+              {!bookingIsPending && <Edit />}
+              {bookingIsPending && (
+                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+              )}
+            </Button>
           )}
-          <span className='truncate'>{initialValue}</span>
-        </div>
+        </>
       );
     },
   };

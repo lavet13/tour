@@ -39,9 +39,9 @@ import {
   NavigationMenuViewport as RadixNavigationMenuViewport,
   NavigationMenuTrigger as RadixNavigationMenuTrigger,
 } from '@radix-ui/react-navigation-menu';
-import { useRoutesByRegion } from '@/features/routes/use-routes-by-region';
+import { useRoutesByRegion } from '@/features/routes/api/queries';
 import { GetRoutesByRegionQuery } from '@/gql/graphql';
-import { useRegionByName } from '@/features/region/use-region-by-name';
+import { useRegionByName } from '@/features/region/api/queries';
 import { navigationMenuStateAtom } from '@/lib/atoms/navigation-menu';
 import { useAtom } from 'jotai';
 import {
@@ -49,7 +49,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useGetMe, useLogout } from '@/features/auth';
+import { useLogout } from '@/features/auth/api/mutations';
+import { useGetMe } from '@/features/auth/api/queries';
 import { Input } from '@/components/ui/input';
 
 type NavLinkProps = Omit<RouterLinkProps, 'className'> & {

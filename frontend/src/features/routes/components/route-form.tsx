@@ -1,4 +1,4 @@
-import { DrawerMode } from '@/hooks/use-drawer-state';
+import { DrawerMode } from '@/features/routes/hooks/use-drawer-state';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import {
@@ -10,112 +10,32 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { z } from 'zod';
 import { ComboBox } from '@/components/combo-box';
-import { useCities } from '@/features/city/use-cities';
+import { useCities } from '@/features/city/api/queries';
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { Edit, MapPinPlus } from 'lucide-react';
-import { useRegions } from '@/features/region/use-regions';
+import { useRegions } from '@/features/region/api/queries';
 import { DatePicker } from '@/components/date-picker';
 import { Switch } from '@/components/ui/switch';
-import { useRouteById } from '@/features/routes/use-route-by-id';
-import { Skeleton } from './ui/skeleton';
-import { useCreateRoute } from '@/features/routes/use-create-route';
+import { useRouteById } from '@/features/routes/api/queries';
+import {
+  useCreateRoute,
+  useUpdateRoute,
+} from '@/features/routes/api/mutations';
 import { toast } from 'sonner';
 import { CreateRouteInput } from '@/gql/graphql';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
-import { useUpdateRoute } from '@/features/routes/use-update-route';
 import { client } from '@/react-query';
 import { NumericFormat } from 'react-number-format';
 import { Input } from '@/components/ui/input';
-
-const FormSchema = z
-  .object({
-    arrivalCityId: z
-      .string({
-        invalid_type_error: 'Выберите город прибытия!',
-      })
-      .cuid2({ message: 'Выберите город прибытия!' }),
-    departureCityId: z
-      .string({
-        invalid_type_error: 'Выберите город отправления!',
-      })
-      .cuid2({ message: 'Выберите город отправления!' }),
-    regionId: z
-      .string({
-        invalid_type_error: 'Выберите регион!',
-      })
-      .cuid2({ message: 'Выберите регион!' })
-      .nullish(),
-    departureDate: z
-      .date({ invalid_type_error: 'Выберите корректную дату!' })
-      .nullish()
-      .refine(
-        date => {
-          if (date === null || date === undefined) {
-            return true;
-          }
-
-          // Ensure date is a valid Date object
-          if (!(date instanceof Date) || isNaN(date.getTime())) {
-            return false;
-          }
-
-          // Reset time to start of the day for consistent comparison
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          date.setHours(0, 0, 0, 0);
-
-          // Validate that the date is today or in the future
-          return date >= today;
-        },
-        { message: 'Выберите сегодняшнюю или будущую дату!' },
-      ),
-    price: z
-      .number({
-        message: 'Введите цену!',
-      })
-      .max(5_000, 'Цена слишком высокая!'),
-    isActive: z.boolean().default(false),
-  })
-  .superRefine((data, ctx) => {
-    if (
-      data.departureCityId &&
-      data.arrivalCityId &&
-      data.departureCityId === data.arrivalCityId
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Город отправления и прибытия не могут быть одинаковыми!',
-        path: ['departureCityId'],
-      });
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Город отправления и прибытия не могут быть одинаковыми!',
-        path: ['arrivalCityId'],
-      });
-    }
-    if (!data.price) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Цена обязательна!',
-        path: ['price'],
-      });
-    }
-  });
-
-type DefaultValues = z.infer<typeof FormSchema>;
-
-const defaultValues: DefaultValues = {
-  isActive: false,
-  departureDate: null,
-  arrivalCityId: '',
-  departureCityId: '',
-  regionId: null,
-  price: 0,
-};
+import {
+  RouteFormSkeleton,
+  RouteFormSchema,
+  RouteFormValues,
+  defaultValues,
+} from '@/features/routes/components';
 
 interface RouteFormProps {
   drawerMode: DrawerMode;
@@ -151,8 +71,8 @@ export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
   const routeInitialLoading =
     routeFetchStatus === 'fetching' && routeStatus === 'pending';
 
-  const form = useForm<DefaultValues>({
-    resolver: zodResolver(FormSchema),
+  const form = useForm<RouteFormValues>({
+    resolver: zodResolver(RouteFormSchema),
     defaultValues,
     values,
     mode: 'onChange',
@@ -206,7 +126,7 @@ export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
   //   return cities.filter(city => city.id !== selectedDepartureId);
   // }, [cities, form.watch('departureCityId')]);
 
-  const onSubmit: SubmitHandler<DefaultValues> = async data => {
+  const onSubmit: SubmitHandler<RouteFormValues> = async data => {
     try {
       if (routeData?.routeById) {
         // editing existing route
@@ -439,51 +359,5 @@ export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
         </Form>
       )}
     </>
-  );
-}
-
-function RouteFormSkeleton() {
-  return (
-    <div className='w-full sm:max-w-screen-sm space-y-6 mx-auto pb-3'>
-      <div className='sm:grid sm:grid-cols-[repeat(auto-fill,_minmax(14rem,_1fr))] space-y-3 sm:space-y-0 sm:gap-y-4 sm:gap-x-2 px-4 sm:px-5'>
-        {/* Departure City */}
-        <div className='space-y-2'>
-          <Skeleton className='h-4 w-[100px]' />
-          <Skeleton className='h-10 w-full' />
-        </div>
-
-        {/* Arrival City */}
-        <div className='space-y-2'>
-          <Skeleton className='h-4 w-[100px]' />
-          <Skeleton className='h-10 w-full' />
-        </div>
-
-        {/* Region */}
-        <div className='space-y-2'>
-          <Skeleton className='h-4 w-[100px]' />
-          <Skeleton className='h-10 w-full' />
-        </div>
-
-        {/* Departure Date */}
-        <div className='space-y-2'>
-          <Skeleton className='h-4 w-[100px]' />
-          <Skeleton className='h-10 w-full' />
-        </div>
-
-        {/* Is Active Switch */}
-        <div className='col-span-2 flex items-center justify-between rounded-lg border shadow-sm p-4'>
-          <div className='space-y-2'>
-            <Skeleton className='h-4 w-[150px]' />
-            <Skeleton className='h-4 w-[200px]' />
-          </div>
-          <Skeleton className='h-6 w-11' />
-        </div>
-
-        {/* Submit Button */}
-        <Button disabled className='w-full col-span-2'>
-          <Skeleton className='h-5 w-[200px]' />
-        </Button>
-      </div>
-    </div>
   );
 }
