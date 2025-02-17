@@ -1,7 +1,5 @@
 import { Button } from '@/components/ui/button';
-import { useSidebar } from '@/components/ui/sidebar';
 import { useSchedulesByRoute } from '@/features/schedule/api/queries';
-import { useMediaQuery } from '@/hooks/use-media-query';
 import { ArrowLeft, CalendarPlus } from 'lucide-react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
@@ -12,8 +10,6 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { cn } from '@/lib/utils';
-import { useAtom } from 'jotai';
-import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import {
   ColumnFiltersState,
   ColumnResizeMode,
@@ -50,6 +46,7 @@ import {
 } from '@/components/ui/drawer';
 import { Separator } from '@/components/ui/separator';
 import { DataTablePagination } from '@/components/data-table-pagination';
+import { useViewportDimensions } from '@/hooks/use-viewport-dimentions';
 
 export interface ScheduleParams {
   route_id: string;
@@ -71,29 +68,10 @@ function Schedules() {
     pageSize: 10,
   });
 
-  const MOBILE_BREAKPOINT = 450;
+  const MOBILE_BREAKPOINT = 400;
+  const { isMobile, sidebarExpanded, contentWidth, height } =
+    useViewportDimensions(MOBILE_BREAKPOINT);
   const navigate = useNavigate();
-  const [{ md }] = useAtom(breakpointsAtom);
-  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
-  const isTablet = useMediaQuery(`(min-width: ${md}px)`);
-  const { state } = useSidebar();
-  const [innerWidth, setInnerWidth] = useState(0);
-  const [innerHeight, setInnerHeight] = useState(0);
-
-  useEffect(() => {
-    const updateViewportSize = () => {
-      setInnerWidth(window.innerWidth);
-      setInnerHeight(window.innerHeight);
-    };
-
-    updateViewportSize();
-
-    window.addEventListener('resize', updateViewportSize);
-
-    return () => {
-      window.removeEventListener('resize', updateViewportSize);
-    };
-  }, []);
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -228,10 +206,10 @@ function Schedules() {
       <div
         className={cn(
           'relative px-1 space-y-2 flex-1 pt-2',
-          state === 'collapsed' && 'mx-0',
+          !sidebarExpanded && 'mx-0',
         )}
         style={{
-          maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
+          maxWidth: `calc(${contentWidth}px)`,
         }}
       >
         {scheduleInitialLoading && (
@@ -260,7 +238,7 @@ function Schedules() {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent
-                    align={state === 'collapsed' ? 'start' : 'center'}
+                    align={!sidebarExpanded ? 'start' : 'center'}
                     side='bottom'
                   >
                     Вернуться назад
@@ -282,7 +260,7 @@ function Schedules() {
               ref={tableContainerRef}
               className='max-w-fit overflow-auto w-full relative rounded-md border'
               style={{
-                maxHeight: `calc(${innerHeight}px - ${isMobile ? 8 : 7.9}rem)`,
+                maxHeight: `calc(${height}px - ${isMobile ? 8 : 7.9}rem)`,
               }}
             >
               {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}

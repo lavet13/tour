@@ -9,8 +9,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { useUpdateBooking } from '@/features/booking/api/mutations';
 import { InfiniteBookingsQuery, BookingStatus } from '@/gql/graphql';
-import { parseIntSafe } from '@/helpers/parse-int-safe';
-import { cn } from '@/lib/utils';
+import { parseIntSafe, cn } from '@/lib/utils';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { client } from '@/react-query';
 import { Column, ColumnDef } from '@tanstack/react-table';

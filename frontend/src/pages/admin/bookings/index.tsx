@@ -64,7 +64,6 @@ import { cn } from '@/lib/utils';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useSidebar } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -72,8 +71,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { breakpointsAtom } from '@/lib/atoms/tailwind';
-import { useAtom } from 'jotai';
 import {
   Tooltip,
   TooltipContent,
@@ -86,6 +83,7 @@ import { useInfiniteBookings } from '@/features/booking/api/queries';
 import { AutosizeTextarea } from '@/components/autosize-textarea';
 import { toast } from 'sonner';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
+import { useViewportDimensions } from '@/hooks/use-viewport-dimentions';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
 
@@ -285,43 +283,23 @@ const BookingsPage: FC = () => {
     }
   }, [sorting, columnFilters]); // Dependency: re-run when sorting changes
 
+  const MOBILE_BREAKPOINT = 400;
+  const { isMobile, isFullHD, sidebarExpanded, contentWidth, height } =
+    useViewportDimensions(MOBILE_BREAKPOINT);
+
   if (isError) {
     throw error;
   }
-
-  const [{ md, xl }] = useAtom(breakpointsAtom);
-  const MOBILE_BREAKPOINT = 400;
-  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
-  const isFullHD = useMediaQuery(`(min-width: ${xl}px)`);
-  const isTablet = useMediaQuery(`(min-width: ${md}px)`);
-  const { state } = useSidebar();
-  const [innerWidth, setInnerWidth] = useState(0);
-  const [innerHeight, setInnerHeight] = useState(0);
-
-  useEffect(() => {
-    const updateViewportSize = () => {
-      setInnerWidth(window.innerWidth);
-      setInnerHeight(window.innerHeight);
-    };
-
-    updateViewportSize();
-
-    window.addEventListener('resize', updateViewportSize);
-
-    return () => {
-      window.removeEventListener('resize', updateViewportSize);
-    };
-  }, []);
 
   return (
     <div className='container px-0'>
       <div
         className={cn(
           'relative px-1 space-y-2 flex-1 pt-2',
-          state === 'collapsed' && 'mx-0',
+          !sidebarExpanded && 'mx-0',
         )}
         style={{
-          maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
+          maxWidth: `calc(${contentWidth}px)`,
         }}
       >
         <div className='grid md:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] items-center gap-2'>
@@ -342,7 +320,7 @@ const BookingsPage: FC = () => {
                 </Button>
               </TooltipTrigger>
               <TooltipContent
-                align={state === 'collapsed' ? 'start' : 'center'}
+                align={!sidebarExpanded ? 'start' : 'center'}
                 side='bottom'
               >
                 Вернуться назад
@@ -394,7 +372,7 @@ const BookingsPage: FC = () => {
           ref={tableContainerRef}
           className='max-w-fit overflow-auto w-full relative rounded-md border'
           style={{
-            maxHeight: `calc(${innerHeight}px - ${isMobile ? 8 : 7.9}rem)`,
+            maxHeight: `calc(${height}px - ${isMobile ? 8 : 7.9}rem)`,
           }}
         >
           {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}

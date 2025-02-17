@@ -312,6 +312,9 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
         </div>
       );
     },
+    meta: {
+      filterVariant: 'timeRange',
+    },
   },
   {
     minSize: 180,
@@ -444,6 +447,9 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
           <span className='truncate'>{initialValue}</span>
         </div>
       );
+    },
+    meta: {
+      filterVariant: 'timeRange',
     },
   },
   {
@@ -706,6 +712,18 @@ function Filter<TData>({ column }: FilterProps<TData>) {
           value={columnFilterValue ?? []}
           onValueChange={value => {
             column.setFilterValue(value);
+          }}
+        />
+      );
+    case 'timeRange':
+      return (
+        <Input
+          type="time"
+          className='p-1 px-2 h-8'
+          placeholder={'Искать...'}
+          value={(columnFilterValue ?? '') as string}
+          onChange={e => {
+            column.setFilterValue(e.target.value);
           }}
         />
       );

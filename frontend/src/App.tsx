@@ -5,7 +5,6 @@ import {
   useLocation,
   useNavigate,
 } from 'react-router-dom';
-import suspenseFallbackMap from './suspense-fallback-map';
 import { lazy, Suspense, useEffect, useState } from 'react';
 
 import { SonnerSpinner } from '@/components/sonner-spinner';

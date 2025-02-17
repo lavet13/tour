@@ -17,7 +17,7 @@ import { List } from 'lucide-react';
 
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
-    filterVariant?: 'text' | 'select' | 'combobox' | 'dateRange' | 'range';
+    filterVariant?: 'text' | 'select' | 'combobox' | 'dateRange' | 'timeRange' | 'range';
     items?: Array<any>;
   }
   interface FilterFns<TData extends RowData> {
