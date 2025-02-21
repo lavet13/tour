@@ -3,11 +3,13 @@ import gql from 'graphql-tag';
 export default gql`
   type Query {
     schedulesByRoute(routeId: ID): [Schedule!]!
+    scheduleById(scheduleId: ID): Schedule
   }
 
   type Mutation {
-    createSchedule(input: ScheduleInput!): Schedule!
+    createSchedule(input: CreateScheduleInput!): Schedule!
     updateSchedule(input: UpdateScheduleInput!): Schedule!
+    deleteSchedule(id: ID!): Boolean!
   }
 
   input UpdateScheduleInput {
@@ -18,11 +20,11 @@ export default gql`
     isActive: Boolean
   }
 
-  input ScheduleInput {
+  input CreateScheduleInput {
     routeId: ID!
     dayOfWeek: DaysOfWeek!
-    startTime: Date!
-    endTime: Date!
+    startTime: Time!
+    endTime: Time!
     isActive: Boolean!
   }
 

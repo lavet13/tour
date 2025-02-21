@@ -1,4 +1,4 @@
-import { Resolvers } from '@/graphql/__generated__/types';
+import { DaysOfWeek, Resolvers } from '@/graphql/__generated__/types';
 import { isAuthenticated } from '@/graphql/composition/authorization';
 import { hasRoles } from '@/graphql/composition/authorization';
 
@@ -9,6 +9,16 @@ import {
 import { Role } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { GraphQLError } from 'graphql';
+
+export const daysOfWeekRu = {
+  [DaysOfWeek.Monday]: 'Понедельник',
+  [DaysOfWeek.Tuesday]: 'Вторник',
+  [DaysOfWeek.Wednesday]: 'Среда',
+  [DaysOfWeek.Thursday]: 'Четверг',
+  [DaysOfWeek.Friday]: 'Пятница',
+  [DaysOfWeek.Saturday]: 'Суббота',
+  [DaysOfWeek.Sunday]: 'Воскресенье',
+};
 
 const resolvers: Resolvers = {
   Query: {
@@ -40,9 +50,39 @@ const resolvers: Resolvers = {
         where: {
           routeId: route.id,
         },
+        orderBy: {
+          dayOfWeek: 'asc',
+        },
       });
 
       return schedules;
+    },
+    async scheduleById(_, args, ctx) {
+      const id = args.scheduleId;
+
+      if (!id?.length) {
+        return null;
+      }
+
+      const schedule = await ctx.prisma.schedule
+        .findUniqueOrThrow({
+          where: {
+            id,
+          },
+        })
+        .catch((err: unknown) => {
+          if (err instanceof PrismaClientKnownRequestError) {
+            if (err.code === 'P2025') {
+              throw new GraphQLError(
+                `Расписание с таким идентификатором \`${id}\` не найден.`,
+              );
+            }
+          }
+          console.log({ err });
+          throw new GraphQLError('Unknown error!');
+        });
+
+      return schedule;
     },
   },
   Mutation: {
@@ -59,34 +99,80 @@ const resolvers: Resolvers = {
         throw new GraphQLError(`Route with ID ${routeId} not found.`);
       }
 
-      const schedule = await ctx.prisma.schedule.create({
-        data: {
-          dayOfWeek,
-          routeId,
-          startTime,
-          endTime,
-          isActive,
-        },
-      });
+      const schedule = await ctx.prisma.schedule
+        .create({
+          data: {
+            dayOfWeek,
+            routeId,
+            startTime,
+            endTime,
+            isActive,
+          },
+        })
+        .catch((err: unknown) => {
+          if (err instanceof PrismaClientKnownRequestError) {
+            if (err.code === 'P2002') {
+              throw new GraphQLError(
+                `День недели \`${daysOfWeekRu[dayOfWeek as DaysOfWeek]}\` уже определен!`,
+              );
+            }
+          }
+          console.log({ err });
+          throw new GraphQLError('Unknown error!');
+        });
 
       return schedule;
     },
     async updateSchedule(_, args, ctx) {
       const { isActive, id, endTime, startTime, dayOfWeek } = args.input;
 
-      const schedule = await ctx.prisma.schedule.update({
+      const schedule = await ctx.prisma.schedule
+        .update({
+          where: {
+            id,
+          },
+          data: {
+            isActive,
+            dayOfWeek,
+            startTime,
+            endTime,
+          },
+        })
+        .catch((err: unknown) => {
+          if (err instanceof PrismaClientKnownRequestError) {
+            if (err.code === 'P2002') {
+              throw new GraphQLError(
+                `День недели \`${daysOfWeekRu[dayOfWeek as DaysOfWeek]}\` уже определен!`,
+              );
+            }
+          }
+          console.log({ err });
+          throw new GraphQLError('Unknown error!');
+        });
+
+      return schedule;
+    },
+    async deleteSchedule(_, args, ctx) {
+      const id = args.id;
+
+      const deletedSchedule = await ctx.prisma.schedule.delete({
         where: {
           id,
         },
-        data: {
-          isActive,
-          dayOfWeek,
-          startTime,
-          endTime,
-        },
-      });
+      }).catch((err: unknown) => {
+          if (err instanceof PrismaClientKnownRequestError) {
+            console.log({ errCode: err.code });
+            if (err.code === 'P2025') {
+              throw new GraphQLError(
+                `Данной записи не существует в расписании!`,
+              );
+            }
+          }
+          console.log({ err });
+          throw new GraphQLError('Unknown error!');
+        });
 
-      return schedule;
+      return !!deletedSchedule;
     },
   },
   Schedule: {

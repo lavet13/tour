@@ -34,7 +34,10 @@ const documents = {
     "\n    query GetRouteById($id: ID) {\n      routeById(id: $id) {\n        id\n        departureCity {\n          id\n          name\n        }\n        arrivalCity {\n          id\n          name\n        }\n        region {\n          id\n          name\n        }\n        isActive\n        departureDate\n        price\n      }\n    }\n  ": types.GetRouteByIdDocument,
     "\n    query InfiniteRoutes($input: RoutesInput!) {\n      routes(input: $input) {\n        edges {\n          id\n          departureCity {\n            id\n            name\n          }\n          region {\n            id\n            name\n          }\n          price\n          isActive\n          departureDate\n          arrivalCity {\n            id\n            name\n          }\n          createdAt\n          updatedAt\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  ": types.InfiniteRoutesDocument,
     "\n    mutation UpdateSchedule($input: UpdateScheduleInput!) {\n      updateSchedule(input: $input) {\n        id\n        isActive\n        dayOfWeek\n        startTime\n        endTime\n        createdAt\n        updatedAt\n      }\n    }\n  ": types.UpdateScheduleDocument,
+    "\n    mutation CreateSchedule($input: CreateScheduleInput!) {\n      createSchedule(input: $input) {\n        id\n        isActive\n        dayOfWeek\n        startTime\n        endTime\n        createdAt\n        updatedAt\n      }\n    }\n  ": types.CreateScheduleDocument,
+    "\n    mutation DeleteSchedule($id: ID!) {\n      deleteSchedule(id: $id)\n    }\n  ": types.DeleteScheduleDocument,
     "\n    query GetSchedulesByRoute($routeId: ID) {\n      schedulesByRoute(routeId: $routeId) {\n        id\n        route {\n          departureCity {\n            id\n            name\n          }\n          arrivalCity {\n            id\n            name\n          }\n        }\n        dayOfWeek\n        startTime\n        endTime\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  ": types.GetSchedulesByRouteDocument,
+    "\n    query GetScheduleById($scheduleId: ID) {\n      scheduleById(scheduleId: $scheduleId) {\n        id\n        dayOfWeek\n        startTime\n        endTime\n        isActive\n      }\n    }\n  ": types.GetScheduleByIdDocument,
     "\n    subscription CreatedBookSubscription {\n      createdBook {\n        id\n      }\n    }\n  ": types.CreatedBookSubscriptionDocument,
     "\n        mutation RefreshToken {\n          refreshToken {\n            accessToken\n            refreshToken\n          }\n        }\n      ": types.RefreshTokenDocument,
 };
@@ -136,7 +139,19 @@ export function graphql(source: "\n    mutation UpdateSchedule($input: UpdateSch
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n    mutation CreateSchedule($input: CreateScheduleInput!) {\n      createSchedule(input: $input) {\n        id\n        isActive\n        dayOfWeek\n        startTime\n        endTime\n        createdAt\n        updatedAt\n      }\n    }\n  "): (typeof documents)["\n    mutation CreateSchedule($input: CreateScheduleInput!) {\n      createSchedule(input: $input) {\n        id\n        isActive\n        dayOfWeek\n        startTime\n        endTime\n        createdAt\n        updatedAt\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    mutation DeleteSchedule($id: ID!) {\n      deleteSchedule(id: $id)\n    }\n  "): (typeof documents)["\n    mutation DeleteSchedule($id: ID!) {\n      deleteSchedule(id: $id)\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n    query GetSchedulesByRoute($routeId: ID) {\n      schedulesByRoute(routeId: $routeId) {\n        id\n        route {\n          departureCity {\n            id\n            name\n          }\n          arrivalCity {\n            id\n            name\n          }\n        }\n        dayOfWeek\n        startTime\n        endTime\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  "): (typeof documents)["\n    query GetSchedulesByRoute($routeId: ID) {\n      schedulesByRoute(routeId: $routeId) {\n        id\n        route {\n          departureCity {\n            id\n            name\n          }\n          arrivalCity {\n            id\n            name\n          }\n        }\n        dayOfWeek\n        startTime\n        endTime\n        isActive\n        createdAt\n        updatedAt\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    query GetScheduleById($scheduleId: ID) {\n      scheduleById(scheduleId: $scheduleId) {\n        id\n        dayOfWeek\n        startTime\n        endTime\n        isActive\n      }\n    }\n  "): (typeof documents)["\n    query GetScheduleById($scheduleId: ID) {\n      scheduleById(scheduleId: $scheduleId) {\n        id\n        dayOfWeek\n        startTime\n        endTime\n        isActive\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

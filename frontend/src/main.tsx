@@ -4,7 +4,8 @@ import App from './App';
 import './index.css';
 import { ReactQueryProvider } from '@/react-query';
 import { BrowserRouter } from 'react-router-dom';
-import { Toaster } from '@/components/ui/sonner';
+import { Toaster as SonnerToaster } from '@/components/ui/sonner';
+import { Toaster } from '@/components/ui/toaster';
 import { type ToasterProps } from 'sonner';
 import { CookiesProvider } from 'react-cookie';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -26,12 +27,13 @@ createRoot(document.getElementById('root')!).render(
     <BrowserRouter>
       <CookiesProvider>
         <ReactQueryProvider>
-          <Toaster
+          <SonnerToaster
             toastOptions={toastOptions}
             visibleToasts={6}
             position={'bottom-center'}
             pauseWhenPageIsHidden
           />
+          <Toaster />
           <TooltipProvider>
             <App />
           </TooltipProvider>

@@ -47,6 +47,8 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { DataTablePagination } from '@/components/data-table-pagination';
 import { useViewportDimensions } from '@/hooks/use-viewport-dimentions';
+import { useDrawerState } from '@/hooks/use-drawer-state';
+import { ScheduleForm } from '@/features/schedule/components/schedule-form';
 
 export interface ScheduleParams {
   route_id: string;
@@ -82,53 +84,47 @@ function Schedules() {
     keyof ScheduleParams
   >() as ScheduleParams;
 
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [drawerMode, setDrawerMode] = useState<DrawerMode>('idle');
+  const { isOpen: drawerIsOpen, mode, setIsOpen: setDrawerIsOpen, openDrawer } = useDrawerState<
+    'idle' | 'addSchedule' | 'editSchedule'
+  >({
+    initialMode: 'idle',
+    queryParams: {
+      editSchedule: 'schedule_id',
+      addSchedule: 'add_schedule',
+    },
+    paramValues: {
+      schedule_id: scheduleId,
+      add_schedule: addSchedule,
+    },
+  });
 
-  // Only set up edit drawerMode when route_id is present
-  useEffect(() => {
-    if (scheduleId) {
-      setDrawerMode('editSchedule');
-    } else if (addSchedule) {
-      setDrawerMode('addSchedule');
-    } else if (!isDrawerOpen) {
-      setDrawerMode('idle');
-    }
-  }, [scheduleId, addSchedule, isDrawerOpen]);
-
-  // Handle drawer state based on route_id
-  useEffect(() => {
-    if (!addSchedule && isDrawerOpen && drawerMode === 'addSchedule') {
-      setIsDrawerOpen(false);
-    }
-    if (addSchedule && !isDrawerOpen && drawerMode === 'addSchedule') {
-      setIsDrawerOpen(true);
-    }
-    if (!scheduleId && isDrawerOpen && drawerMode === 'editSchedule') {
-      setIsDrawerOpen(false);
-    }
-    if (scheduleId && !isDrawerOpen && drawerMode === 'editSchedule') {
-      setIsDrawerOpen(true);
-    }
-  }, [scheduleId, addSchedule, isDrawerOpen, drawerMode]);
 
   const handleAddSchedule = () => {
-    setDrawerMode('addSchedule');
-    setIsDrawerOpen(true);
+    openDrawer('addSchedule');
     setSearchParams(params => {
       const query = new URLSearchParams(params.toString());
       query.set('add_schedule', 'true');
       return query;
     });
   };
+
+  const handleEditSchedule = (id: string) => {
+    openDrawer('editSchedule');
+    setSearchParams(params => {
+      const query = new URLSearchParams(params.toString());
+      query.set('schedule_id', id);
+      return query;
+    });
+  };
+
   const handleClose = () => {
-    if (drawerMode === 'editSchedule') {
+    if (mode === 'editSchedule') {
       setSearchParams(params => {
         const query = new URLSearchParams(params.toString());
         query.delete('schedule_id');
         return query;
       });
-    } else if (drawerMode === 'addSchedule') {
+    } else if (mode === 'addSchedule') {
       setSearchParams(params => {
         const query = new URLSearchParams(params.toString());
         query.delete('add_schedule');
@@ -175,6 +171,9 @@ function Schedules() {
     getFilteredRowModel: getFilteredRowModel(),
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
+    meta: {
+      onEditSchedule: handleEditSchedule,
+    },
     state: {
       pagination,
       sorting,
@@ -392,25 +391,27 @@ function Schedules() {
         )}
       </div>
 
-      <Drawer
-        repositionInputs
-        open={isDrawerOpen}
-        onOpenChange={setIsDrawerOpen}
-        onClose={handleClose}
-      >
+      <Drawer open={drawerIsOpen} onOpenChange={setDrawerIsOpen} onClose={handleClose}>
         {/* <DrawerContent className="inset-x-auto right-2"> */}
         <DrawerContent>
           <DrawerHeader>
             <DrawerTitle>
-              {drawerMode === 'addSchedule' && 'Добавить новое расписание'}
-              {drawerMode === 'editSchedule' && 'Изменить расписание'}
-              {drawerMode === 'idle' && <Skeleton className='h-6 w-full' />}
+              {mode === 'addSchedule' && 'Добавить новое расписание'}
+              {mode === 'editSchedule' && 'Изменить расписание'}
+              {mode === 'idle' && <Skeleton className='h-6 w-full' />}
             </DrawerTitle>
           </DrawerHeader>
           <Separator className='mt-2 mb-4' />
+          <ScheduleForm
+            onClose={handleClose}
+            scheduleId={scheduleId}
+            routeId={routeId}
+            drawerMode={mode}
+          />
         </DrawerContent>
         {/* </DrawerContent> */}
       </Drawer>
+
     </div>
   );
 }

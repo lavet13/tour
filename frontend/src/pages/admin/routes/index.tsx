@@ -7,18 +7,16 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { useSidebar } from '@/components/ui/sidebar';
 import { useInfiniteRoutes } from '@/features/routes/api/queries';
 import { InfiniteRoutesQuery } from '@/gql/graphql';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import { cn } from '@/lib/utils';
-import { useAtom } from 'jotai';
 import {
   ArrowLeft,
   Calendar,
   CalendarClock,
   Edit,
+  Loader2,
   MapPin,
   MapPinOff,
   MapPinPlus,
@@ -27,14 +25,7 @@ import {
   TicketX,
   Trash,
 } from 'lucide-react';
-import {
-  Fragment,
-  Suspense,
-  useDeferredValue,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { Fragment, Suspense, useDeferredValue, useMemo, useState } from 'react';
 import { useImage } from 'react-image';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -46,16 +37,25 @@ import { Input } from '@/components/ui/input';
 import { Waypoint } from 'react-waypoint';
 import { Skeleton } from '@/components/ui/skeleton';
 import { RouteForm } from '@/features/routes/components';
-import { useDrawerState } from '@/features/routes/hooks';
+import { useDrawerState } from '@/hooks/use-drawer-state';
 import { Separator } from '@/components/ui/separator';
+import { useViewportDimensions } from '@/hooks/use-viewport-dimentions';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 type Route = InfiniteRoutesQuery['routes']['edges'][number];
 
 function RoutesPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [{ md }] = useAtom(breakpointsAtom);
-  const isTablet = useMediaQuery(`(min-width: ${md}px)`);
 
   const searchQuery = searchParams.get('q') ?? '';
   const deferredSearchQuery = useDeferredValue(searchQuery);
@@ -63,24 +63,19 @@ function RoutesPage() {
   const routeId = searchParams.get('route_id');
   const addRoute = searchParams.get('add_route');
 
-  const { state } = useSidebar();
-  const [innerWidth, setInnerWidth] = useState(0);
-  useEffect(() => {
-    const updateViewportSize = () => {
-      setInnerWidth(window.innerWidth);
-    };
-
-    updateViewportSize();
-
-    window.addEventListener('resize', updateViewportSize);
-
-    return () => {
-      window.removeEventListener('resize', updateViewportSize);
-    };
-  }, []);
-
-  const { isDrawerOpen, drawerMode, setDrawerMode, setIsDrawerOpen } =
-    useDrawerState({ routeId, addRoute });
+  const { isOpen, mode, setIsOpen, openDrawer } = useDrawerState<
+    'idle' | 'addRoute' | 'editRoute'
+  >({
+    initialMode: 'idle',
+    queryParams: {
+      addRoute: 'add_route',
+      editRoute: 'route_id',
+    },
+    paramValues: {
+      route_id: routeId,
+      add_route: addRoute,
+    },
+  });
 
   const {
     data,
@@ -110,13 +105,13 @@ function RoutesPage() {
   );
 
   const handleClose = () => {
-    if (drawerMode === 'editRoute') {
+    if (mode === 'editRoute') {
       setSearchParams(params => {
         const query = new URLSearchParams(params.toString());
         query.delete('route_id');
         return query;
       });
-    } else if (drawerMode === 'addRoute') {
+    } else if (mode === 'addRoute') {
       setSearchParams(params => {
         const query = new URLSearchParams(params.toString());
         query.delete('add_route');
@@ -126,8 +121,7 @@ function RoutesPage() {
   };
 
   const handleAddRoute = () => {
-    setDrawerMode('addRoute');
-    setIsDrawerOpen(true);
+    openDrawer('addRoute');
     setSearchParams(params => {
       const query = new URLSearchParams(params.toString());
       query.set('add_route', 'true');
@@ -135,9 +129,8 @@ function RoutesPage() {
     });
   };
 
-  const handleEditRoute = (id: string) => () => {
-    setDrawerMode('editRoute');
-    setIsDrawerOpen(true);
+  const handleEditRoute = (id: string) => {
+    openDrawer('editRoute');
     setSearchParams(params => {
       const query = new URLSearchParams(params.toString());
       query.set('route_id', id);
@@ -145,20 +138,20 @@ function RoutesPage() {
     });
   };
 
-  const handleDeleteRoute = (id: string) => () => {};
+  const handleDeleteRoute = (id: string) => {
+    console.log({ id });
+  };
 
   const MOBILE_BREAKPOINT = 400;
-  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+  const { isMobile, contentWidth, sidebarExpanded } =
+    useViewportDimensions(MOBILE_BREAKPOINT);
 
   return (
     <div className='container px-1 sm:px-2 pt-2 mx-auto overflow-hidden flex-1 flex flex-col'>
       <div
-        className={cn(
-          'relative space-y-2 flex-1',
-          state === 'collapsed' && 'mx-0',
-        )}
+        className={cn('relative space-y-2 flex-1', !sidebarExpanded && 'mx-0')}
         style={{
-          maxWidth: `calc(${innerWidth - (isTablet && state === 'expanded' ? 256 : 0)}px)`,
+          maxWidth: `calc(${contentWidth}px)`,
         }}
       >
         <div className='flex items-center gap-2'>
@@ -175,7 +168,7 @@ function RoutesPage() {
               </Button>
             </TooltipTrigger>
             <TooltipContent
-              align={state === 'collapsed' ? 'start' : 'center'}
+              align={!sidebarExpanded ? 'start' : 'center'}
               side='bottom'
             >
               Вернуться назад
@@ -202,12 +195,16 @@ function RoutesPage() {
           {isMobile && (
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
-                <Button className='h-9 min-w-9' size={'icon'} onClick={handleAddRoute}>
+                <Button
+                  className='h-9 min-w-9'
+                  size={'icon'}
+                  onClick={handleAddRoute}
+                >
                   <MapPinPlus />
                 </Button>
               </TooltipTrigger>
               <TooltipContent
-                align={state === 'collapsed' ? 'start' : 'center'}
+                align={!sidebarExpanded ? 'start' : 'center'}
                 side='bottom'
               >
                 Добавить маршрут
@@ -235,8 +232,8 @@ function RoutesPage() {
                     <RouteCard
                       key={route.id}
                       route={route}
-                      onEdit={handleEditRoute(route.id)}
-                      onDelete={handleDeleteRoute(route.id)}
+                      onEdit={handleEditRoute}
+                      onDelete={handleDeleteRoute}
                     />
                     {idx === routes.length - 1 && (
                       <Waypoint
@@ -267,26 +264,21 @@ function RoutesPage() {
           </p>
         )}
 
-        <Drawer
-          repositionInputs
-          open={isDrawerOpen}
-          onOpenChange={setIsDrawerOpen}
-          onClose={handleClose}
-        >
+        <Drawer open={isOpen} onOpenChange={setIsOpen} onClose={handleClose}>
           {/* <DrawerContent className="inset-x-auto right-2"> */}
           <DrawerContent>
             <DrawerHeader>
               <DrawerTitle>
-                {drawerMode === 'addRoute' && 'Добавить новый маршрут'}
-                {drawerMode === 'editRoute' && 'Изменить маршрут'}
-                {drawerMode === 'idle' && <Skeleton className='h-6 w-full' />}
+                {mode === 'addRoute' && 'Добавить новый маршрут'}
+                {mode === 'editRoute' && 'Изменить маршрут'}
+                {mode === 'idle' && <Skeleton className='h-6 w-full' />}
               </DrawerTitle>
             </DrawerHeader>
             <Separator className='mt-2 mb-4' />
             <RouteForm
               onClose={handleClose}
               routeId={routeId}
-              drawerMode={drawerMode}
+              drawerMode={mode}
             />
           </DrawerContent>
           {/* </DrawerContent> */}
@@ -358,11 +350,21 @@ function RouteCard({
   onDelete,
 }: {
   route: Route;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const MOBILE_BREAKPOINT = 340;
   const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+  const [isAlertOpen, setIsAlertOpen] = useState(false);
+
+  const handleEdit = () => {
+    onEdit(route.id);
+  };
+
+  const handleDelete = () => {
+    onDelete(route.id);
+    setIsAlertOpen(false);
+  };
 
   return (
     <Card className={cn('overflow-hidden transition-opacity')}>
@@ -443,7 +445,7 @@ function RouteCard({
                       className='size-9 gap-0'
                       variant='outline'
                       size='icon'
-                      onClick={onEdit}
+                      onClick={handleEdit}
                     >
                       <Edit className='h-4 w-4' />
                     </Button>
@@ -456,40 +458,61 @@ function RouteCard({
                   className='gap-0 px-2'
                   variant='outline'
                   size='sm'
-                  onClick={onEdit}
+                  onClick={handleEdit}
                 >
                   <Edit className='h-4 w-4 mr-2' />
                   Изменить
                 </Button>
               )}
-              {isMobile && (
-                <Tooltip delayDuration={700}>
-                  <TooltipTrigger asChild>
+              <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
+                <AlertDialogTrigger asChild>
+                  {isMobile ? (
+                    <Tooltip delayDuration={700}>
+                      <TooltipTrigger asChild>
+                        <Button
+                          className='size-9 gap-0 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'
+                          variant='outline'
+                          size='sm'
+                        >
+                          <Trash className='h-4 w-4' />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side='bottom' align='end'>
+                        Удалить
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
                     <Button
-                      className='size-9 gap-0 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'
+                      className='gap-0 px-2 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'
                       variant='outline'
                       size='sm'
-                      onClick={onDelete}
                     >
-                      <Trash className='h-4 w-4' />
+                      <Trash className='h-4 w-4 mr-2' />
+                      Удалить
                     </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side='bottom' align='end'>
-                    Удалить
-                  </TooltipContent>
-                </Tooltip>
-              )}
-              {!isMobile && (
-                <Button
-                  className='gap-0 px-2 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'
-                  variant='outline'
-                  size='sm'
-                  onClick={onDelete}
-                >
-                  <Trash className='h-4 w-4 mr-2' />
-                  Удалить
-                </Button>
-              )}
+                  )}
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Это действие нельзя отменить. Маршрут будет удален
+                      навсегда.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                    <Button
+                      className='gap-0'
+                      variant='destructive'
+                      onClick={handleDelete}
+                    >
+                      <Trash className='h-4 w-4 mr-2' />
+                      Удалить
+                    </Button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { DrawerMode } from '@/features/routes/hooks/use-drawer-state';
+import { DrawerMode } from '@/hooks/use-drawer-state';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import {
@@ -38,7 +38,7 @@ import {
 } from '@/features/routes/components';
 
 interface RouteFormProps {
-  drawerMode: DrawerMode;
+  drawerMode: Extract<DrawerMode, 'addRoute' | 'editRoute' | 'idle'>;
   routeId: string | null;
   onClose: () => void;
 }
@@ -128,7 +128,7 @@ export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
 
   const onSubmit: SubmitHandler<RouteFormValues> = async data => {
     try {
-      if (routeData?.routeById) {
+      if (drawerMode === 'editRoute') {
         // editing existing route
         const payload: CreateRouteInput = {
           ...data,
@@ -141,7 +141,8 @@ export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
           richColors: true,
           position: 'bottom-center',
         });
-      } else {
+      }
+      if (drawerMode === 'addRoute') {
         // adding a new route
         const payload: CreateRouteInput = {
           ...data,

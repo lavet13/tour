@@ -10,6 +10,7 @@ import {
   CirclePlus,
   CircleMinus,
   Loader2,
+  Edit,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -27,7 +28,10 @@ import { DatePicker } from '@/components/date-picker-filter';
 import { type Schedule } from '.';
 import { Switch } from '@/components/ui/switch';
 import { KeyboardEvent, useEffect, useState } from 'react';
-import { useUpdateSchedule } from '@/features/schedule/api/mutations';
+import {
+  useDeleteSchedule,
+  useUpdateSchedule,
+} from '@/features/schedule/api/mutations';
 import { client as queryClient } from '@/react-query';
 import { toast } from 'sonner';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
@@ -40,6 +44,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogDescription,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 export type ScheduleColumns = Exclude<keyof Schedule, '__typename' | 'route'>;
 export const columnTranslations = {
@@ -52,7 +68,7 @@ export const columnTranslations = {
   updatedAt: 'Обновлено',
 } as const satisfies Record<ScheduleColumns, string>;
 
-const daysOfWeekRu = {
+export const daysOfWeekRu = {
   [DaysOfWeek.Monday]: 'Понедельник',
   [DaysOfWeek.Tuesday]: 'Вторник',
   [DaysOfWeek.Wednesday]: 'Среда',
@@ -149,6 +165,7 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
             return `\`${columnTranslations[columnId as ScheduleColumns]}\` изменёно ${daysOfWeekRu[enumValue as DaysOfWeek]} → ${daysOfWeekRu[newValue as DaysOfWeek]}`;
           },
           error(error) {
+            console.log({ error });
             if (isGraphQLRequestError(error)) {
               return error.response.errors[0].message;
             } else if (error instanceof Error) {
@@ -601,26 +618,88 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
     id: 'actions',
     size: 70,
     enableHiding: false,
-    cell: ({ row }) => {
+    cell: ({ row, table }) => {
       const { id } = row.original;
-      console.log({ id });
+      const { onEditSchedule } = table.options.meta || {};
+      const [alertOpen, setAlertOpen] = useState(false);
+      const [dropdownOpen, setDropdownOpen] = useState(false);
+      const { toast } = useToast();
+      const { mutate: deleteSchedule, isPending: deleteIsPending } =
+        useDeleteSchedule();
+
+      const openAlertDialog = (event: React.MouseEvent) => {
+        event.preventDefault();
+        setAlertOpen(true);
+        setDropdownOpen(false);
+      };
+
+      const handleDelete = () => {
+        deleteSchedule({ id }, {
+          async onSuccess() {
+            await client.invalidateQueries({ queryKey: ['GetSchedulesByRoute'] });
+            toast({
+              title: 'Операция была проведена успешно!',
+              description: 'Запись из расписания была удалена безвозвратно!',
+            });
+          },
+          onSettled() {
+            setAlertOpen(false);
+          }
+        });
+      };
+
+      const handleEdit = () => {
+        onEditSchedule?.(id);
+      };
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 w-8 p-0'>
-              <span className='sr-only'>Открыть меню</span>
-              <MoreHorizontal className='h-4 w-4' />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuLabel>Действия</DropdownMenuLabel>
-            <DropdownMenuItem className='text-destructive focus:text-destructive focus:bg-destructive/10'>
-              <Trash />
-              Удалить
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <>
+          <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button variant='ghost' className='h-8 w-8 p-0'>
+                <span className='sr-only'>Открыть меню</span>
+                <MoreHorizontal className='h-4 w-4' />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end'>
+              <DropdownMenuLabel>Действия</DropdownMenuLabel>
+              <DropdownMenuItem onClick={handleEdit}>
+                <Edit />
+                Изменить
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={openAlertDialog}
+                className='text-destructive focus:text-destructive focus:bg-destructive/10'
+              >
+                <Trash />
+                Удалить
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <AlertDialog open={alertOpen} onOpenChange={setAlertOpen}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Вы точно в этом уверены?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Это действие нельзя отменить. Это приведет к окончательному
+                  удалению записи из расписания.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Отменить</AlertDialogCancel>
+                <Button variant="destructive" disabled={deleteIsPending} onClick={handleDelete}>
+                  {deleteIsPending && (
+                    <>
+                      <Loader2 className='animate-spin' />
+                      Удаляется
+                    </>
+                  )}
+                  {!deleteIsPending && 'Да, я уверен(а)'}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </>
       );
     },
   },
@@ -718,7 +797,7 @@ function Filter<TData>({ column }: FilterProps<TData>) {
     case 'timeRange':
       return (
         <Input
-          type="time"
+          type='time'
           className='p-1 px-2 h-8'
           placeholder={'Искать...'}
           value={(columnFilterValue ?? '') as string}

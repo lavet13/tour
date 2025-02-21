@@ -1,5 +1,5 @@
 import { graphql } from '@/gql';
-import { GetSchedulesByRouteQuery } from '@/gql/graphql';
+import { GetSchedulesByRouteQuery, GetScheduleByIdQuery } from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
 import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
@@ -39,6 +39,35 @@ export const useSchedulesByRoute = (
     ],
     queryFn: async () => {
       return await client.request(schedulesByRoute, { routeId });
+    },
+    meta: {
+      toastEnabled: false,
+    },
+    retry: false,
+    ...options,
+  });
+};
+
+export const useScheduleById = (
+  scheduleId: string | null,
+  options?: InitialDataOptions<GetScheduleByIdQuery>,
+) => {
+  const scheduleById = graphql(`
+    query GetScheduleById($scheduleId: ID) {
+      scheduleById(scheduleId: $scheduleId) {
+        id
+        dayOfWeek
+        startTime
+        endTime
+        isActive
+      }
+    }
+  `);
+
+  return useQuery({
+    queryKey: [(scheduleById.definitions[0] as any).name.value, { scheduleId }],
+    queryFn: async () => {
+      return await client.request(scheduleById, { scheduleId });
     },
     meta: {
       toastEnabled: false,
