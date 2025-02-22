@@ -1,7 +1,7 @@
 import { useControllableState } from '@/hooks/use-controllable-state';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { cn } from '@/lib/utils';
-import { forwardRef, useState } from 'react';
+import { forwardRef, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { FormControl } from '@/components/ui/form';
 import { SonnerSpinner } from '@/components/sonner-spinner';
@@ -47,6 +47,8 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     },
     ref,
   ) => {
+    const buttonRef = useRef<HTMLButtonElement | null>(null);
+    const [popoverWidth, setPopoverWidth] = useState<number>(0);
     const isDesktop = useMediaQuery('(min-width: 768px)');
     const [value, setValue] = useControllableState({
       prop: valueProp,
@@ -60,11 +62,34 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
       setOpen(false); // Close the popover or drawer
     };
 
+     // Merge the forwarded ref with our local ref
+    useEffect(() => {
+      if (typeof ref === 'function') {
+        ref(buttonRef.current);
+      } else if (ref) {
+        ref.current = buttonRef.current;
+      }
+    }, [ref]);
+
+    // Update popover width when button width changes
+    useEffect(() => {
+      if (buttonRef.current) {
+        const updateWidth = () => {
+          const width = buttonRef.current?.offsetWidth ?? 0;
+          setPopoverWidth(width);
+        };
+
+        updateWidth();
+        window.addEventListener('resize', updateWidth);
+        return () => window.removeEventListener('resize', updateWidth);
+      }
+    }, []);
+
     const renderTrigger = () => {
       return (
         <FormControl>
           <Button
-            ref={ref}
+            ref={buttonRef}
             variant='outline'
             role='combobox'
             disabled={isLoading || disabled}
@@ -93,6 +118,7 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     };
 
     const renderContent = () => {
+      // TODO: find a solution for scroll lock
       const commandList = (
         <CommandList onWheelCapture={(e) => e.stopPropagation()}>
           {items.length >= 7 && <CommandEmpty>{emptyLabel}</CommandEmpty>}
@@ -138,7 +164,7 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     return isDesktop ? (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
-        <PopoverContent className='p-0'>{renderContent()}</PopoverContent>
+        <PopoverContent style={{ width: `${popoverWidth}px` }} className='p-0'>{renderContent()}</PopoverContent>
       </Popover>
     ) : (
       <Drawer open={open} onOpenChange={setOpen}>
