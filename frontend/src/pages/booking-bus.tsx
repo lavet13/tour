@@ -24,7 +24,10 @@ import { cn } from '@/lib/utils';
 import { BorderBeam } from '@/components/ui/border-beam';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { useSearchParams } from 'react-router-dom';
-import { useArrivalCities, useDepartureCities } from '@/features/city/api/queries';
+import {
+  useArrivalCities,
+  useDepartureCities,
+} from '@/features/city/api/queries';
 import {
   Popover,
   PopoverContent,
@@ -62,10 +65,7 @@ const FormSchema = z.object({
     .min(4, { message: 'Фамилия обязательно к заполнению!' }),
   phoneNumber: z
     .string({ required_error: 'Телефон обязателен к заполнению!' })
-    .refine(
-      isPossiblePhoneNumber,
-      'Проверьте правильность ввода телефона!',
-    ),
+    .refine(isPossiblePhoneNumber, 'Проверьте правильность ввода телефона!'),
   seatsCount: z
     .number({ invalid_type_error: 'Должно быть числом!' })
     .refine(value => value > 0, { message: 'Укажите количество мест!' }),
@@ -605,7 +605,7 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
       <FormControl>
         <div
           className={cn(
-            'flex items-center justify-center space-x-2',
+            'flex items-center justify-center space-x-2 sm:space-x-4',
             value === 0 && 'text-muted-foreground',
             'focus:outline-none focus:ring-1 focus:ring-ring',
           )}
@@ -613,13 +613,13 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
           <Button
             variant='outline'
             size='icon'
-            className={cn('h-8 w-8 shrink-0 rounded-full')}
+            className={cn('h-8 w-8 sm:h-10 sm:w-10 shrink-0 rounded-full')}
             type='button'
             onClick={() => setValue(value - 1)}
             disabled={value <= 0}
             tabIndex={-1}
           >
-            <Minus />
+            <Minus className='h-4 w-4 sm:h-5 sm:w-5' />
             <span className='sr-only'>Уменьшить</span>
           </Button>
           <div className='flex-1 text-center'>
@@ -632,13 +632,13 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
               isAllowed={isAllowed}
               className={cn(
                 'focus:outline-none focus:ring-1 focus:ring-ring',
-                'text-4xl font-bold tracking-tighter text-center bg-background',
+                'text-3xl sm:text-4xl font-bold tracking-tighter text-center bg-background w-full',
                 error && 'text-destructive',
               )}
             />
             <div
               className={cn(
-                'text-[0.70rem] uppercase text-muted-foreground',
+                'text-[0.70rem] sm:text-sm uppercase text-muted-foreground',
                 error && 'text-destructive',
               )}
             >
@@ -648,13 +648,13 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
           <Button
             variant='outline'
             size='icon'
-            className={cn('h-8 w-8 shrink-0 rounded-full')}
+            className={cn('h-8 w-8 sm:h-10 sm:w-10 shrink-0 rounded-full')}
             type='button'
             onClick={() => setValue(value + 1)}
             disabled={value >= 20}
             tabIndex={-1}
           >
-            <Plus />
+            <Plus className='h-4 w-4 sm:h-5 sm:w-5' />
             <span className='sr-only'>Увеличить</span>
           </Button>
         </div>

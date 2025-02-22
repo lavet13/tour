@@ -593,7 +593,7 @@ function HideColumns({ table, isMobile }: HideColumnsProps<Booking>) {
           <CommandSeparator />
 
           <ScrollArea className='h-[calc(16rem)]'>
-            <CommandGroup className='pr-3'>
+            <CommandGroup>
               {allColumns.map(column => (
                 <CommandItem
                   key={column.id}

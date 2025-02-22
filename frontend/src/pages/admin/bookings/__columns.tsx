@@ -563,10 +563,13 @@ export const columns: ColumnDef<Booking, unknown>[] = [
       const [previousStatus, setPreviousStatus] =
         useState<BookingStatus>(status);
 
+      const columnWidth = props.column.getSize();
+
       return (
         <ComboBox
           isLoading={isPending}
           size={'lg'}
+          width={columnWidth}
           items={statusOptions}
           value={props.getValue() ?? ''}
           onValueChange={async value => {
@@ -823,6 +826,8 @@ function Filter<TData>({ column }: FilterProps<TData>) {
   const columnFilterValue = column.getFilterValue();
   const { filterVariant, items } = column.columnDef.meta ?? {};
 
+  const columnWidth = column.getSize();
+
   return filterVariant === 'combobox' ? (
     <ComboBox
       // [label, value, icon]
@@ -831,6 +836,7 @@ function Filter<TData>({ column }: FilterProps<TData>) {
       onValueChange={value => {
         column.setFilterValue(value);
       }}
+      width={columnWidth}
     />
   ) : filterVariant === 'dateRange' ? (
     <DatePicker

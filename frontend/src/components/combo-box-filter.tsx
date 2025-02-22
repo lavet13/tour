@@ -1,15 +1,21 @@
-import { VariantProps } from "class-variance-authority";
-import { Button, buttonVariants } from "./ui/button";
-import { forwardRef, useState } from "react";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { useControllableState } from "@/hooks/use-controllable-state";
-import { cn } from "@/lib/utils";
-import { SonnerSpinner } from "./sonner-spinner";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "./ui/command";
-import { ScrollArea } from "./ui/scroll-area";
-import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
-import { Drawer, DrawerContent, DrawerTrigger } from "./ui/drawer";
+import { VariantProps } from 'class-variance-authority';
+import { Button, buttonVariants } from './ui/button';
+import { forwardRef, useState } from 'react';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { useControllableState } from '@/hooks/use-controllable-state';
+import { cn } from '@/lib/utils';
+import { SonnerSpinner } from './sonner-spinner';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from './ui/command';
+import { ScrollArea } from './ui/scroll-area';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Drawer, DrawerContent, DrawerTrigger } from './ui/drawer';
 
 interface ComboBoxProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -18,6 +24,7 @@ interface ComboBoxProps
   onValueChange?: (value: any) => void;
   items: any[];
   disabled?: boolean;
+  width?: number;
   isLoading?: boolean;
 }
 
@@ -30,6 +37,7 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
       disabled,
       variant,
       size,
+      width,
       isLoading,
     }: ComboBoxProps,
     ref,
@@ -55,6 +63,7 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     const renderTrigger = () => {
       return (
         <Button
+          style={{ width: width ? width - 20 : undefined }}
           ref={ref}
           variant={variant || 'outline'}
           role='combobox'
@@ -131,7 +140,9 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     return isDesktop ? (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
-        <PopoverContent className='p-0 w-fit'>{renderContent()}</PopoverContent>
+        <PopoverContent style={{ width: width ? width - 20 : undefined }} className='p-0'>
+          {renderContent()}
+        </PopoverContent>
       </Popover>
     ) : (
       <Drawer open={open} onOpenChange={setOpen}>

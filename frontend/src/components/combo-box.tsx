@@ -125,7 +125,7 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
         <Command>
           {items.length >= 7 && <CommandInput placeholder={inputPlaceholder} />}
           {isDesktop ? (
-            <ScrollArea className={cn("max-h-fit overflow-y-auto h-[30vh]", items.length >= 7 && 'pr-1')}>
+            <ScrollArea className={cn("max-h-fit overflow-y-auto h-[30vh]")}>
               {commandList}
             </ScrollArea>
           ) : (

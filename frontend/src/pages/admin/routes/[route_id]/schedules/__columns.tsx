@@ -754,6 +754,10 @@ function Filter<TData>({ column }: FilterProps<TData>) {
   const columnFilterValue = column.getFilterValue();
   const { filterVariant, items } = column.columnDef.meta ?? {};
 
+  // Get current column width
+  const columnWidth = column.getSize();
+  console.log({ columnWidth });
+
   switch (filterVariant) {
     case 'select':
       return (
@@ -783,6 +787,7 @@ function Filter<TData>({ column }: FilterProps<TData>) {
           onValueChange={value => {
             column.setFilterValue(value);
           }}
+          width={columnWidth}
         />
       );
     case 'dateRange':
