@@ -1,5 +1,9 @@
 import { graphql } from '@/gql';
-import { GetRoutesByRegionQuery, GetRouteByIdQuery } from '@/gql/graphql';
+import {
+  GetRoutesByRegionQuery,
+  GetRouteByIdQuery,
+  GetRoutesQuery,
+} from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
 import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
@@ -104,9 +108,9 @@ export const useInfiniteRoutes = ({
 }: UseInfiniteRoutesProps) => {
   const navigate = useNavigate();
 
-  const routes = graphql(`
+  const infiniteRoutes = graphql(`
     query InfiniteRoutes($input: RoutesInput!) {
-      routes(input: $input) {
+      infiniteRoutes(input: $input) {
         edges {
           id
           departureCity {
@@ -140,12 +144,12 @@ export const useInfiniteRoutes = ({
 
   return useInfiniteQuery({
     queryKey: [
-      (routes.definitions[0] as any).name.value,
+      (infiniteRoutes.definitions[0] as any).name.value,
       { input: { take, query, sorting } },
     ],
     queryFn: async ({ pageParam }) => {
       try {
-        return await client.request(routes, {
+        return await client.request(infiniteRoutes, {
           input: {
             query,
             take,
@@ -165,14 +169,48 @@ export const useInfiniteRoutes = ({
       }
     },
     getNextPageParam: lastPage => {
-      return lastPage.routes.pageInfo.hasNextPage
-        ? { after: lastPage.routes.pageInfo.endCursor ?? null }
+      return lastPage.infiniteRoutes.pageInfo.hasNextPage
+        ? { after: lastPage.infiniteRoutes.pageInfo.endCursor ?? null }
         : undefined;
     },
     initialPageParam: { after: null },
     meta: {
       toastEnabled: true,
     },
+    ...options,
+  });
+};
+
+export const useRoutes = (
+  regionId: string,
+  options?: InitialDataOptions<GetRoutesQuery>,
+) => {
+  const routes = graphql(`
+    query GetRoutes($regionId: ID!) {
+      routes(regionId: $regionId) {
+        id
+        departureCity {
+          id
+          name
+        }
+        arrivalCity {
+          id
+          name
+        }
+        departureDate
+      }
+    }
+  `);
+
+  return useQuery({
+    queryKey: [(routes.definitions[0] as any).name.value, { regionId }],
+    queryFn: async () => {
+      return await client.request(routes, { regionId });
+    },
+    meta: {
+      toastEnabled: false,
+    },
+    retry: false,
     ...options,
   });
 };

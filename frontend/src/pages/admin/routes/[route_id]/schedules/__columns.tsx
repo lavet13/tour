@@ -118,62 +118,65 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
 
         setPreviousValue(enumValue);
 
-        const promise = new Promise((resolve, reject) => {
-          updateSchedule(
-            { input: { id: originalId, [columnId]: newValue } },
-            {
-              onSuccess: async data => {
-                await client.invalidateQueries({
-                  queryKey: ['GetSchedulesByRoute'],
-                });
-                resolve(data);
-              },
-              onError(error) {
-                reject(error);
-              },
-            },
-          );
-        });
+        const toastId = toast.loading(
+          `Обновление поля \`${columnTranslations[columnId as ScheduleColumns]}\`...`,
+        );
 
-        toast.promise(promise, {
-          loading: `Обновление поля \`${columnTranslations[columnId as ScheduleColumns]}\`...`,
-          duration: 10000,
-          action: {
-            label: 'Отменить',
-            onClick() {
-              updateSchedule(
-                { input: { id: originalId, [columnId]: previousValue } },
+        updateSchedule(
+          { input: { id: originalId, [columnId]: newValue } },
+          {
+            onSuccess: async () => {
+              await client.invalidateQueries({
+                queryKey: ['GetSchedulesByRoute'],
+              });
+              // On success, dismiss the loading toast and create a new success toast with the action button
+              toast.dismiss(toastId);
+              toast.success(
+                `\`${columnTranslations[columnId as ScheduleColumns]}\` изменёно ${daysOfWeekRu[enumValue as DaysOfWeek]} → ${daysOfWeekRu[newValue as DaysOfWeek]}`,
                 {
-                  async onSuccess() {
-                    await client.invalidateQueries({
-                      queryKey: ['GetSchedulesByRoute'],
-                    });
-                    toast.success(
-                      `Отмена изменения поля \`${columnTranslations[columnId as ScheduleColumns]}\` выполненo успешно!`,
-                    );
-                  },
-                  onError() {
-                    toast.error(
-                      `Не удалось отменить изменения поля \`${columnTranslations[columnId as ScheduleColumns]}\`!`,
-                    );
+                  duration: 10000,
+                  action: {
+                    label: 'Отменить',
+                    onClick() {
+                      updateSchedule(
+                        {
+                          input: { id: originalId, [columnId]: previousValue },
+                        },
+                        {
+                          async onSuccess() {
+                            await client.invalidateQueries({
+                              queryKey: ['GetSchedulesByRoute'],
+                            });
+                            toast.success(
+                              `Отмена изменения поля \`${columnTranslations[columnId as ScheduleColumns]}\` выполненo успешно!`,
+                            );
+                          },
+                          onError() {
+                            toast.error(
+                              `Не удалось отменить изменения поля \`${columnTranslations[columnId as ScheduleColumns]}\`!`,
+                            );
+                          },
+                        },
+                      );
+                    },
                   },
                 },
               );
             },
+            onError(error) {
+              // On error, convert the loading toast to an error toast without an action button
+              let errorMessage = 'Произошла ошибка!';
+              if (isGraphQLRequestError(error)) {
+                errorMessage = error.response.errors[0].message;
+              } else if (error instanceof Error) {
+                errorMessage = error.message;
+              }
+
+              toast.error(errorMessage, { id: toastId });
+            },
           },
-          success() {
-            return `\`${columnTranslations[columnId as ScheduleColumns]}\` изменёно ${daysOfWeekRu[enumValue as DaysOfWeek]} → ${daysOfWeekRu[newValue as DaysOfWeek]}`;
-          },
-          error(error) {
-            console.log({ error });
-            if (isGraphQLRequestError(error)) {
-              return error.response.errors[0].message;
-            } else if (error instanceof Error) {
-              return error.message;
-            }
-            return 'Произошла ошибка!';
-          },
-        });
+        );
+
         setIsEditing(false);
       };
 
@@ -620,7 +623,7 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
     enableHiding: false,
     cell: ({ row, table }) => {
       const { id } = row.original;
-      const { onEditSchedule } = table.options.meta || {};
+      const { onEdit } = table.options.meta || {};
       const [alertOpen, setAlertOpen] = useState(false);
       const [dropdownOpen, setDropdownOpen] = useState(false);
       const { toast } = useToast();
@@ -634,22 +637,27 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
       };
 
       const handleDelete = () => {
-        deleteSchedule({ id }, {
-          async onSuccess() {
-            await client.invalidateQueries({ queryKey: ['GetSchedulesByRoute'] });
-            toast({
-              title: 'Операция была проведена успешно!',
-              description: 'Запись из расписания была удалена безвозвратно!',
-            });
+        deleteSchedule(
+          { id },
+          {
+            async onSuccess() {
+              await client.invalidateQueries({
+                queryKey: ['GetSchedulesByRoute'],
+              });
+              toast({
+                title: 'Операция была проведена успешно!',
+                description: 'Запись из расписания была удалена безвозвратно!',
+              });
+            },
+            onSettled() {
+              setAlertOpen(false);
+            },
           },
-          onSettled() {
-            setAlertOpen(false);
-          }
-        });
+        );
       };
 
       const handleEdit = () => {
-        onEditSchedule?.(id);
+        onEdit?.(id);
       };
 
       return (
@@ -687,7 +695,11 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Отменить</AlertDialogCancel>
-                <Button variant="destructive" disabled={deleteIsPending} onClick={handleDelete}>
+                <Button
+                  variant='destructive'
+                  disabled={deleteIsPending}
+                  onClick={handleDelete}
+                >
                   {deleteIsPending && (
                     <>
                       <Loader2 className='animate-spin' />

@@ -38,32 +38,13 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Command,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-} from '@/components/ui/command';
-import {
   ArrowLeft,
-  ArrowUpDown,
-  Check,
-  ChevronDown,
   Edit,
-  ListCollapse,
   ListFilter,
   Loader2,
   MoreHorizontal,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
-import { useMediaQuery } from '@/hooks/use-media-query';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,6 +65,7 @@ import { AutosizeTextarea } from '@/components/autosize-textarea';
 import { toast } from 'sonner';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { useViewportDimensions } from '@/hooks/use-viewport-dimentions';
+import { DataTableViewOptions } from '@/components/data-table-column-toggle';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
 
@@ -116,7 +98,7 @@ const BookingsPage: FC = () => {
 
   import.meta.env.DEV && console.log({ data, flatData });
 
-  const columnResizeModeRef = useRef<ColumnResizeMode>('onChange');
+  const columnResizeModeRef = useRef<ColumnResizeMode>('onEnd');
 
   const defaultColumn: Partial<ColumnDef<Booking>> = {
     cell: ({
@@ -326,7 +308,11 @@ const BookingsPage: FC = () => {
                 Вернуться назад
               </TooltipContent>
             </Tooltip>
-            <HideColumns table={table} isMobile={isMobile} />
+            <DataTableViewOptions
+              table={table}
+              isMobile={isMobile}
+              columnTranslations={columnTranslations}
+            />
             {isFullHD && (
               <Button
                 onClick={() => {
@@ -430,6 +416,7 @@ const BookingsPage: FC = () => {
                                           .deltaOffset ?? 0)
                                       }px)`
                                     : '',
+                                zIndex: 50,
                               },
                             }}
                           />
@@ -530,106 +517,6 @@ function TableCellSkeleton({ table }: TableCellSkeletonProps<Booking>) {
         );
       })}
     </>
-  );
-}
-
-interface HideColumnsProps<TData> {
-  table: ReactTable<TData>;
-  isMobile: boolean;
-}
-
-function HideColumns({ table, isMobile }: HideColumnsProps<Booking>) {
-  const isDesktop = useMediaQuery('(min-width: 768px)');
-
-  const allColumns = table
-    .getAllColumns()
-    .filter(column => column.getCanHide());
-  const visibleColumns = allColumns.filter(column => column.getIsVisible());
-  const isAllVisible = visibleColumns.length === allColumns.length;
-  const isSomeVisible = visibleColumns.length > 0 && !isAllVisible;
-
-  const toggleAllColumns = (visible: boolean) => {
-    allColumns.forEach(column => column.toggleVisibility(visible));
-  };
-
-  const renderTrigger = () => {
-    return (
-      <Button
-        className='grow sm:grow-0'
-        size={isMobile ? 'sm' : 'default'}
-        variant='outline'
-      >
-        <ListCollapse />
-        Скрыть столбцы
-        <ChevronDown />
-      </Button>
-    );
-  };
-
-  const renderContent = () => {
-    return (
-      <Command>
-        <CommandList>
-          <CommandGroup>
-            <CommandItem
-              onSelect={() => toggleAllColumns(!isAllVisible)}
-              className='flex gap-[4rem]'
-            >
-              <span className={cn(!isAllVisible && 'opacity-70')}>
-                Все столбцы
-              </span>
-              {isAllVisible || isSomeVisible ? (
-                <Check
-                  className={cn(
-                    'ml-auto',
-                    isAllVisible ? 'opacity-100' : 'opacity-70',
-                    isSomeVisible && 'opacity-70',
-                  )}
-                />
-              ) : null}
-            </CommandItem>
-          </CommandGroup>
-
-          <CommandSeparator />
-
-          <ScrollArea className='h-[calc(16rem)]'>
-            <CommandGroup>
-              {allColumns.map(column => (
-                <CommandItem
-                  key={column.id}
-                  onSelect={() =>
-                    column.toggleVisibility(!column.getIsVisible())
-                  }
-                  className='flex gap-3'
-                >
-                  <span className={cn(!column.getIsVisible() && 'opacity-50')}>
-                    {columnTranslations[column.id as BookingColumns] ??
-                      'no-name'}
-                  </span>
-                  {column.getIsVisible() ? (
-                    <Check className='ml-auto opacity-100' />
-                  ) : (
-                    <Check className='ml-auto opacity-0' />
-                  )}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </ScrollArea>
-        </CommandList>
-      </Command>
-    );
-  };
-
-  return isDesktop ? (
-    <Popover>
-      <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
-      <PopoverContent className='p-0 w-fit'>{renderContent()}</PopoverContent>
-    </Popover>
-  ) : (
-    <Drawer>
-      <DrawerTrigger asChild>{renderTrigger()}</DrawerTrigger>
-      <DrawerContent>{renderContent()}</DrawerContent>
-    </Drawer>
   );
 }
 

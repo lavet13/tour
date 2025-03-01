@@ -37,6 +37,15 @@ export const useInfiniteBookings = ({
           travelDate
           seatsCount
           commentary
+          route {
+            id
+            arrivalCity {
+              name
+            }
+            departureCity {
+              name
+            }
+          }
           status
           createdAt
           updatedAt
@@ -83,7 +92,7 @@ export const useInfiniteBookings = ({
         throw error;
       }
     },
-    getNextPageParam: (lastPage) => {
+    getNextPageParam: lastPage => {
       return lastPage.bookings.pageInfo.hasNextPage
         ? { after: lastPage.bookings.pageInfo.endCursor ?? null }
         : undefined;

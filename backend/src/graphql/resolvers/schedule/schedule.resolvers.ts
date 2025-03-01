@@ -113,12 +113,12 @@ const resolvers: Resolvers = {
           if (err instanceof PrismaClientKnownRequestError) {
             if (err.code === 'P2002') {
               throw new GraphQLError(
-                `День недели \`${daysOfWeekRu[dayOfWeek as DaysOfWeek]}\` уже определен!`,
+                `День недели \`${daysOfWeekRu[dayOfWeek as DaysOfWeek]}\` уже определен(а)!`,
               );
             }
           }
           console.log({ err });
-          throw new GraphQLError('Unknown error!');
+          throw new GraphQLError('Произошла ошибка!');
         });
 
       return schedule;
@@ -142,12 +142,12 @@ const resolvers: Resolvers = {
           if (err instanceof PrismaClientKnownRequestError) {
             if (err.code === 'P2002') {
               throw new GraphQLError(
-                `День недели \`${daysOfWeekRu[dayOfWeek as DaysOfWeek]}\` уже определен!`,
+                `День недели \`${daysOfWeekRu[dayOfWeek as DaysOfWeek]}\` уже определен(a)!`,
               );
             }
           }
           console.log({ err });
-          throw new GraphQLError('Unknown error!');
+          throw new GraphQLError('Произошла ошибка!');
         });
 
       return schedule;
@@ -155,11 +155,13 @@ const resolvers: Resolvers = {
     async deleteSchedule(_, args, ctx) {
       const id = args.id;
 
-      const deletedSchedule = await ctx.prisma.schedule.delete({
-        where: {
-          id,
-        },
-      }).catch((err: unknown) => {
+      const deletedSchedule = await ctx.prisma.schedule
+        .delete({
+          where: {
+            id,
+          },
+        })
+        .catch((err: unknown) => {
           if (err instanceof PrismaClientKnownRequestError) {
             console.log({ errCode: err.code });
             if (err.code === 'P2025') {

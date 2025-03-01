@@ -46,7 +46,6 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
             variant='outline'
             className={cn(
               'flex w-full',
-              'focus:outline-none focus:ring-1 focus:ring-ring',
               'justify-start text-left font-normal',
               !value && 'text-muted-foreground',
             )}

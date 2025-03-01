@@ -92,7 +92,7 @@ function RoutesPage() {
   });
 
   const flatData = useMemo(
-    () => data?.pages.flatMap(page => page.routes.edges) ?? [],
+    () => data?.pages.flatMap(page => page.infiniteRoutes.edges) ?? [],
     [data],
   );
 
@@ -139,7 +139,6 @@ function RoutesPage() {
   };
 
   const handleDeleteRoute = (id: string) => {
-    console.log({ id });
   };
 
   const MOBILE_BREAKPOINT = 400;

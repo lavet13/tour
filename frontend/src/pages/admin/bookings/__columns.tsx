@@ -732,40 +732,7 @@ export const columns: ColumnDef<Booking, unknown>[] = [
     meta: {
       filterVariant: 'dateRange',
     },
-  },
-  {
-    enableResizing: false,
-    id: 'actions',
-    size: 70,
-    enableHiding: false,
-    cell: ({ row }) => {
-      const { id } = row.original;
-
-      return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant='ghost' className='h-8 w-8 p-0'>
-              <span className='sr-only'>Открыть меню</span>
-              <MoreHorizontal className='h-4 w-4' />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align='end'>
-            <DropdownMenuLabel>Действия</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText('payment.id')}
-            >
-              <Edit />
-              Изменить
-            </DropdownMenuItem>
-            <DropdownMenuItem className='text-destructive focus:text-destructive focus:bg-destructive/10'>
-              <Trash />
-              Удалить
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      );
-    },
-  },
+  }
 ];
 
 interface HeaderProps<TData> {
@@ -848,7 +815,7 @@ function Filter<TData>({ column }: FilterProps<TData>) {
   ) : filterVariant === 'range' ? (
     <div className='flex flex-1 gap-1 items-center'>
       <Input
-        className='text-foreground p-1 w-16 h-8 flex-1'
+        className='p-1 w-16 h-8 flex-1'
         type='number'
         value={(columnFilterValue as [string, string])?.[0] ?? ''}
         onChange={e => {
@@ -859,7 +826,7 @@ function Filter<TData>({ column }: FilterProps<TData>) {
         placeholder={`Мин`}
       />
       <Input
-        className='text-foreground p-1 w-16 h-8 flex-1'
+        className='p-1 w-16 h-8 flex-1'
         type='number'
         value={(columnFilterValue as [string, string])?.[1] ?? ''}
         onChange={e => {
@@ -872,7 +839,7 @@ function Filter<TData>({ column }: FilterProps<TData>) {
     </div>
   ) : (
     <Input
-      className='text-foreground p-1 px-2 h-8'
+      className='p-1 px-2 h-8'
       placeholder={'Искать...'}
       value={(columnFilterValue ?? '') as string}
       onChange={e => {

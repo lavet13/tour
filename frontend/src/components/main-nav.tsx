@@ -39,8 +39,8 @@ import {
   NavigationMenuViewport as RadixNavigationMenuViewport,
   NavigationMenuTrigger as RadixNavigationMenuTrigger,
 } from '@radix-ui/react-navigation-menu';
-import { useRoutesByRegion } from '@/features/routes/api/queries';
-import { GetRoutesByRegionQuery } from '@/gql/graphql';
+import { useRoutes, useRoutesByRegion } from '@/features/routes/api/queries';
+import { GetRoutesByRegionQuery, GetRoutesQuery } from '@/gql/graphql';
 import { useRegionByName } from '@/features/region/api/queries';
 import { navigationMenuStateAtom } from '@/lib/atoms/navigation-menu';
 import { useAtom } from 'jotai';
@@ -104,6 +104,73 @@ function onNavChange() {
   });
 }
 
+interface CityConnection {
+  id: string;
+  name: string;
+  routeId: string;
+  departureDate: Date;
+}
+
+interface ProcessedCity {
+  id: string;
+  name: string;
+  connections: CityConnection[];
+}
+
+function processCityRoutes(data: GetRoutesQuery | undefined): ProcessedCity[] {
+  // If data is undefined, return an empty array
+  if (!data) return [];
+
+  // Create a map to store all cities and their connections
+  const cityMap = new Map<string, ProcessedCity>();
+
+  // Process each route
+  data.routes.forEach(route => {
+    const departureCity = route.departureCity;
+    const arrivalCity = route.arrivalCity;
+
+    // Skip if either city is null
+    if (!departureCity || !arrivalCity) return;
+
+    // Add departure city if not already in the map
+    if (!cityMap.has(departureCity.id)) {
+      cityMap.set(departureCity.id, {
+        id: departureCity.id,
+        name: departureCity.name,
+        connections: [],
+      });
+    }
+
+    // Add arrival city if not already in the map
+    if (!cityMap.has(arrivalCity.id)) {
+      cityMap.set(arrivalCity.id, {
+        id: arrivalCity.id,
+        name: arrivalCity.name,
+        connections: [],
+      });
+    }
+
+    // Add the connection from departure to arrival
+    cityMap.get(departureCity.id)?.connections.push({
+      id: arrivalCity.id,
+      name: arrivalCity.name,
+      routeId: route.id,
+      departureDate: route.departureDate,
+    });
+
+    // Add the connection from arrival to departure
+    cityMap.get(arrivalCity.id)?.connections.push({
+      id: departureCity.id,
+      name: departureCity.name,
+      routeId: route.id,
+      departureDate: route.departureDate,
+    });
+  });
+
+  // Convert the map to an array
+  return Array.from(cityMap.values());
+}
+
 const MainNav: FC = () => {
   const [open, setOpen] = useAtom(navigationMenuStateAtom);
   const { data: ldnrRegion } = useRegionByName('ЛДНР');
@@ -116,7 +183,7 @@ const MainNav: FC = () => {
     data: ldnrData,
     isPending: ldnrIsPending,
     fetchStatus: ldnrFetchStatus,
-  } = useRoutesByRegion(ldnrRegion?.regionByName?.id as string, {
+  } = useRoutes(ldnrRegion?.regionByName?.id as string, {
     enabled: !!ldnrRegion,
   });
 
@@ -124,7 +191,7 @@ const MainNav: FC = () => {
     data: coastalData,
     isPending: coastalIsPending,
     fetchStatus: coastalFetchStatus,
-  } = useRoutesByRegion(coastalRegion?.regionByName?.id as string, {
+  } = useRoutes(coastalRegion?.regionByName?.id as string, {
     enabled: !!coastalRegion,
   });
 
@@ -132,8 +199,8 @@ const MainNav: FC = () => {
     coastalFetchStatus === 'fetching' && coastalIsPending;
   const ldnrIsLoading = ldnrFetchStatus === 'fetching' && ldnrIsPending;
 
-  const ldnrRoutes = ldnrData?.routesByRegion ?? [];
-  const coastalRoutes = coastalData?.routesByRegion ?? [];
+  const processedLDNR = processCityRoutes(ldnrData);
+  const processedCoastal = processCityRoutes(coastalData);
 
   const routesIsLoading = ldnrIsLoading || coastalIsLoading;
   if (routesIsLoading) {
@@ -181,12 +248,12 @@ const MainNav: FC = () => {
                       <Link to={'/bookings'}>Показать все</Link>
                     </Button>
                     <NavigationMenuItem>
-                      <NavigationRoutes title='ЛДНР' routes={ldnrRoutes} />
+                      <NavigationRoutes title='ЛДНР' routes={processedLDNR} />
                     </NavigationMenuItem>
                     <NavigationMenuItem>
                       <NavigationRoutes
                         title='Азовское побережье'
-                        routes={coastalRoutes}
+                        routes={processedCoastal}
                       />
                     </NavigationMenuItem>
                   </NavigationMenuList>
@@ -331,21 +398,19 @@ const ListItem = forwardRef<HTMLAnchorElement, ListItemProps>(
   },
 );
 
-type Route = GetRoutesByRegionQuery['routesByRegion'][number];
 interface NavigationRoutesProps {
-  routes: Route[];
+  routes: ProcessedCity[];
   title: string;
 }
 
 const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
-  const [, setOpen] = useAtom(navigationMenuStateAtom);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchRoute, setSearchRoute] = useState('');
 
   const filteredRoutes = useMemo(() => {
-    return routes.filter(route =>
-      route.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    return routes.filter(city =>
+      city.name.toLowerCase().includes(searchRoute.toLowerCase()),
     );
-  }, [routes, searchTerm]);
+  }, [routes, searchRoute]);
 
   return (
     <>
@@ -376,9 +441,9 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
               <Input
                 type='text'
                 placeholder='Найти город...'
-                className='self-center max-w-[150px] mr-2 ml-1 mb-2'
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
+                className='self-center max-w-[150px] mr-2 ml-1 mb-2 h-8'
+                value={searchRoute}
+                onChange={e => setSearchRoute(e.target.value)}
               />
               <ScrollArea
                 className={cn(routes.length === 0 && 'w-52', 'h-[22rem]')}
@@ -409,64 +474,16 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                         <Separator className='mb-4' />
                         <ScrollArea
                           className={cn(
-                            'h-[16rem] min-w-[200px] min-[860px]:min-w-[300px]',
+                            'h-[21rem] min-w-[200px] min-[860px]:min-w-[300px]',
                           )}
                         >
-                          <div className='grid gap-2'>
-                            {route.departureTrips.map(trip => {
-                              const isAvailable = trip.departureDate
-                                ? trip.departureDate <= new Date()
-                                : true;
-                              const formattedDate = trip.departureDate
-                                ? new Date(
-                                    trip.departureDate,
-                                  ).toLocaleDateString('ru-RU')
-                                : null;
-
-                              let content: ReactNode = null;
-
-                              const handleClick = () => {
-                                window.scrollTo({ top: 0 });
-                              };
-
-                              content = isAvailable ? (
-                                <Button
-                                  asChild={isAvailable}
-                                  key={trip.id}
-                                  size='sm'
-                                  variant='ghost'
-                                  className={cn('w-full justify-between')}
-                                  onClick={() => setOpen('')}
-                                >
-                                  <Link
-                                    onClick={handleClick}
-                                    to={`booking-bus?departureCityId=${route.id}&arrivalCityId=${trip.arrivalCity?.id}`}
-                                  >
-                                    {trip.arrivalCity?.name}
-                                  </Link>
-                                </Button>
-                              ) : (
-                                <Button
-                                  key={trip.id}
-                                  asChild={isAvailable}
-                                  size='sm'
-                                  variant='ghost'
-                                  className={cn(
-                                    'w-full justify-between',
-                                    !isAvailable && 'opacity-50',
-                                  )}
-                                >
-                                  {trip.arrivalCity?.name}
-                                  {!isAvailable && formattedDate && (
-                                    <span className='text-xs text-muted-foreground'>
-                                      {`от ${formattedDate}`}
-                                    </span>
-                                  )}
-                                </Button>
-                              );
-
-                              return content;
-                            })}
+                          <div className='grid gap-0.5'>
+                            {route.connections.map(cityConnection => (
+                              <CityConnection
+                                cityConnection={cityConnection}
+                                route={route}
+                              />
+                            ))}
                           </div>
                         </ScrollArea>
                       </div>
@@ -476,7 +493,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                 {routes.length !== 0 && filteredRoutes.length === 0 && (
                   <NavigationMenuItem className='text-center self-center'>
                     <span className='text-sm text-muted-foreground'>
-                      Не найдено.
+                      Не найдено
                     </span>
                   </NavigationMenuItem>
                 )}
@@ -502,6 +519,63 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
       </NavigationMenuContent>
     </>
   );
+};
+
+const CityConnection = ({
+  cityConnection,
+  route,
+}: {
+  cityConnection: CityConnection;
+  route: ProcessedCity;
+}) => {
+  const [_, setOpen] = useAtom(navigationMenuStateAtom);
+  const isAvailable = cityConnection.departureDate
+    ? cityConnection.departureDate <= new Date()
+    : true;
+  const formattedDate = cityConnection.departureDate
+    ? new Date(cityConnection.departureDate).toLocaleDateString('ru-RU')
+    : null;
+
+  let content: ReactNode = null;
+
+  const handleClick = () => {
+    window.scrollTo({ top: 0 });
+  };
+
+  content = isAvailable ? (
+    <Button
+      asChild={isAvailable}
+      key={cityConnection.id}
+      size='sm'
+      variant='ghost'
+      className={cn('w-full justify-between')}
+      onClick={() => setOpen('')}
+    >
+      <Link
+        onClick={handleClick}
+        to={`booking-bus?departureCityId=${route.id}&arrivalCityId=${cityConnection.id}`}
+      >
+        {cityConnection.name}
+      </Link>
+    </Button>
+  ) : (
+    <Button
+      key={cityConnection.id}
+      asChild={isAvailable}
+      size='sm'
+      variant='ghost'
+      className={cn('w-full justify-between', !isAvailable && 'opacity-50')}
+    >
+      {cityConnection.name}
+      {!isAvailable && formattedDate && (
+        <span className='text-xs text-muted-foreground'>
+          {`от ${formattedDate}`}
+        </span>
+      )}
+    </Button>
+  );
+
+  return content;
 };
 
 export default MainNav;

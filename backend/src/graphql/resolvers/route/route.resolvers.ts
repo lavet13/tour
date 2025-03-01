@@ -12,7 +12,7 @@ import { hasRoles, isAuthenticated } from '@/graphql/composition/authorization';
 
 const resolvers: Resolvers = {
   Query: {
-    async routes(_, args, ctx) {
+    async infiniteRoutes(_, args, ctx) {
       const query = args.input.query;
 
       enum PaginationDirection {
@@ -125,6 +125,30 @@ const resolvers: Resolvers = {
         },
       };
     },
+    async routes(_, { regionId }, ctx) {
+      const routes = await ctx.prisma.route.findMany({
+        where: {
+          regionId,
+          isActive: true,
+        },
+      });
+
+      return routes;
+    },
+    async routesByRegion(_, { regionId }, { prisma }) {
+      const cities = await prisma.city.findMany({
+        where: {
+          departureTrips: {
+            some: {
+              regionId,
+              isActive: true,
+            },
+          },
+        },
+      });
+
+      return cities;
+    },
     async routeById(_, args, ctx) {
       const id = args.id;
 
@@ -151,20 +175,6 @@ const resolvers: Resolvers = {
         });
 
       return route;
-    },
-    async routesByRegion(_, { regionId }, { prisma }) {
-      const cities = await prisma.city.findMany({
-        where: {
-          departureTrips: {
-            some: {
-              regionId,
-              isActive: true,
-            },
-          },
-        },
-      });
-
-      return cities;
     },
   },
   Mutation: {
@@ -266,7 +276,7 @@ const resolvers: Resolvers = {
 
 const resolversComposition: ResolversComposerMapping<any> = {
   'Query.routeById': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
-  'Query.routes': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
+  'Query.infiniteRoutes': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
   'Mutation.createRoute': [
     isAuthenticated(),
     hasRoles([Role.MANAGER, Role.ADMIN]),

@@ -172,7 +172,7 @@ function Schedules() {
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     meta: {
-      onEditSchedule: handleEditSchedule,
+      onEdit: handleEditSchedule,
     },
     state: {
       pagination,
