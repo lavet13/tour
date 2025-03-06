@@ -3,8 +3,8 @@ import gql from 'graphql-tag';
 export default gql`
   type Query {
     cities: [City!]!
-    departureCities(regionId: ID): [City!]!
-    arrivalCities(departureCityId: ID): [City!]!
+    departureCities: [City!]!
+    arrivalCities(cityId: ID): [City!]!
   }
 
   type Mutation {
@@ -14,8 +14,8 @@ export default gql`
   type City {
     id: ID!
     name: String!
-    departureTrips(regionId: ID!): [Route!]!
-    arrivalTrips(regionId: ID!): [Route!]!
+    departureTrips: [Route!]!
+    arrivalTrips: [Route!]!
     createdAt: Date!
     updatedAt: Date!
   }

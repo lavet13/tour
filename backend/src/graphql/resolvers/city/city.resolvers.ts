@@ -13,14 +13,15 @@ const resolvers: Resolvers = {
 
       return cities;
     },
-    async arrivalCities(_, { departureCityId }, { prisma }) {
-      if (departureCityId === null) {
+    async arrivalCities(_, { cityId }, { prisma }) {
+      if (cityId === null) {
         return [];
       }
 
-      const routes = await prisma.route.findMany({
+      // Get routes where the provided cityId is either the departure or arrival city
+      const arrivalCitiesQuery = await prisma.route.findMany({
         where: {
-          departureCityId,
+          departureCityId: cityId,
           OR: [{ departureDate: null }, { departureDate: { lte: new Date() } }],
           isActive: true,
         },
@@ -30,21 +31,44 @@ const resolvers: Resolvers = {
         distinct: ['arrivalCityId'],
       });
 
-      return routes.map(route => route.arrivalCity);
-    },
+      const departureCitiesQuery = await prisma.route.findMany({
+        where: {
+          arrivalCityId: cityId,
+          OR: [{ departureDate: null }, { departureDate: { lte: new Date() } }],
+          isActive: true,
+        },
+        select: {
+          departureCity: true,
+        },
+        distinct: ['departureCityId'],
+      });
 
-    async departureCities(_, { regionId }, { prisma }) {
-      const cities = await prisma.city.findMany({
+      // Process and combine results
+      const arrivalCities = arrivalCitiesQuery
+        .map(route => route.arrivalCity)
+        .filter(Boolean);
+      const departureCities = departureCitiesQuery
+        .map(route => route.departureCity)
+        .filter(Boolean);
+
+      const citiesMap = new Map();
+
+      [...arrivalCities, ...departureCities].forEach(city => {
+        if (city?.id) {
+          citiesMap.set(city.id, city);
+        }
+      });
+
+      return Array.from(citiesMap.values());
+    },
+    async departureCities(_, __, { prisma }) {
+      // Find cities that are departure cities for the given region
+      const departureCitiesQuery = await prisma.city.findMany({
         where: {
           departureTrips: {
             some: {
-              region: {
-                id: regionId ?? undefined,
-              },
               OR: [
-                {
-                  departureDate: null,
-                },
+                { departureDate: null },
                 { departureDate: { lte: new Date() } },
               ],
               isActive: true,
@@ -54,8 +78,35 @@ const resolvers: Resolvers = {
         distinct: ['id'],
       });
 
-      console.log(inspect(cities, { depth: Infinity, colors: true }));
+      // Find cities that are arrival cities for the given region
+      const arrivalCitiesQuery = await prisma.city.findMany({
+        where: {
+          arrivalTrips: {
+            some: {
+              OR: [
+                { departureDate: null },
+                { departureDate: { lte: new Date() } },
+              ],
+              isActive: true,
+            },
+          },
+        },
+        distinct: ['id'],
+      });
 
+      // Combine both sets of cities and remove duplicates
+      const citiesMap = new Map();
+
+      [...departureCitiesQuery, ...arrivalCitiesQuery].forEach(city => {
+        if (city && city.id) {
+          citiesMap.set(city.id, city);
+        }
+      });
+
+      // Convert map values to array
+      const cities = Array.from(citiesMap.values());
+
+      console.log(inspect(cities, { depth: Infinity, colors: true }));
       return cities;
     },
   },
@@ -71,11 +122,11 @@ const resolvers: Resolvers = {
     },
   },
   City: {
-    async arrivalTrips(parent, { regionId }, { loaders }) {
-      return loaders.arrivalTripsLoader(regionId).load(parent.id);
+    async arrivalTrips(parent, _, { loaders }) {
+      return loaders.arrivalTripsLoader.load(parent.id);
     },
-    async departureTrips(parent, { regionId }, { loaders }) {
-      return loaders.departureTripsLoader(regionId).load(parent.id);
+    async departureTrips(parent, _, { loaders }) {
+      return loaders.departureTripsLoader.load(parent.id);
     },
   },
 };

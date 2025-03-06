@@ -39,7 +39,7 @@ import {
   NavigationMenuViewport as RadixNavigationMenuViewport,
   NavigationMenuTrigger as RadixNavigationMenuTrigger,
 } from '@radix-ui/react-navigation-menu';
-import { useRoutes, useRoutesByRegion } from '@/features/routes/api/queries';
+import { useRoutes } from '@/features/routes/api/queries';
 import { GetRoutesByRegionQuery, GetRoutesQuery } from '@/gql/graphql';
 import { useRegionByName } from '@/features/region/api/queries';
 import { navigationMenuStateAtom } from '@/lib/atoms/navigation-menu';
@@ -125,12 +125,12 @@ function processCityRoutes(data: GetRoutesQuery | undefined): ProcessedCity[] {
   const cityMap = new Map<string, ProcessedCity>();
 
   // Process each route
-  data.routes.forEach(route => {
+  for (const route of data.routes) {
     const departureCity = route.departureCity;
     const arrivalCity = route.arrivalCity;
 
     // Skip if either city is null
-    if (!departureCity || !arrivalCity) return;
+    if (!departureCity || !arrivalCity) continue;
 
     // Add departure city if not already in the map
     if (!cityMap.has(departureCity.id)) {
@@ -165,7 +165,7 @@ function processCityRoutes(data: GetRoutesQuery | undefined): ProcessedCity[] {
       routeId: route.id,
       departureDate: route.departureDate,
     });
-  });
+  }
 
   // Convert the map to an array
   return Array.from(cityMap.values());
@@ -238,7 +238,7 @@ const MainNav: FC = () => {
             </NavigationMenuTrigger>
             <NavigationMenuContent>
               <RadixNavigationMenuSub className='flex'>
-                <ScrollArea className='h-fit'>
+                <ScrollArea className='max-h-[400px]'>
                   <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 pt-2 pl-2 pb-2'>
                     <Button
                       className='px-3 underline decoration-dotted hover:decoration-solid h-fit'
@@ -457,7 +457,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
                     <RadixNavigationMenuTrigger asChild>
                       <Button
                         className={cn(
-                          'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto gap-1 mr-2 ml-2',
+                          'flex-1 group data-[state=open]:bg-accent data-[state=open]:text-accent-foreground space-y-1 space-x-0 cursor-auto gap-1 ml-2',
                         )}
                         variant='ghost'
                         size='sm'

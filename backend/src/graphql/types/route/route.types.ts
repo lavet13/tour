@@ -5,7 +5,6 @@ export default gql`
     routes(regionId: ID!): [Route!]!
     infiniteRoutes(input: RoutesInput!): RoutesResponse!
     routeById(id: ID): Route
-    routesByRegion(regionId: ID!): [City!]!
   }
 
   type Mutation {
@@ -29,6 +28,7 @@ export default gql`
 
     query: String!
     sorting: [SortingState!]!
+    regionId: ID
   }
 
   type PageInfo {

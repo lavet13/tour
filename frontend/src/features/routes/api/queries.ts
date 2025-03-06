@@ -1,6 +1,5 @@
 import { graphql } from '@/gql';
 import {
-  GetRoutesByRegionQuery,
   GetRouteByIdQuery,
   GetRoutesQuery,
 } from '@/gql/graphql';
@@ -14,40 +13,7 @@ import { InitialDataInfiniteOptions } from '@/react-query/types/initial-data-inf
 import { useNavigate } from 'react-router-dom';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { SortingState } from '@tanstack/react-table';
-
-export const useRoutesByRegion = (
-  regionId: string,
-  options?: InitialDataOptions<GetRoutesByRegionQuery>,
-) => {
-  const routesByRegion = graphql(`
-    query GetRoutesByRegion($regionId: ID!) {
-      routesByRegion(regionId: $regionId) {
-        id
-        name
-        departureTrips(regionId: $regionId) {
-          id
-          arrivalCity {
-            id
-            name
-          }
-          departureDate
-        }
-      }
-    }
-  `);
-
-  return useQuery<GetRoutesByRegionQuery>({
-    queryKey: [(routesByRegion.definitions[0] as any).name.value, { regionId }],
-    queryFn: async () => {
-      return await client.request(routesByRegion, { regionId });
-    },
-    meta: {
-      toastEnabled: false,
-    },
-    retry: false,
-    ...options,
-  });
-};
+import { useEffect, useState } from 'react';
 
 export const useRouteById = (
   id: string | null,
@@ -95,18 +61,23 @@ type TPageParam = {
 
 type UseInfiniteRoutesProps = {
   take?: number;
+  initialTake?: number;
   query?: string;
   sorting?: SortingState;
   options?: InitialDataInfiniteOptions<InfiniteRoutesQuery, TPageParam>;
+  regionId?: string | null;
 };
 
 export const useInfiniteRoutes = ({
   query = '',
+  initialTake = 5,
   take = 30,
   sorting = [],
   options = {},
+  regionId,
 }: UseInfiniteRoutesProps) => {
   const navigate = useNavigate();
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   const infiniteRoutes = graphql(`
     query InfiniteRoutes($input: RoutesInput!) {
@@ -142,19 +113,23 @@ export const useInfiniteRoutes = ({
     }
   `);
 
-  return useInfiniteQuery({
+  const result = useInfiniteQuery({
     queryKey: [
       (infiniteRoutes.definitions[0] as any).name.value,
-      { input: { take, query, sorting } },
+      { input: { take, query, sorting, regionId } },
     ],
     queryFn: async ({ pageParam }) => {
       try {
+        // Use the appropriate take value based on initialization state
+        const currentTake = hasInitialized ? take : initialTake;
+
         return await client.request(infiniteRoutes, {
           input: {
             query,
-            take,
+            take: currentTake,
             after: pageParam.after,
             sorting,
+            regionId: regionId ?? null,
           },
         });
       } catch (error) {
@@ -168,6 +143,7 @@ export const useInfiniteRoutes = ({
         throw error;
       }
     },
+    maxPages: 10,
     getNextPageParam: lastPage => {
       return lastPage.infiniteRoutes.pageInfo.hasNextPage
         ? { after: lastPage.infiniteRoutes.pageInfo.endCursor ?? null }
@@ -179,6 +155,15 @@ export const useInfiniteRoutes = ({
     },
     ...options,
   });
+
+  // Mark as initialized after the first successful fetch
+  useEffect(() => {
+    if (result.data && !hasInitialized) {
+      setHasInitialized(true);
+    }
+  }, [result.data, hasInitialized]);
+
+  return result;
 };
 
 export const useRoutes = (

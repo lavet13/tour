@@ -53,11 +53,13 @@ const resolvers: Resolvers = {
       // Prepare sorting
       const sorting = args.input.sorting || [];
 
-      const orderBy: Prisma.BookingOrderByWithRelationInput[] = sorting.length
-        ? sorting.flatMap((sort): Prisma.BookingOrderByWithRelationInput[] => {
+      const orderBy: Prisma.RouteOrderByWithRelationInput[] = sorting.length
+        ? sorting.flatMap((sort): Prisma.RouteOrderByWithRelationInput[] => {
             return [{ [sort.id]: sort.desc ? 'desc' : 'asc' }, { id: 'asc' }];
           })
         : [{ updatedAt: 'desc' }, { id: 'asc' }];
+
+      const regionId = args.input.regionId;
 
       // fetching routes with extra one, so to determine if there's more to fetch
       const routes = await ctx.prisma.route.findMany({
@@ -79,6 +81,7 @@ const resolvers: Resolvers = {
               },
             },
           ],
+          regionId,
         },
       });
 
@@ -134,20 +137,6 @@ const resolvers: Resolvers = {
       });
 
       return routes;
-    },
-    async routesByRegion(_, { regionId }, { prisma }) {
-      const cities = await prisma.city.findMany({
-        where: {
-          departureTrips: {
-            some: {
-              regionId,
-              isActive: true,
-            },
-          },
-        },
-      });
-
-      return cities;
     },
     async routeById(_, args, ctx) {
       const id = args.id;

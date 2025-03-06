@@ -9,12 +9,12 @@ import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
 
 export const useArrivalCities = (
-  departureCityId: string,
+  cityId: string,
   options?: InitialDataOptions<GetArrivalCitiesQuery>,
 ) => {
   const arrivalCities = graphql(`
-    query GetArrivalCities($departureCityId: ID) {
-      arrivalCities(departureCityId: $departureCityId) {
+    query GetArrivalCities($cityId: ID) {
+      arrivalCities(cityId: $cityId) {
         id
         name
       }
@@ -22,12 +22,9 @@ export const useArrivalCities = (
   `);
 
   return useQuery({
-    queryKey: [
-      (arrivalCities.definitions[0] as any).name.value,
-      { departureCityId },
-    ],
+    queryKey: [(arrivalCities.definitions[0] as any).name.value, { cityId }],
     queryFn: async () => {
-      return await client.request(arrivalCities, { departureCityId });
+      return await client.request(arrivalCities, { cityId });
     },
     meta: {
       toastEnabled: true,
@@ -61,12 +58,11 @@ export const useCities = (options?: InitialDataOptions<GetCitiesQuery>) => {
 };
 
 export const useDepartureCities = (
-  regionId?: string,
   options?: InitialDataOptions<GetDepartureCitiesQuery>,
 ) => {
   const departureCities = graphql(`
-    query GetDepartureCities($regionId: ID) {
-      departureCities(regionId: $regionId) {
+    query GetDepartureCities {
+      departureCities {
         id
         name
       }
@@ -74,12 +70,9 @@ export const useDepartureCities = (
   `);
 
   return useQuery({
-    queryKey: [
-      (departureCities.definitions[0] as any).name.value,
-      { regionId },
-    ],
+    queryKey: [(departureCities.definitions[0] as any).name.value],
     queryFn: async () => {
-      return await client.request(departureCities, { regionId });
+      return await client.request(departureCities);
     },
     meta: {
       toastEnabled: true,
