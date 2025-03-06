@@ -1,8 +1,5 @@
 import { graphql } from '@/gql';
-import {
-  GetRouteByIdQuery,
-  GetRoutesQuery,
-} from '@/gql/graphql';
+import { GetRouteByIdQuery, GetRoutesQuery } from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
 import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
@@ -13,7 +10,7 @@ import { InitialDataInfiniteOptions } from '@/react-query/types/initial-data-inf
 import { useNavigate } from 'react-router-dom';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { SortingState } from '@tanstack/react-table';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export const useRouteById = (
   id: string | null,
@@ -61,7 +58,7 @@ type TPageParam = {
 
 type UseInfiniteRoutesProps = {
   take?: number;
-  initialTake?: number;
+  initialLoading?: boolean;
   query?: string;
   sorting?: SortingState;
   options?: InitialDataInfiniteOptions<InfiniteRoutesQuery, TPageParam>;
@@ -70,14 +67,13 @@ type UseInfiniteRoutesProps = {
 
 export const useInfiniteRoutes = ({
   query = '',
-  initialTake = 5,
+  initialLoading = false,
   take = 30,
   sorting = [],
   options = {},
   regionId,
 }: UseInfiniteRoutesProps) => {
   const navigate = useNavigate();
-  const [hasInitialized, setHasInitialized] = useState(false);
 
   const infiniteRoutes = graphql(`
     query InfiniteRoutes($input: RoutesInput!) {
@@ -113,25 +109,29 @@ export const useInfiniteRoutes = ({
     }
   `);
 
-  const result = useInfiniteQuery({
+  return useInfiniteQuery({
     queryKey: [
       (infiniteRoutes.definitions[0] as any).name.value,
       { input: { take, query, sorting, regionId } },
     ],
     queryFn: async ({ pageParam }) => {
       try {
-        // Use the appropriate take value based on initialization state
-        const currentTake = hasInitialized ? take : initialTake;
+        // We only want initialLoading to be true for the first request
+        // For subsequent requests (when using "load more"), it should be false
+        const isFirstPage = pageParam.after === null;
 
-        return await client.request(infiniteRoutes, {
+        const data = await client.request(infiniteRoutes, {
           input: {
             query,
-            take: currentTake,
+            initialLoading: isFirstPage && initialLoading,
+            take,
             after: pageParam.after,
             sorting,
             regionId: regionId ?? null,
           },
         });
+
+        return data;
       } catch (error) {
         if (
           isGraphQLRequestError(error) &&
@@ -143,27 +143,18 @@ export const useInfiniteRoutes = ({
         throw error;
       }
     },
-    maxPages: 10,
     getNextPageParam: lastPage => {
       return lastPage.infiniteRoutes.pageInfo.hasNextPage
         ? { after: lastPage.infiniteRoutes.pageInfo.endCursor ?? null }
         : undefined;
     },
+    maxPages: 10,
     initialPageParam: { after: null },
     meta: {
       toastEnabled: true,
     },
     ...options,
   });
-
-  // Mark as initialized after the first successful fetch
-  useEffect(() => {
-    if (result.data && !hasInitialized) {
-      setHasInitialized(true);
-    }
-  }, [result.data, hasInitialized]);
-
-  return result;
 };
 
 export const useRoutes = (

@@ -20,6 +20,9 @@ export const useUpdateRoute = (
     mutation UpdateRoute($id: ID!, $input: CreateRouteInput!) {
       updateRoute(id: $id, input: $input) {
         id
+        region {
+          id
+        }
       }
     }
   `);
@@ -32,9 +35,12 @@ export const useUpdateRoute = (
     },
     onSettled(data) {
       const id = data?.updateRoute.id;
+      const regionId = data?.updateRoute.region?.id;
 
       return Promise.all([
-        queryClient.invalidateQueries({ queryKey: ['InfiniteRoutes'] }),
+        queryClient.invalidateQueries({
+          queryKey: ['InfiniteRoutes', { input: { regionId } }],
+        }),
         queryClient.invalidateQueries({ queryKey: ['GetRouteById', { id }] }),
       ]);
     },

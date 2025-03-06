@@ -27,14 +27,18 @@ const resolvers: Resolvers = {
           ? PaginationDirection.BACKWARD
           : PaginationDirection.NONE;
 
-      const take = Math.abs(
-        applyConstraints({
-          type: 'take',
-          min: 5,
-          max: 50,
-          value: args.input.take ?? 30,
-        }),
-      );
+      const initialLoading = args.input.initialLoading;
+
+      const take = initialLoading
+        ? 5
+        : Math.abs(
+            applyConstraints({
+              type: 'take',
+              min: 5,
+              max: 50,
+              value: args.input.take ?? 30,
+            }),
+          );
 
       let cursor =
         direction === PaginationDirection.NONE
@@ -265,7 +269,10 @@ const resolvers: Resolvers = {
 
 const resolversComposition: ResolversComposerMapping<any> = {
   'Query.routeById': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
-  'Query.infiniteRoutes': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
+  'Query.infiniteRoutes': [
+    isAuthenticated(),
+    hasRoles([Role.MANAGER, Role.ADMIN]),
+  ],
   'Mutation.createRoute': [
     isAuthenticated(),
     hasRoles([Role.MANAGER, Role.ADMIN]),

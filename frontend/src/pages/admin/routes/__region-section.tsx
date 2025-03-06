@@ -33,7 +33,7 @@ import {
   TicketX,
   Trash,
 } from 'lucide-react';
-import { Suspense, useMemo, useRef, useState } from 'react';
+import { Suspense, useMemo, useState } from 'react';
 import { useImage } from 'react-image';
 import { Waypoint } from 'react-waypoint';
 import { Link } from 'react-router-dom';
@@ -59,6 +59,18 @@ function RegionSection({
   regionName,
 }: RegionSectionProps) {
   const take = import.meta.env.DEV ? 15 : 30;
+  const [showLoadMoreButton, setShowLoadMoreButton] = useState(true);
+
+  const handleLoadMore = () => {
+    fetchNextPage();
+    setShowLoadMoreButton(false); // Hide the button after first click
+  };
+
+  const handleWaypointEnter = () => {
+    if (hasNextPage && !isFetchingNextPage && !showLoadMoreButton) {
+      fetchNextPage();
+    }
+  };
 
   const {
     data,
@@ -66,11 +78,12 @@ function RegionSection({
     isFetchingNextPage,
     fetchNextPage,
     isPending,
+    isFetching,
     isError,
     error,
   } = useInfiniteRoutes({
     take,
-    initialTake: 5,
+    initialLoading: true,
     query: searchQuery,
     regionId,
   });
@@ -108,7 +121,12 @@ function RegionSection({
   }
 
   return (
-    <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(18.5rem,_1fr))] gap-2 pb-2'>
+    <div
+      className={cn(
+        'sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(18.5rem,_1fr))] gap-2 pb-4',
+        isFetching && 'opacity-80',
+      )}
+    >
       {/* Region header with routes count */}
       {routes.length > 0 && (
         <div className='col-span-full mt-4 mb-2 first:mt-0'>
@@ -135,14 +153,12 @@ function RegionSection({
           <SkeletonRouteCard key={idx} />
         ))}
 
-      {/* Load more button */}
-      {hasNextPage && (
+      {/* Load more button - only shown initially */}
+      {hasNextPage && showLoadMoreButton && (
         <div className='col-span-full flex flex-col justify-center items-center'>
           <Button
             className='h-8'
-            onClick={() => {
-              fetchNextPage();
-            }}
+            onClick={handleLoadMore}
             disabled={isFetchingNextPage}
           >
             {!isFetchingNextPage && 'Посмотреть еще'}
@@ -152,6 +168,13 @@ function RegionSection({
               </>
             )}
           </Button>
+        </div>
+      )}
+
+      {/* Waypoint for automatic loading after button click */}
+      {hasNextPage && !showLoadMoreButton && !isFetchingNextPage && (
+        <div className='col-span-full'>
+          <Waypoint onEnter={handleWaypointEnter} bottomOffset={'-200px'} />
         </div>
       )}
     </div>

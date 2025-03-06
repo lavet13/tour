@@ -152,7 +152,12 @@ export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
           richColors: true,
           position: 'bottom-center',
         });
-        client.invalidateQueries({ queryKey: ['InfiniteRoutes'] });
+        client.invalidateQueries({
+          queryKey: [
+            'InfiniteRoutes',
+            { input: { regionId: payload.regionId } },
+          ],
+        });
         form.reset();
       }
       onClose();

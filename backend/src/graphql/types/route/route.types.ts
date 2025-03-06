@@ -22,6 +22,7 @@ export default gql`
   }
 
   input RoutesInput {
+    initialLoading: Boolean
     take: Int
     after: ID
     before: ID

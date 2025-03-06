@@ -28,7 +28,7 @@ const documents = {
     "\n    query RegionByName($regionName: String!) {\n      regionByName(regionName: $regionName) {\n        id\n        name\n      }\n    }\n  ": types.RegionByNameDocument,
     "\n    query GetRegionForRoute($departureCityId: ID, $arrivalCityId: ID) {\n      regionForRoute(\n        departureCityId: $departureCityId\n        arrivalCityId: $arrivalCityId\n      ) {\n        id\n        name\n      }\n    }\n  ": types.GetRegionForRouteDocument,
     "\n    query Regions {\n      regions {\n        id\n        name\n      }\n    }\n  ": types.RegionsDocument,
-    "\n    mutation UpdateRoute($id: ID!, $input: CreateRouteInput!) {\n      updateRoute(id: $id, input: $input) {\n        id\n      }\n    }\n  ": types.UpdateRouteDocument,
+    "\n    mutation UpdateRoute($id: ID!, $input: CreateRouteInput!) {\n      updateRoute(id: $id, input: $input) {\n        id\n        region {\n          id\n        }\n      }\n    }\n  ": types.UpdateRouteDocument,
     "\n    mutation CreateRoute($input: CreateRouteInput!) {\n      createRoute(input: $input) {\n        id\n      }\n    }\n  ": types.CreateRouteDocument,
     "\n    query GetRouteById($id: ID) {\n      routeById(id: $id) {\n        id\n        departureCity {\n          id\n          name\n        }\n        arrivalCity {\n          id\n          name\n        }\n        region {\n          id\n          name\n        }\n        isActive\n        departureDate\n        price\n      }\n    }\n  ": types.GetRouteByIdDocument,
     "\n    query InfiniteRoutes($input: RoutesInput!) {\n      infiniteRoutes(input: $input) {\n        edges {\n          id\n          departureCity {\n            id\n            name\n          }\n          region {\n            id\n            name\n          }\n          price\n          isActive\n          departureDate\n          arrivalCity {\n            id\n            name\n          }\n          createdAt\n          updatedAt\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  ": types.InfiniteRoutesDocument,
@@ -115,7 +115,7 @@ export function graphql(source: "\n    query Regions {\n      regions {\n       
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    mutation UpdateRoute($id: ID!, $input: CreateRouteInput!) {\n      updateRoute(id: $id, input: $input) {\n        id\n      }\n    }\n  "): (typeof documents)["\n    mutation UpdateRoute($id: ID!, $input: CreateRouteInput!) {\n      updateRoute(id: $id, input: $input) {\n        id\n      }\n    }\n  "];
+export function graphql(source: "\n    mutation UpdateRoute($id: ID!, $input: CreateRouteInput!) {\n      updateRoute(id: $id, input: $input) {\n        id\n        region {\n          id\n        }\n      }\n    }\n  "): (typeof documents)["\n    mutation UpdateRoute($id: ID!, $input: CreateRouteInput!) {\n      updateRoute(id: $id, input: $input) {\n        id\n        region {\n          id\n        }\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
