@@ -43,6 +43,7 @@ import { ComboBox } from '@/components/combo-box-filter';
 import { DatePicker } from '@/components/date-picker-filter';
 import { AutosizeTextarea } from '@/components/autosize-textarea';
 import { NumberFormatValues, NumericFormat } from 'react-number-format';
+import { Link } from 'react-router-dom';
 
 type Booking = Omit<
   InfiniteBookingsQuery['bookings']['edges'][number],
@@ -61,6 +62,7 @@ export const columnTranslations = {
   updatedAt: 'Изменено',
   travelDate: 'Желаемая дата',
   phoneNumber: 'Телефон',
+  route: 'Маршрут',
 } as const satisfies Record<BookingColumns, string>;
 
 type StatusColumns = keyof typeof BookingStatus;
@@ -247,7 +249,7 @@ export const columns: ColumnDef<Booking, unknown>[] = [
               {isPending && (
                 <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
               )}
-              <span className='truncate'>{initialValue}</span>
+              <span title={initialValue} className='truncate'>{initialValue}</span>
             </div>
           ) : (
             <Button
@@ -403,7 +405,7 @@ export const columns: ColumnDef<Booking, unknown>[] = [
           {isPending && (
             <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
           )}
-          <span className='truncate'>{initialValue}</span>
+          <span title={`${initialValue}`} className='truncate'>{initialValue}</span>
         </div>
       );
     },
@@ -533,7 +535,7 @@ export const columns: ColumnDef<Booking, unknown>[] = [
               {isPending && (
                 <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
               )}
-              <span className='truncate'>{initialValue}</span>
+              <span title={initialValue} className='truncate'>{initialValue}</span>
             </div>
           ) : (
             <Button
@@ -639,6 +641,37 @@ export const columns: ColumnDef<Booking, unknown>[] = [
     },
   },
   {
+    id: 'route',
+    accessorKey: 'route',
+    minSize: 200,
+    size: 200,
+    cell: props => {
+      const routeId = props.row.original.route?.id;
+      const arrivalCity = props.row.original.route?.arrivalCity?.name;
+      const departureCity = props.row.original.route?.departureCity?.name;
+
+      return (
+        <Button
+          className='w-full justify-start p-0 h-auto'
+          variant='link'
+          asChild
+        >
+          <Link className='w-full' to={`../routes/${routeId}`}>
+            <span
+              title={`${departureCity} ⇆ ${arrivalCity}`}
+              className='truncate block w-full'
+            >
+              <span>{departureCity}</span> &#x21c6; <span>{arrivalCity}</span>
+            </span>
+          </Link>
+        </Button>
+      );
+    },
+    header: ({ column }) => {
+      return <Header title='Маршрут' column={column} />;
+    },
+  },
+  {
     minSize: 155,
     size: 155,
     enableGlobalFilter: false,
@@ -732,7 +765,7 @@ export const columns: ColumnDef<Booking, unknown>[] = [
     meta: {
       filterVariant: 'dateRange',
     },
-  }
+  },
 ];
 
 interface HeaderProps<TData> {

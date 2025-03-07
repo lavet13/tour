@@ -66,6 +66,9 @@ import { toast } from 'sonner';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { useViewportDimensions } from '@/hooks/use-viewport-dimentions';
 import { DataTableViewOptions } from '@/components/data-table-column-toggle';
+import { useMediaQuery } from '@/hooks/use-media-query';
+import { useAtom } from 'jotai';
+import { breakpointsAtom } from '@/lib/atoms/tailwind';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
 
@@ -209,7 +212,7 @@ const BookingsPage: FC = () => {
               {bookingIsPending && (
                 <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
               )}
-              <span className='truncate'>{initialValue}</span>
+              <span title={initialValue} className='truncate'>{initialValue}</span>
             </div>
           ) : (
             <Button
@@ -266,8 +269,12 @@ const BookingsPage: FC = () => {
   }, [sorting, columnFilters]); // Dependency: re-run when sorting changes
 
   const MOBILE_BREAKPOINT = 400;
-  const { isMobile, isFullHD, sidebarExpanded, contentWidth, height } =
-    useViewportDimensions(MOBILE_BREAKPOINT);
+  const [{ xl }] = useAtom(breakpointsAtom);
+  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+  const isFullHD = useMediaQuery(`(min-width: ${xl}px)`);
+
+  const { sidebarExpanded, contentWidth, height } =
+    useViewportDimensions();
 
   if (isError) {
     throw error;

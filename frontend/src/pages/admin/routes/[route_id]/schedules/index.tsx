@@ -49,6 +49,7 @@ import { DataTablePagination } from '@/components/data-table-pagination';
 import { useViewportDimensions } from '@/hooks/use-viewport-dimentions';
 import { useDrawerState } from '@/hooks/use-drawer-state';
 import { ScheduleForm } from '@/features/schedule/components/schedule-form';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 export interface ScheduleParams {
   route_id: string;
@@ -71,7 +72,8 @@ function Schedules() {
   });
 
   const MOBILE_BREAKPOINT = 400;
-  const { isMobile, sidebarExpanded, contentWidth, height } =
+  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+  const { sidebarExpanded, contentWidth, height } =
     useViewportDimensions(MOBILE_BREAKPOINT);
   const navigate = useNavigate();
 

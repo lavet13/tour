@@ -7,22 +7,18 @@ import { useSidebar } from '@/components/ui/sidebar';
 export interface ViewportDimensions {
   width: number;
   height: number;
-  isMobile: boolean;
   isTablet: boolean;
-  isFullHD: boolean;
   contentWidth: number;
   sidebarExpanded: boolean;
 }
 
-export const useViewportDimensions = (mobileBreakpoint: number = 450): ViewportDimensions => {
+export const useViewportDimensions = (): ViewportDimensions => {
   const [innerWidth, setInnerWidth] = useState(0);
   const [innerHeight, setInnerHeight] = useState(0);
-  const [{ md, xl }] = useAtom(breakpointsAtom);
+  const [{ md }] = useAtom(breakpointsAtom);
   const { state: sidebarState } = useSidebar();
 
-  const isMobile = useMediaQuery(`(max-width: ${mobileBreakpoint}px)`);
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
-  const isFullHD = useMediaQuery(`(min-width: ${xl}px)`);
   const sidebarExpanded = sidebarState === 'expanded';
 
   useEffect(() => {
@@ -45,9 +41,7 @@ export const useViewportDimensions = (mobileBreakpoint: number = 450): ViewportD
   return {
     width: innerWidth,
     height: innerHeight,
-    isMobile,
     isTablet,
-    isFullHD,
     contentWidth,
     sidebarExpanded
   };

@@ -35,7 +35,8 @@ export const useUpdateRoute = (
     },
     onSettled(data) {
       const id = data?.updateRoute.id;
-      const regionId = data?.updateRoute.region?.id;
+      const regionId = data?.updateRoute.region?.id ?? null;
+      console.log({ regionId });
 
       return Promise.all([
         queryClient.invalidateQueries({

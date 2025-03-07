@@ -22,13 +22,13 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
+    ArrowLeftRight,
   Calendar,
   CalendarClock,
   Edit,
   Loader2,
   MapPin,
   MapPinOff,
-  MoveHorizontal,
   TicketCheck,
   TicketX,
   Trash,
@@ -215,7 +215,7 @@ function RouteCard({
         <div className='p-4 flex flex-col flex-1 justify-between gap-2'>
           <h2 className='inline items-center gap-2 text-xl font-semibold mb-2'>
             {route.departureCity?.name}{' '}
-            <MoveHorizontal className='inline-block size-5' />{' '}
+            <ArrowLeftRight className='inline-block size-4' />{' '}
             {route.arrivalCity?.name}
           </h2>
           <div className='mb-2'>

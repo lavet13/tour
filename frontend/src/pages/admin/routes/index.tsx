@@ -23,6 +23,8 @@ import { useViewportDimensions } from '@/hooks/use-viewport-dimentions';
 import { useRegions } from '@/features/region';
 import RegionSection from './__region-section';
 import { SonnerSpinner } from '@/components/sonner-spinner';
+import { PageHeader, PageHeaderHeading } from '@/components/page-header';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 function RoutesPage() {
   const navigate = useNavigate();
@@ -94,7 +96,8 @@ function RoutesPage() {
   const handleDeleteRoute = (id: string) => {};
 
   const MOBILE_BREAKPOINT = 400;
-  const { isMobile, contentWidth, sidebarExpanded } =
+  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+  const { contentWidth, sidebarExpanded } =
     useViewportDimensions(MOBILE_BREAKPOINT);
 
   return (

@@ -92,7 +92,7 @@ export const useInfiniteBookings = ({
         throw error;
       }
     },
-    maxPages: 20,
+    maxPages: 2,
     getNextPageParam: lastPage => {
       return lastPage.bookings.pageInfo.hasNextPage
         ? { after: lastPage.bookings.pageInfo.endCursor ?? null }
