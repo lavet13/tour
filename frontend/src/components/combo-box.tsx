@@ -96,6 +96,7 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
             disabled={isLoading || disabled}
             className={cn(
               'flex w-full justify-between',
+              'focus:outline-none focus:ring-1 focus:ring-ring',
               !value && 'text-muted-foreground',
             )}
           >

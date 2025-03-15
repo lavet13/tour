@@ -1,3 +1,5 @@
+'use client';
+
 import * as React from 'react';
 import { Drawer as DrawerPrimitive } from 'vaul';
 
@@ -9,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { X } from 'lucide-react';
 
 const Drawer = ({
-  shouldScaleBackground = true,
+  shouldScaleBackground = false,
   ...props
 }: React.ComponentProps<typeof DrawerPrimitive.Root>) => {
   return (
@@ -47,7 +49,7 @@ const DrawerContent = React.forwardRef<
   const isTablet = useMediaQuery(`(min-width: ${md}px)`);
   const isTabletRef = React.useRef(isTablet);
 
-  // Фиксируем `isTablet`, если он был `true`
+  // Keep isTablet as true if it was true before
   isTabletRef.current = isTablet || isTabletRef.current;
 
   const contentClassName = React.useMemo(() => {
@@ -59,18 +61,34 @@ const DrawerContent = React.forwardRef<
     );
   }, [isTabletRef.current, className]);
 
+  // This style fixes the blur on the drawer content
+  const fixBlurStyle = {
+    // Disable hardware acceleration and transforms that might cause blur
+    transform: 'translateZ(0)',
+    backfaceVisibility: 'hidden' as const,
+    WebkitFontSmoothing: 'subpixel-antialiased',
+    // Ensure crisp text rendering
+    textRendering: 'optimizeLegibility' as const,
+    // Prevent any subpixel rendering issues
+    willChange: 'auto',
+  };
+
   return (
     <DrawerPortal>
       <DrawerOverlay />
       <DrawerPrimitive.Content
         ref={ref}
         className={contentClassName}
+        style={fixBlurStyle}
         {...props}
       >
         {isTabletRef.current ? (
-          <div className='bg-background border h-full w-full flex flex-col rounded-[16px] overflow-y-auto'>
+          <div
+            className='bg-background border h-full w-full flex flex-col rounded-[16px] overflow-y-auto'
+            style={fixBlurStyle}
+          >
             <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
-            <DrawerClose asChild>
+            <DrawerClose className="z-50" asChild>
               <Button
                 className='absolute bg-background top-3 right-3 w-6 h-6'
                 variant='ghost'
@@ -80,12 +98,19 @@ const DrawerContent = React.forwardRef<
                 <span className='sr-only'>Закрыть модальное окно</span>
               </Button>
             </DrawerClose>
-            <div className='flex-1 overflow-y-auto'>{children}</div>
+            <div className='flex-1 overflow-y-auto' style={fixBlurStyle}>
+              {children}
+            </div>
           </div>
         ) : (
-          <div className='flex flex-col flex-1 overflow-y-auto'>
+          <div
+            className='flex flex-col flex-1 overflow-y-auto'
+            style={fixBlurStyle}
+          >
             <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
-            <div className='flex-1 overflow-y-auto'>{children}</div>
+            <div className='flex-1 overflow-y-auto' style={fixBlurStyle}>
+              {children}
+            </div>
           </div>
         )}
       </DrawerPrimitive.Content>
@@ -103,6 +128,13 @@ const DrawerHeader = ({
       'grid gap-1.5 p-4 px-5 md:pt-7 md:px-5 text-center sm:text-left sm:max-w-screen-sm mx-auto',
       className,
     )}
+    style={{
+      // Apply the same blur-fixing styles to the header
+      transform: 'translateZ(0)',
+      backfaceVisibility: 'hidden',
+      WebkitFontSmoothing: 'subpixel-antialiased',
+      textRendering: 'optimizeLegibility',
+    }}
     {...props}
   />
 );
@@ -114,6 +146,13 @@ const DrawerFooter = ({
 }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
     className={cn('mt-auto flex flex-col gap-2 p-4', className)}
+    style={{
+      // Apply the same blur-fixing styles to the footer
+      transform: 'translateZ(0)',
+      backfaceVisibility: 'hidden',
+      WebkitFontSmoothing: 'subpixel-antialiased',
+      textRendering: 'optimizeLegibility',
+    }}
     {...props}
   />
 );
@@ -129,6 +168,13 @@ const DrawerTitle = React.forwardRef<
       'text-lg font-semibold leading-none tracking-tight',
       className,
     )}
+    style={{
+      // Apply the same blur-fixing styles to the title
+      transform: 'translateZ(0)',
+      backfaceVisibility: 'hidden',
+      WebkitFontSmoothing: 'subpixel-antialiased',
+      textRendering: 'optimizeLegibility',
+    }}
     {...props}
   />
 ));
@@ -141,6 +187,13 @@ const DrawerDescription = React.forwardRef<
   <DrawerPrimitive.Description
     ref={ref}
     className={cn('text-sm text-muted-foreground', className)}
+    style={{
+      // Apply the same blur-fixing styles to the description
+      transform: 'translateZ(0)',
+      backfaceVisibility: 'hidden',
+      WebkitFontSmoothing: 'subpixel-antialiased',
+      textRendering: 'optimizeLegibility',
+    }}
     {...props}
   />
 ));

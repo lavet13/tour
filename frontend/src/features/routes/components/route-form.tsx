@@ -12,10 +12,10 @@ import {
 } from '@/components/ui/form';
 import { ComboBox } from '@/components/combo-box';
 import { useCities } from '@/features/city/api/queries';
-import { useMemo } from 'react';
+import { FC, memo, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { SonnerSpinner } from '@/components/sonner-spinner';
-import { ArrowLeft, CalendarClock, Edit, MapPinPlus } from 'lucide-react';
+import { CalendarClock, Edit, MapPinPlus } from 'lucide-react';
 import { useRegions } from '@/features/region/api/queries';
 import { DatePicker } from '@/components/date-picker';
 import { Switch } from '@/components/ui/switch';
@@ -27,7 +27,6 @@ import {
 import { toast } from 'sonner';
 import { CreateRouteInput } from '@/gql/graphql';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
-import { client } from '@/react-query';
 import { NumericFormat } from 'react-number-format';
 import { Input } from '@/components/ui/input';
 import {
@@ -37,12 +36,6 @@ import {
   defaultValues,
 } from '@/features/routes/components';
 import { DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useNavigate } from 'react-router-dom';
@@ -54,12 +47,12 @@ interface RouteFormProps {
   sidebarExpanded: boolean;
 }
 
-export function RouteForm({
+export const RouteForm: FC<RouteFormProps> = memo(({
   drawerMode,
   routeId,
   onClose,
   sidebarExpanded,
-}: RouteFormProps) {
+}) => {
   const navigate = useNavigate();
   const {
     data: routeData,
@@ -228,7 +221,7 @@ export function RouteForm({
             </DrawerTitle>
             <div className='flex items-center justify-center w-full'>
               {routeInitialLoading ? (
-                <Button variant="ghost" disabled className='w-full col-span-2'>
+                <Button variant='ghost' disabled className='w-full col-span-2'>
                   <Skeleton className='h-5 w-[200px]' />
                 </Button>
               ) : (
@@ -247,9 +240,7 @@ export function RouteForm({
           </>
         )}
       </DrawerHeader>
-      {drawerMode === 'editRoute' && (
-        <Separator className='mt-2 mb-4' />
-      )}
+      {drawerMode === 'editRoute' && <Separator className='mt-2 mb-4' />}
       {routeIsFetching && routeIsSuccess && (
         <div className='w-full sm:max-w-screen-sm mx-auto'>
           <div className='flex items-center justify-center mb-6 px-4 sm:px-5'>
@@ -437,4 +428,4 @@ export function RouteForm({
       )}
     </>
   );
-}
+});

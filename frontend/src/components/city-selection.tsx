@@ -82,12 +82,15 @@ const CitySelectionForm: FC<CitySelectionFormProps> = () => {
     const clearFields = () => {
       form.setValue('departureCityId', '', { shouldValidate: false });
       form.setValue('arrivalCityId', '', { shouldValidate: false });
-      setSearchParams(params => {
-        const query = new URLSearchParams(params.toString());
-        query.delete('departureCityId');
-        query.delete('arrivalCityId');
-        return query;
-      });
+      setSearchParams(
+        params => {
+          const query = new URLSearchParams(params.toString());
+          query.delete('departureCityId');
+          query.delete('arrivalCityId');
+          return query;
+        },
+        { replace: true },
+      );
     };
 
     // Check if departure cities are loaded
@@ -121,12 +124,25 @@ const CitySelectionForm: FC<CitySelectionFormProps> = () => {
         } else {
           // Clear invalid arrival city
           form.setValue('arrivalCityId', '', { shouldValidate: false });
-          setSearchParams(params => {
+          setSearchParams(
+            params => {
+              const query = new URLSearchParams(params.toString());
+              query.delete('arrivalCityId');
+              return query;
+            },
+            { replace: true },
+          );
+        }
+      } else {
+        form.setValue('arrivalCityId', '', { shouldValidate: false });
+        setSearchParams(
+          params => {
             const query = new URLSearchParams(params.toString());
             query.delete('arrivalCityId');
             return query;
-          });
-        }
+          },
+          { replace: true },
+        );
       }
     } else {
       // Clear invalid departure city and related arrival city

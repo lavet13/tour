@@ -71,6 +71,26 @@ const resolvers: Resolvers = {
 
       const columnConditions: Prisma.BookingWhereInput[] = columnFilters
         .map(filter => {
+          if (filter?.id === 'route') {
+            const value = filter.value?.[0] ?? '';
+            return {
+              [filter.id]: {
+                OR: [
+                  {
+                    arrivalCity: {
+                      name: { contains: value, mode: 'insensitive' },
+                    },
+                  },
+                  {
+                    departureCity: {
+                      name: { contains: value, mode: 'insensitive' },
+                    },
+                  },
+                ],
+              },
+            };
+          }
+
           if (filter?.id === 'seatsCount' && Array.isArray(filter.value)) {
             //@ts-ignore
             const [min, max] = filter.value.map(v =>
@@ -78,7 +98,7 @@ const resolvers: Resolvers = {
             );
 
             return {
-              seatsCount: { gte: min ?? undefined, lte: max ?? undefined },
+              [filter.id]: { gte: min ?? undefined, lte: max ?? undefined },
             };
           }
 
@@ -104,6 +124,8 @@ const resolvers: Resolvers = {
           };
         })
         .filter(Boolean);
+
+      console.log({ columnConditions });
 
       // const globalCondition = query
       //   ? {

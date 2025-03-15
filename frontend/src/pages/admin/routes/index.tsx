@@ -1,8 +1,5 @@
 import { Button } from '@/components/ui/button';
-import {
-  Drawer,
-  DrawerContent,
-} from '@/components/ui/drawer';
+import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { cn } from '@/lib/utils';
 import { MapPinPlus } from 'lucide-react';
 import { useMemo } from 'react';
@@ -28,6 +25,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import CitySelectionForm from '@/components/city-selection';
+import { Dialog, DialogTrigger } from '@/components/ui/dialog';
 
 function RoutesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -104,7 +102,7 @@ function RoutesPage() {
 
   const MOBILE_BREAKPOINT = 400;
   const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
-  const { contentWidth, sidebarExpanded } = useViewportDimensions();
+  const { contentWidth, sidebarExpanded, isTablet } = useViewportDimensions();
 
   return (
     <div className='container px-1 sm:px-2 pt-2 mx-auto overflow-hidden flex-1 flex flex-col'>

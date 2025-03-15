@@ -34,12 +34,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import {
-    ArrowRightLeft,
-    ArrowUpDown,
+  ArrowRightLeft,
+  ArrowUpDown,
   CalendarIcon,
   Minus,
-  MoveHorizontal,
-  MoveVertical,
   Plus,
 } from 'lucide-react';
 import { useMediaQuery } from '@/hooks/use-media-query';
@@ -174,12 +172,15 @@ const BookingBusPage: FC = () => {
     const clearFields = () => {
       form.setValue('departureCityId', '', { shouldValidate: false });
       form.setValue('arrivalCityId', '', { shouldValidate: false });
-      setSearchParams(params => {
-        const query = new URLSearchParams(params.toString());
-        query.delete('departureCityId');
-        query.delete('arrivalCityId');
-        return query;
-      });
+      setSearchParams(
+        params => {
+          const query = new URLSearchParams(params.toString());
+          query.delete('departureCityId');
+          query.delete('arrivalCityId');
+          return query;
+        },
+        { replace: true },
+      );
     };
 
     // Check if departure cities are loaded
@@ -217,8 +218,15 @@ const BookingBusPage: FC = () => {
             const query = new URLSearchParams(params.toString());
             query.delete('arrivalCityId');
             return query;
-          });
+          }, { replace: true });
         }
+      } else {
+        form.setValue('arrivalCityId', '', { shouldValidate: false });
+        setSearchParams(params => {
+          const query = new URLSearchParams(params.toString());
+          query.delete('arrivalCityId');
+          return query;
+        }, { replace: true });
       }
     } else {
       // Clear invalid departure city and related arrival city
