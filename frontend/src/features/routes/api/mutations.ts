@@ -60,6 +60,9 @@ export const useCreateRoute = (
     mutation CreateRoute($input: CreateRouteInput!) {
       createRoute(input: $input) {
         id
+        region {
+          id
+        }
       }
     }
   `);
@@ -69,6 +72,13 @@ export const useCreateRoute = (
       mutationFn: (variables: CreateRouteMutationVariables) => {
         return client.request(createBooking, {
           ...variables,
+        });
+      },
+      onSettled(data) {
+        const regionId = data?.createRoute.region?.id ?? null;
+
+        return queryClient.invalidateQueries({
+          queryKey: ['InfiniteRoutes', { input: { regionId } }],
         });
       },
       ...options,

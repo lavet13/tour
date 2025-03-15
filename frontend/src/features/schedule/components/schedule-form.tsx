@@ -14,12 +14,8 @@ import { Button } from '@/components/ui/button';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { CalendarPlus, Edit } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
-import {
-  useCreateRoute,
-  useUpdateRoute,
-} from '@/features/routes/api/mutations';
 import { toast } from 'sonner';
-import { ScheduleInput, UpdateScheduleInput } from '@/gql/graphql';
+import { CreateScheduleInput, UpdateScheduleInput } from '@/gql/graphql';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { client } from '@/react-query';
 import { Input } from '@/components/ui/input';
@@ -107,7 +103,7 @@ export function ScheduleForm({
         });
       }
       if (drawerMode === 'addSchedule') {
-        const payload: ScheduleInput = {
+        const payload: CreateScheduleInput = {
           ...data,
           routeId,
         };

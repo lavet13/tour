@@ -15,7 +15,7 @@ import { useCities } from '@/features/city/api/queries';
 import { useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { SonnerSpinner } from '@/components/sonner-spinner';
-import { Edit, MapPinPlus } from 'lucide-react';
+import { ArrowLeft, CalendarClock, Edit, MapPinPlus } from 'lucide-react';
 import { useRegions } from '@/features/region/api/queries';
 import { DatePicker } from '@/components/date-picker';
 import { Switch } from '@/components/ui/switch';
@@ -36,14 +36,31 @@ import {
   RouteFormValues,
   defaultValues,
 } from '@/features/routes/components';
+import { DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Separator } from '@/components/ui/separator';
+import { useNavigate } from 'react-router-dom';
 
 interface RouteFormProps {
   drawerMode: Extract<DrawerMode, 'addRoute' | 'editRoute' | 'idle'>;
   routeId: string | null;
   onClose: () => void;
+  sidebarExpanded: boolean;
 }
 
-export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
+export function RouteForm({
+  drawerMode,
+  routeId,
+  onClose,
+  sidebarExpanded,
+}: RouteFormProps) {
+  const navigate = useNavigate();
   const {
     data: routeData,
     fetchStatus: routeFetchStatus,
@@ -53,6 +70,9 @@ export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
   } = useRouteById(routeId, {
     enabled: !!routeId,
   });
+
+  const departureCityName = routeData?.routeById?.departureCity?.name ?? '';
+  const arrivalCityName = routeData?.routeById?.arrivalCity?.name ?? '';
 
   const values = routeData?.routeById
     ? {
@@ -152,12 +172,6 @@ export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
           richColors: true,
           position: 'bottom-center',
         });
-        client.invalidateQueries({
-          queryKey: [
-            'InfiniteRoutes',
-            { input: { regionId: payload.regionId } },
-          ],
-        });
         form.reset();
       }
       onClose();
@@ -179,6 +193,63 @@ export function RouteForm({ drawerMode, routeId, onClose }: RouteFormProps) {
 
   return (
     <>
+      <DrawerHeader className='pt-4 pb-2 md:pt-4 md:pb-2 md:px-5 flex flex-wrap items-center gap-2'>
+        <DrawerTitle className='flex-1'>
+          {drawerMode === 'addRoute' && (
+            <span className='flex justify-center flex-wrap gap-2'>
+              Добавить новый маршрут
+            </span>
+          )}
+          {drawerMode === 'editRoute' && (
+            <span className='flex justify-center flex-wrap gap-2'>
+              Изменить маршрут
+            </span>
+          )}
+          {drawerMode === 'idle' && <Skeleton className='h-6 w-full' />}
+        </DrawerTitle>
+      </DrawerHeader>
+      <Separator className='mt-2 mb-4' />
+      <DrawerHeader className='pt-0 pb-0 md:pt-0 md:pb-0 md:px-5 flex flex-wrap items-center gap-2'>
+        {drawerMode === 'editRoute' && (
+          <>
+            <DrawerTitle className='flex flex-wrap items-center w-full justify-center gap-2'>
+              {!routeInitialLoading && (
+                <>
+                  <span>{departureCityName}</span>⇆
+                  <span>{arrivalCityName}</span>
+                </>
+              )}
+              {routeInitialLoading && (
+                <span className='flex items-center gap-4'>
+                  <Skeleton className='h-6 w-24' />⇆
+                  <Skeleton className='h-6 w-24' />
+                </span>
+              )}
+            </DrawerTitle>
+            <div className='flex items-center justify-center w-full'>
+              {routeInitialLoading ? (
+                <Button variant="ghost" disabled className='w-full col-span-2'>
+                  <Skeleton className='h-5 w-[200px]' />
+                </Button>
+              ) : (
+                <Button
+                  className='h-7 p-3'
+                  variant='ghost'
+                  onClick={() =>
+                    navigate(`${routeData?.routeById?.id}/schedules`)
+                  }
+                >
+                  <CalendarClock />
+                  Посмотреть расписание
+                </Button>
+              )}
+            </div>
+          </>
+        )}
+      </DrawerHeader>
+      {drawerMode === 'editRoute' && (
+        <Separator className='mt-2 mb-4' />
+      )}
       {routeIsFetching && routeIsSuccess && (
         <div className='w-full sm:max-w-screen-sm mx-auto'>
           <div className='flex items-center justify-center mb-6 px-4 sm:px-5'>

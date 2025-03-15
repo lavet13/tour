@@ -57,7 +57,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Waypoint } from 'react-waypoint';
 import { useUpdateBooking } from '@/features/booking/api/mutations';
 import { useInfiniteBookings } from '@/features/booking/api/queries';
@@ -69,6 +69,14 @@ import { DataTableViewOptions } from '@/components/data-table-column-toggle';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useAtom } from 'jotai';
 import { breakpointsAtom } from '@/lib/atoms/tailwind';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
 
@@ -212,7 +220,9 @@ const BookingsPage: FC = () => {
               {bookingIsPending && (
                 <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
               )}
-              <span title={initialValue} className='truncate'>{initialValue}</span>
+              <span title={initialValue} className='truncate'>
+                {initialValue}
+              </span>
             </div>
           ) : (
             <Button
@@ -273,8 +283,7 @@ const BookingsPage: FC = () => {
   const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
   const isFullHD = useMediaQuery(`(min-width: ${xl}px)`);
 
-  const { sidebarExpanded, contentWidth, height } =
-    useViewportDimensions();
+  const { sidebarExpanded, contentWidth, height } = useViewportDimensions();
 
   if (isError) {
     throw error;
@@ -291,30 +300,23 @@ const BookingsPage: FC = () => {
           maxWidth: `calc(${contentWidth}px)`,
         }}
       >
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link className='flex items-center gap-2' to={`/admin/home`}>
+                  Главная
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Бронирования</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         <div className='grid md:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] items-center gap-2'>
           <div className='flex items-center sm:col-[1_/_-1] min-[940px]:grid-cols-[repeat(auto-fill,_minmax(13rem,_1fr))] gap-2'>
-            <Tooltip delayDuration={700}>
-              <TooltipTrigger asChild>
-                <Button
-                  className={cn(
-                    'h-10 w-10 min-w-10',
-                    isMobile && 'h-9 w-9 min-w-9',
-                  )}
-                  variant='outline'
-                  size='icon'
-                  onClick={() => navigate('../home')}
-                >
-                  <ArrowLeft />
-                  <span className='sr-only'>Назад</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent
-                align={!sidebarExpanded ? 'start' : 'center'}
-                side='bottom'
-              >
-                Вернуться назад
-              </TooltipContent>
-            </Tooltip>
             <DataTableViewOptions
               table={table}
               isMobile={isMobile}
@@ -365,7 +367,7 @@ const BookingsPage: FC = () => {
           ref={tableContainerRef}
           className='max-w-fit overflow-auto w-full relative rounded-md border'
           style={{
-            maxHeight: `calc(${height}px - ${isMobile ? 8 : 7.9}rem)`,
+            maxHeight: `calc(${height}px - ${isMobile ? 9.5 : 9.9}rem)`,
           }}
         >
           {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}

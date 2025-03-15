@@ -2,39 +2,40 @@ import { Button } from '@/components/ui/button';
 import {
   Drawer,
   DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
 } from '@/components/ui/drawer';
 import { cn } from '@/lib/utils';
-import { ArrowLeft, MapPinPlus } from 'lucide-react';
-import { useDeferredValue, useMemo } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { MapPinPlus } from 'lucide-react';
+import { useMemo } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { Input } from '@/components/ui/input';
-import { Skeleton } from '@/components/ui/skeleton';
 import { RouteForm } from '@/features/routes/components';
 import { useDrawerState } from '@/hooks/use-drawer-state';
-import { Separator } from '@/components/ui/separator';
 import { useViewportDimensions } from '@/hooks/use-viewport-dimentions';
 import { useRegions } from '@/features/region';
 import RegionSection from './__region-section';
 import { SonnerSpinner } from '@/components/sonner-spinner';
-import { PageHeader, PageHeaderHeading } from '@/components/page-header';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import CitySelectionForm from '@/components/city-selection';
 
 function RoutesPage() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const searchQuery = searchParams.get('q') ?? '';
-  const deferredSearchQuery = useDeferredValue(searchQuery);
 
   const routeId = searchParams.get('route_id');
   const addRoute = searchParams.get('add_route');
+  const departureCityId = searchParams.get('departureCityId') || '';
+  const arrivalCityId = searchParams.get('arrivalCityId') || '';
 
   const { isOpen, mode, setIsOpen, openDrawer } = useDrawerState<
     'idle' | 'addRoute' | 'editRoute'
@@ -95,10 +96,15 @@ function RoutesPage() {
 
   const handleDeleteRoute = (id: string) => {};
 
+  const handleValuesChange = (values: any) => {
+    // This gets called automatically whenever both cities are selected
+    console.log('Auto-submitting with values:', values);
+    // Call your API or perform any action needed with these values
+  };
+
   const MOBILE_BREAKPOINT = 400;
   const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
-  const { contentWidth, sidebarExpanded } =
-    useViewportDimensions(MOBILE_BREAKPOINT);
+  const { contentWidth, sidebarExpanded } = useViewportDimensions();
 
   return (
     <div className='container px-1 sm:px-2 pt-2 mx-auto overflow-hidden flex-1 flex flex-col'>
@@ -108,46 +114,22 @@ function RoutesPage() {
           maxWidth: `calc(${contentWidth}px)`,
         }}
       >
+        <Breadcrumb className='mb-3'>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link className='flex items-center gap-2' to={`/admin/home`}>
+                  Главная
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Маршруты</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         <div className='flex items-center gap-2'>
-          <Tooltip delayDuration={700}>
-            <TooltipTrigger asChild>
-              <Button
-                className={cn('h-10 min-w-10', isMobile && 'h-9 min-w-9')}
-                variant='outline'
-                size='icon'
-                onClick={() => navigate('../home')}
-              >
-                <ArrowLeft />
-                <span className='sr-only'>Назад</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent
-              align={!sidebarExpanded ? 'start' : 'center'}
-              side='bottom'
-            >
-              Вернуться назад
-            </TooltipContent>
-          </Tooltip>
-
-          <Input
-            className={cn('max-w-full sm:max-w-[300px]', isMobile && 'h-9')}
-            placeholder='Найти маршрут...'
-            value={searchQuery}
-            onChange={e => {
-              setSearchParams(params => {
-                const query = new URLSearchParams(params.toString());
-
-                if (e.target.value.length === 0) {
-                  query.delete('q');
-                  return query;
-                }
-
-                query.set('q', e.target.value);
-                return query;
-              });
-            }}
-          />
-
           {isMobile && (
             <Tooltip delayDuration={700}>
               <TooltipTrigger asChild>
@@ -175,6 +157,8 @@ function RoutesPage() {
           )}
         </div>
 
+        <CitySelectionForm />
+
         {isRegionsPending && (
           <div className='flex-1 flex items-center justify-center min-h-screen'>
             <SonnerSpinner className='bg-foreground' />
@@ -187,7 +171,6 @@ function RoutesPage() {
             key={region.id}
             regionId={region.id}
             regionName={region.name}
-            searchQuery={deferredSearchQuery}
             onEdit={handleEditRoute}
             onDelete={handleDeleteRoute}
           />
@@ -196,15 +179,8 @@ function RoutesPage() {
         <Drawer open={isOpen} onOpenChange={setIsOpen} onClose={handleClose}>
           {/* <DrawerContent className="inset-x-auto right-2"> */}
           <DrawerContent>
-            <DrawerHeader>
-              <DrawerTitle>
-                {mode === 'addRoute' && 'Добавить новый маршрут'}
-                {mode === 'editRoute' && 'Изменить маршрут'}
-                {mode === 'idle' && <Skeleton className='h-6 w-full' />}
-              </DrawerTitle>
-            </DrawerHeader>
-            <Separator className='mt-2 mb-4' />
             <RouteForm
+              sidebarExpanded={sidebarExpanded}
               onClose={handleClose}
               routeId={routeId}
               drawerMode={mode}

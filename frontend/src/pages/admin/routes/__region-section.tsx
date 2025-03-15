@@ -1,4 +1,3 @@
-import { SonnerSpinner } from '@/components/sonner-spinner';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -22,7 +21,8 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import {
-    ArrowLeftRight,
+  ArrowDown,
+  ArrowLeftRight,
   Calendar,
   CalendarClock,
   Edit,
@@ -33,13 +33,13 @@ import {
   TicketX,
   Trash,
 } from 'lucide-react';
-import { Suspense, useMemo, useState } from 'react';
-import { useImage } from 'react-image';
+import { useMemo, useState } from 'react';
 import { Waypoint } from 'react-waypoint';
 import { Link } from 'react-router-dom';
+import { LazyImageWrapper } from '@/components/lazy-image';
+import { SonnerSpinner } from '@/components/sonner-spinner';
 
 interface RegionSectionProps {
-  searchQuery: string;
   regionId?: string | null;
   regionName?: string;
   onEdit: (id: string) => void;
@@ -52,7 +52,6 @@ type Route = Omit<
 >;
 
 function RegionSection({
-  searchQuery = '',
   onEdit,
   onDelete,
   regionId,
@@ -84,13 +83,12 @@ function RegionSection({
   } = useInfiniteRoutes({
     take,
     initialLoading: true,
-    query: searchQuery,
     regionId,
   });
 
   const routes = useMemo(
     () => data?.pages.flatMap(page => page.infiniteRoutes.edges) ?? [],
-    [data, searchQuery],
+    [data],
   );
 
   // Determine route count text
@@ -102,9 +100,15 @@ function RegionSection({
   }, [routes.length]);
 
   if (isPending && !routes.length) {
+    // @TODO: change the skeleton view
     return (
       <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(18.5rem,_1fr))] gap-2 pb-2'>
-        {Array.from({ length: 8 }).map((_, idx) => (
+        <div className='col-span-full mt-4 mb-2 first:mt-0'>
+          <Skeleton className='h-6 w-1/3 mb-2' />
+          <Skeleton className='h-4 w-1/4' />
+        </div>
+
+        {Array.from({ length: 3 }).map((_, idx) => (
           <SkeletonRouteCard key={idx} />
         ))}
       </div>
@@ -123,7 +127,7 @@ function RegionSection({
   return (
     <div
       className={cn(
-        'sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(18.5rem,_1fr))] gap-2 pb-4',
+        'sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(17rem,_1fr))] gap-2 pb-4',
         isFetching && 'opacity-80',
       )}
     >
@@ -148,20 +152,26 @@ function RegionSection({
         />
       ))}
 
-      {isFetchingNextPage &&
-        Array.from({ length: take }).map((_, idx) => (
-          <SkeletonRouteCard key={idx} />
-        ))}
+      {isFetchingNextPage && (
+        <div className='col-span-full flex flex-col justify-center items-center'>
+          <SonnerSpinner className='bg-foreground' />
+        </div>
+      )}
 
       {/* Load more button - only shown initially */}
       {hasNextPage && showLoadMoreButton && (
         <div className='col-span-full flex flex-col justify-center items-center'>
           <Button
+            variant='ghost'
             className='h-8'
             onClick={handleLoadMore}
             disabled={isFetchingNextPage}
           >
-            {!isFetchingNextPage && 'Посмотреть еще'}
+            {!isFetchingNextPage && (
+              <>
+                Посмотреть еще <ArrowDown />
+              </>
+            )}
             {isFetchingNextPage && (
               <>
                 <Loader2 className='animate-spin' /> Загружаем...
@@ -364,54 +374,6 @@ function formatDate(date: Date): string {
     month: 'long',
     day: 'numeric',
   });
-}
-
-interface LazyImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {
-  src: string; // The primary image URL
-  fallbackSrc: string; // URL for the fallback image if the primary fails
-}
-
-function LazyImage({ src, fallbackSrc, alt, style, ...rest }: LazyImageProps) {
-  const { src: loadedSrc } = useImage({
-    srcList: [src, fallbackSrc], // Tries `src` first, then `fallbackSrc`
-    useSuspense: true, // Suspense for waiting until the image loads
-  });
-
-  return (
-    <img
-      src={loadedSrc}
-      alt={alt}
-      style={{
-        ...style,
-        opacity: 1,
-        transition: 'opacity 0.3s ease-in-out',
-      }}
-      {...rest}
-    />
-  );
-}
-
-function LazyImageWrapper({ className, ...props }: LazyImageProps) {
-  return (
-    <div className='relative h-48 overflow-hidden'>
-      <Suspense
-        fallback={
-          <div
-            className='flex items-center justify-center w-full h-full'
-            aria-busy='true'
-            aria-label='Loading image'
-          >
-            <SonnerSpinner className='bg-foreground' />
-          </div>
-        }
-      >
-        <LazyImage
-          className={cn('w-full h-48 object-cover', className)}
-          {...props}
-        />
-      </Suspense>
-    </div>
-  );
 }
 
 function SkeletonRouteCard() {

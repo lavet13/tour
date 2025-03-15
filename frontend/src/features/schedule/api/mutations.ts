@@ -9,6 +9,7 @@ import {
 } from '@/gql/graphql';
 import { graphql } from '@/gql';
 import { client } from '@/graphql/graphql-request';
+import { client as queryClient } from '@/react-query';
 
 export const useUpdateSchedule = (
   options: UseMutationOptions<
@@ -21,6 +22,9 @@ export const useUpdateSchedule = (
     mutation UpdateSchedule($input: UpdateScheduleInput!) {
       updateSchedule(input: $input) {
         id
+        route {
+          id
+        }
         isActive
         dayOfWeek
         startTime
@@ -37,6 +41,17 @@ export const useUpdateSchedule = (
         ...variables,
       });
     },
+    onSettled(data) {
+      const id = data?.updateSchedule.id;
+      const routeId = data?.updateSchedule.route?.id ?? null;
+
+      return Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['GetSchedulesByRoute', { routeId }],
+        }),
+        queryClient.invalidateQueries({ queryKey: ['GetRouteById', { id }] }),
+      ]);
+    },
     ...options,
   });
 };
@@ -52,6 +67,9 @@ export const useCreateSchedule = (
     mutation CreateSchedule($input: CreateScheduleInput!) {
       createSchedule(input: $input) {
         id
+        route {
+          id
+        }
         isActive
         dayOfWeek
         startTime
@@ -68,6 +86,13 @@ export const useCreateSchedule = (
         ...variables,
       });
     },
+    onSettled(data) {
+      const routeId = data?.createSchedule.route?.id;
+
+      return queryClient.invalidateQueries({
+        queryKey: ['GetSchedulesByRoute', { routeId }],
+      });
+    },
     ...options,
   });
 };
@@ -81,7 +106,11 @@ export const useDeleteSchedule = (
 ) => {
   const deleteSchedule = graphql(`
     mutation DeleteSchedule($id: ID!) {
-      deleteSchedule(id: $id)
+      deleteSchedule(id: $id) {
+        route {
+          id
+        }
+      }
     }
   `);
 
@@ -89,6 +118,13 @@ export const useDeleteSchedule = (
     mutationFn: (variables: DeleteScheduleMutationVariables) => {
       return client.request(deleteSchedule, {
         ...variables,
+      });
+    },
+    onSettled(data) {
+      const routeId = data?.deleteSchedule.route?.id ?? null;
+
+      return queryClient.invalidateQueries({
+        queryKey: ['GetSchedulesByRoute', { routeId }],
       });
     },
     ...options,

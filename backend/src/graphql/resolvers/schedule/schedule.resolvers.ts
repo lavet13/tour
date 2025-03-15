@@ -174,7 +174,7 @@ const resolvers: Resolvers = {
           throw new GraphQLError('Unknown error!');
         });
 
-      return !!deletedSchedule;
+      return deletedSchedule;
     },
   },
   Schedule: {

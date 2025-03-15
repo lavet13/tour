@@ -173,7 +173,9 @@ const customFetch = async (
 };
 
 export const client = new AuthenticatedGraphQLClient(
-  import.meta.env.VITE_GRAPHQL_URI,
+  import.meta.env.DEV
+    ? import.meta.env.VITE_GRAPHQL_URI_DEV
+    : import.meta.env.VITE_GRAPHQL_URI,
   {
     requestMiddleware: requestMiddlewareUploadFiles,
     mode: 'cors',

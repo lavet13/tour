@@ -656,7 +656,7 @@ export const columns: ColumnDef<Booking, unknown>[] = [
           variant='link'
           asChild
         >
-          <Link className='w-full' to={`../routes/${routeId}`}>
+          <Link className='w-full' to={`../routes/?route_id=${routeId}`}>
             <span
               title={`${departureCity} ⇆ ${arrivalCity}`}
               className='truncate block w-full'

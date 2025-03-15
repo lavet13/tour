@@ -9,7 +9,7 @@ export default gql`
   type Mutation {
     createSchedule(input: CreateScheduleInput!): Schedule!
     updateSchedule(input: UpdateScheduleInput!): Schedule!
-    deleteSchedule(id: ID!): Boolean!
+    deleteSchedule(id: ID!): Schedule!
   }
 
   input UpdateScheduleInput {

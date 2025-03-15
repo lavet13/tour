@@ -126,9 +126,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
           { input: { id: originalId, [columnId]: newValue } },
           {
             onSuccess: async () => {
-              await client.invalidateQueries({
-                queryKey: ['GetSchedulesByRoute'],
-              });
               // On success, dismiss the loading toast and create a new success toast with the action button
               toast.dismiss(toastId);
               toast.success(
@@ -144,9 +141,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
                         },
                         {
                           async onSuccess() {
-                            await client.invalidateQueries({
-                              queryKey: ['GetSchedulesByRoute'],
-                            });
                             toast.success(
                               `Отмена изменения поля \`${columnTranslations[columnId as ScheduleColumns]}\` выполненo успешно!`,
                             );
@@ -235,9 +229,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
               { input: { id: originalId, [columnId]: newValue } },
               {
                 onSuccess: async data => {
-                  await client.invalidateQueries({
-                    queryKey: ['GetSchedulesByRoute'],
-                  });
                   resolve(data);
                 },
                 onError(error) {
@@ -257,9 +248,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
                   { input: { id: originalId, [columnId]: previousValue } },
                   {
                     async onSuccess() {
-                      await client.invalidateQueries({
-                        queryKey: ['GetSchedulesByRoute'],
-                      });
                       toast.success(
                         `Отмена изменения поля \`${columnTranslations[columnId as ScheduleColumns]}\` выполненo успешно!`,
                       );
@@ -371,9 +359,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
               { input: { id: originalId, [columnId]: newValue } },
               {
                 onSuccess: async data => {
-                  await client.invalidateQueries({
-                    queryKey: ['GetSchedulesByRoute'],
-                  });
                   resolve(data);
                 },
                 onError(error) {
@@ -393,9 +378,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
                   { input: { id: originalId, [columnId]: previousValue } },
                   {
                     async onSuccess() {
-                      await client.invalidateQueries({
-                        queryKey: ['GetSchedulesByRoute'],
-                      });
                       toast.success(
                         `Отмена изменения поля \`${columnTranslations[columnId as ScheduleColumns]}\` выполненo успешно!`,
                       );
@@ -565,9 +547,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
                 const data = await mutateAsync({
                   input: { id, isActive: checked },
                 });
-                await queryClient.invalidateQueries({
-                  queryKey: ['GetSchedulesByRoute'],
-                });
 
                 resolve(data);
               } catch (error) {
@@ -584,9 +563,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
                   try {
                     await mutateAsync({
                       input: { id, isActive: previousIsActive },
-                    });
-                    await queryClient.invalidateQueries({
-                      queryKey: ['GetSchedulesByRoute'],
                     });
 
                     toast.success('Отмена доступа выполнена успешно!');
@@ -641,9 +617,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
           { id },
           {
             async onSuccess() {
-              await client.invalidateQueries({
-                queryKey: ['GetSchedulesByRoute'],
-              });
               toast({
                 title: 'Операция была проведена успешно!',
                 description: 'Запись из расписания была удалена безвозвратно!',

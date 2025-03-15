@@ -38,16 +38,19 @@ export default defineConfig(({ mode }) => {
       },
       proxy: {
         '/graphql': {
-          target: 'http://localhost:80',
+          target: 'http://localhost:4000',
           changeOrigin: true,
+          secure: false,
         },
         '/api': {
-          target: 'http://localhost:80',
+          target: 'http://localhost:4000',
           changeOrigin: true,
+          secure: false,
         },
         '/assets': {
-          target: 'http://localhost:80',
+          target: 'http://localhost:4000',
           changeOrigin: true,
+          secure: false,
         },
       },
     },

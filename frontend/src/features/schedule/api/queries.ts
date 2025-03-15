@@ -12,16 +12,6 @@ export const useSchedulesByRoute = (
     query GetSchedulesByRoute($routeId: ID) {
       schedulesByRoute(routeId: $routeId) {
         id
-        route {
-          departureCity {
-            id
-            name
-          }
-          arrivalCity {
-            id
-            name
-          }
-        }
         dayOfWeek
         startTime
         endTime

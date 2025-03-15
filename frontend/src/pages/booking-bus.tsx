@@ -34,6 +34,8 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import {
+    ArrowRightLeft,
+    ArrowUpDown,
   CalendarIcon,
   Minus,
   MoveHorizontal,
@@ -305,9 +307,9 @@ const BookingBusPage: FC = () => {
                     )}
                   </span>
                   {isMobile ? (
-                    <MoveVertical className='size-4 mt-1.5' />
+                    <ArrowUpDown className='size-4 mt-1.5' />
                   ) : (
-                    <MoveHorizontal className='size-4 self-end' />
+                    <ArrowRightLeft className='size-4 self-end' />
                   )}
                   <span className='leading-5 text-center'>
                     {arrivalIsLoading ? (
@@ -379,6 +381,7 @@ const BookingBusPage: FC = () => {
                           label={'Выберите куда'}
                           isLoading={arrivalIsLoading}
                           items={arrivalCities}
+                          disabled={!form.watch('departureCityId')}
                           onValueChange={value => {
                             onChange(value);
                             setSearchParams(params => {

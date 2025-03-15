@@ -1,7 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { useSchedulesByRoute } from '@/features/schedule/api/queries';
 import { ArrowLeft, CalendarPlus } from 'lucide-react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import {
   Tooltip,
   TooltipTrigger,
@@ -50,6 +55,16 @@ import { useViewportDimensions } from '@/hooks/use-viewport-dimentions';
 import { useDrawerState } from '@/hooks/use-drawer-state';
 import { ScheduleForm } from '@/features/schedule/components/schedule-form';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import {
+  Breadcrumb,
+  BreadcrumbEllipsis,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb';
+import { useRouteById } from '@/features/routes';
 
 export interface ScheduleParams {
   route_id: string;
@@ -73,8 +88,7 @@ function Schedules() {
 
   const MOBILE_BREAKPOINT = 400;
   const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
-  const { sidebarExpanded, contentWidth, height } =
-    useViewportDimensions(MOBILE_BREAKPOINT);
+  const { sidebarExpanded, contentWidth, height } = useViewportDimensions();
   const navigate = useNavigate();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -86,9 +100,12 @@ function Schedules() {
     keyof ScheduleParams
   >() as ScheduleParams;
 
-  const { isOpen: drawerIsOpen, mode, setIsOpen: setDrawerIsOpen, openDrawer } = useDrawerState<
-    'idle' | 'addSchedule' | 'editSchedule'
-  >({
+  const {
+    isOpen: drawerIsOpen,
+    mode,
+    setIsOpen: setDrawerIsOpen,
+    openDrawer,
+  } = useDrawerState<'idle' | 'addSchedule' | 'editSchedule'>({
     initialMode: 'idle',
     queryParams: {
       editSchedule: 'schedule_id',
@@ -99,7 +116,6 @@ function Schedules() {
       add_schedule: addSchedule,
     },
   });
-
 
   const handleAddSchedule = () => {
     openDrawer('addSchedule');
@@ -146,6 +162,16 @@ function Schedules() {
     isSuccess: scheduleIsSuccess,
     isError: scheduleIsError,
   } = useSchedulesByRoute(routeId, { enabled: !!routeId });
+
+  const {
+    data: routeData,
+    fetchStatus: routeFetchStatus,
+    status: routeStatus,
+  } = useRouteById(routeId, { enabled: !!routeId });
+  const routeInitialLoading =
+    routeFetchStatus === 'fetching' && routeStatus === 'pending';
+  const departureCityName = routeData?.routeById?.departureCity?.name ?? '';
+  const arrivalCityName = routeData?.routeById?.arrivalCity?.name ?? '';
 
   const scheduleInitialLoading =
     scheduleFetchStatus === 'fetching' && scheduleStatus === 'pending';
@@ -221,30 +247,49 @@ function Schedules() {
 
         {!scheduleInitialLoading && (
           <>
+            <Breadcrumb className="px-2 py-2">
+              <BreadcrumbList>
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link
+                      className="flex items-center gap-2"
+                      to={`/admin/home`}
+                    >
+                      Главная
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link
+                      className="flex items-center gap-2"
+                      to={`/admin/routes`}
+                    >
+                      Маршруты
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbLink asChild>
+                    <Link
+                      className="flex items-center gap-2"
+                      to={`/admin/routes/?route_id=${routeData?.routeById?.id}`}
+                    >
+                      <span>{departureCityName}</span>⇆
+                      <span>{arrivalCityName}</span>
+                    </Link>
+                  </BreadcrumbLink>
+                </BreadcrumbItem>
+                <BreadcrumbSeparator />
+                <BreadcrumbItem>
+                  <BreadcrumbPage>Расписание</BreadcrumbPage>
+                </BreadcrumbItem>
+              </BreadcrumbList>
+            </Breadcrumb>
             <div className='flex flex-col'>
               <div className='flex items-center gap-2'>
-                <Tooltip delayDuration={700}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      className={cn(
-                        'h-10 w-10 min-w-10',
-                        isMobile && 'h-9 w-9 min-w-9',
-                      )}
-                      variant='outline'
-                      size='icon'
-                      onClick={() => navigate('../routes')}
-                    >
-                      <ArrowLeft />
-                      <span className='sr-only'>Назад</span>
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent
-                    align={!sidebarExpanded ? 'start' : 'center'}
-                    side='bottom'
-                  >
-                    Вернуться назад
-                  </TooltipContent>
-                </Tooltip>
                 <Button
                   size={isMobile ? 'sm' : 'default'}
                   onClick={handleAddSchedule}
@@ -393,7 +438,11 @@ function Schedules() {
         )}
       </div>
 
-      <Drawer open={drawerIsOpen} onOpenChange={setDrawerIsOpen} onClose={handleClose}>
+      <Drawer
+        open={drawerIsOpen}
+        onOpenChange={setDrawerIsOpen}
+        onClose={handleClose}
+      >
         {/* <DrawerContent className="inset-x-auto right-2"> */}
         <DrawerContent>
           <DrawerHeader>
@@ -413,7 +462,6 @@ function Schedules() {
         </DrawerContent>
         {/* </DrawerContent> */}
       </Drawer>
-
     </div>
   );
 }

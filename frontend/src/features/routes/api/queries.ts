@@ -10,7 +10,6 @@ import { InitialDataInfiniteOptions } from '@/react-query/types/initial-data-inf
 import { useNavigate } from 'react-router-dom';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { SortingState } from '@tanstack/react-table';
-import { useEffect, useRef, useState } from 'react';
 
 export const useRouteById = (
   id: string | null,
