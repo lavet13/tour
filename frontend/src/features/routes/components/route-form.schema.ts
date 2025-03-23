@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const RouteFormSchema = z
   .object({
@@ -26,6 +26,7 @@ export const RouteFormSchema = z
         message: 'Введите цену!',
       })
       .max(5_000, 'Цена слишком высокая!'),
+    photo: z.array(z.instanceof(File)).optional(),
     isActive: z.boolean().default(false),
   })
   .superRefine((data, ctx) => {
@@ -62,5 +63,6 @@ export const defaultValues: RouteFormValues = {
   arrivalCityId: '',
   departureCityId: '',
   regionId: null,
+  photo: [],
   price: 0,
 };

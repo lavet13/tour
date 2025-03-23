@@ -6,7 +6,10 @@ import { ErrorCode } from '@/helpers/error-codes';
 import { Role } from '@prisma/client';
 import { UserWithRoles } from '@/helpers/create-tokens';
 
-export function userHasRole(user: UserWithRoles, requiredRoles: Role[]): boolean {
+export function userHasRole(
+  user: UserWithRoles,
+  requiredRoles: Role[],
+): boolean {
   return requiredRoles.some(r => user.roles.map(r => r.role).includes(r));
 }
 
@@ -31,7 +34,9 @@ export const isAuthenticated =
   };
 
 export const hasRoles =
-  (roles: Role[]): ResolversComposition<GraphQLFieldResolver<any, ContextValue, any>> =>
+  (
+    roles: Role[],
+  ): ResolversComposition<GraphQLFieldResolver<any, ContextValue, any>> =>
   next =>
   async (parent, args, ctx, info) => {
     const me = ctx.me;
@@ -46,7 +51,7 @@ export const hasRoles =
     });
 
     if (!user) {
-      throw new GraphQLError('Вы вне системы!', {
+      throw new GraphQLError('Такого пользователя не существует', {
         extensions: { code: ErrorCode.UNAUTHENTICATED },
       });
     }

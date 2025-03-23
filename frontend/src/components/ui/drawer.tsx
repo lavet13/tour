@@ -23,6 +23,8 @@ const Drawer = ({
 };
 Drawer.displayName = 'Drawer';
 
+const DrawerNestedRoot = DrawerPrimitive.NestedRoot;
+
 const DrawerTrigger = DrawerPrimitive.Trigger;
 
 const DrawerPortal = DrawerPrimitive.Portal;
@@ -88,7 +90,7 @@ const DrawerContent = React.forwardRef<
             style={fixBlurStyle}
           >
             <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
-            <DrawerClose className="z-50" asChild>
+            <DrawerClose className='z-50' asChild>
               <Button
                 className='absolute bg-background top-3 right-3 w-6 h-6'
                 variant='ghost'
@@ -210,4 +212,5 @@ export {
   DrawerFooter,
   DrawerTitle,
   DrawerDescription,
+  DrawerNestedRoot,
 };

@@ -73,8 +73,9 @@ const resolvers: Resolvers = {
         .map(filter => {
           if (filter?.id === 'route') {
             const value = filter.value?.[0] ?? '';
+
             return {
-              [filter.id]: {
+              [filter?.id as string]: {
                 OR: [
                   {
                     arrivalCity: {

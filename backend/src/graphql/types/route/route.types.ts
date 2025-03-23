@@ -5,11 +5,33 @@ export default gql`
     routes(regionId: ID!): [Route!]!
     infiniteRoutes(input: RoutesInput!): RoutesResponse!
     routeById(id: ID): Route
+    routesGallery(limit: Int, offset: Int): GalleryResponse!
   }
 
   type Mutation {
     createRoute(input: CreateRouteInput!): Route!
     updateRoute(id: ID!, input: CreateRouteInput!): Route!
+    uploadPhotoRoute(
+      file: File!
+      isPhotoSelected: Boolean
+      routeId: ID!
+    ): UploadPhotoRouteResponse!
+  }
+
+  type RouteByIdResponse {
+    route: Route!
+    photo: File
+  }
+
+  type UploadPhotoRouteResponse {
+    photo: File!
+    routeId: ID!
+    regionId: ID
+  }
+
+  type GalleryResponse {
+    totalCount: Int!
+    images: [File!]!
   }
 
   type Subscription {
@@ -59,6 +81,8 @@ export default gql`
     arrivalCity: City
     region: Region
     isActive: Boolean!
+    photo: File
+    photoName: String
     price: Int!
     createdAt: Date!
     updatedAt: Date!

@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { cn } from '@/lib/utils';
-import { MapPinPlus } from 'lucide-react';
+import { Filter, MapPinPlus } from 'lucide-react';
 import { useMemo } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
@@ -24,8 +24,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
-import CitySelectionForm from '@/components/city-selection';
-import { Dialog, DialogTrigger } from '@/components/ui/dialog';
+import RouteFilterForm from '@/components/route-filter-form';
 
 function RoutesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,9 +34,28 @@ function RoutesPage() {
   const departureCityId = searchParams.get('departureCityId') || '';
   const arrivalCityId = searchParams.get('arrivalCityId') || '';
 
-  const { isOpen, mode, setIsOpen, openDrawer } = useDrawerState<
-    'idle' | 'addRoute' | 'editRoute'
-  >({
+  const filter = searchParams.get('filter');
+  const {
+    isOpen: filterIsOpen,
+    mode: filterMode,
+    setIsOpen: setFilterIsOpen,
+    openDrawer: openFilterDrawer,
+  } = useDrawerState<'idle' | 'filter'>({
+    initialMode: 'idle',
+    queryParams: {
+      filter: 'filter',
+    },
+    paramValues: {
+      filter: filter,
+    },
+  });
+
+  const {
+    isOpen: routeIsOpen,
+    mode: routeMode,
+    setIsOpen: setRouteIsOpen,
+    openDrawer: openRouteDrawer,
+  } = useDrawerState<'idle' | 'addRoute' | 'editRoute'>({
     initialMode: 'idle',
     queryParams: {
       addRoute: 'add_route',
@@ -58,14 +76,33 @@ function RoutesPage() {
     [regionsData],
   );
 
-  const handleClose = () => {
-    if (mode === 'editRoute') {
+  const handleOpenFilter = () => {
+    openFilterDrawer('filter');
+    setSearchParams(params => {
+      const query = new URLSearchParams(params.toString());
+      query.set('filter', 'true');
+      return query;
+    });
+  };
+
+  const handleFilterClose = () => {
+    if (filterMode === 'filter') {
+      setSearchParams(params => {
+        const query = new URLSearchParams(params.toString());
+        query.delete('filter');
+        return query;
+      });
+    }
+  };
+
+  const handleRouteClose = () => {
+    if (routeMode === 'editRoute') {
       setSearchParams(params => {
         const query = new URLSearchParams(params.toString());
         query.delete('route_id');
         return query;
       });
-    } else if (mode === 'addRoute') {
+    } else if (routeMode === 'addRoute') {
       setSearchParams(params => {
         const query = new URLSearchParams(params.toString());
         query.delete('add_route');
@@ -75,7 +112,7 @@ function RoutesPage() {
   };
 
   const handleAddRoute = () => {
-    openDrawer('addRoute');
+    openRouteDrawer('addRoute');
     setSearchParams(params => {
       const query = new URLSearchParams(params.toString());
       query.set('add_route', 'true');
@@ -84,7 +121,7 @@ function RoutesPage() {
   };
 
   const handleEditRoute = (id: string) => {
-    openDrawer('editRoute');
+    openRouteDrawer('editRoute');
     setSearchParams(params => {
       const query = new URLSearchParams(params.toString());
       query.set('route_id', id);
@@ -93,12 +130,6 @@ function RoutesPage() {
   };
 
   const handleDeleteRoute = (id: string) => {};
-
-  const handleValuesChange = (values: any) => {
-    // This gets called automatically whenever both cities are selected
-    console.log('Auto-submitting with values:', values);
-    // Call your API or perform any action needed with these values
-  };
 
   const MOBILE_BREAKPOINT = 400;
   const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
@@ -136,6 +167,7 @@ function RoutesPage() {
                   size={'icon'}
                   onClick={handleAddRoute}
                 >
+                  <span className='sr-only'>Добавить маршрут</span>
                   <MapPinPlus />
                 </Button>
               </TooltipTrigger>
@@ -153,9 +185,50 @@ function RoutesPage() {
               Добавить маршрут
             </Button>
           )}
+          {isMobile && (
+            <Tooltip delayDuration={700}>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='outline'
+                  size='icon'
+                  className='h-9 min-w-9'
+                  onClick={handleOpenFilter}
+                >
+                  <Filter />
+                  <span className='sr-only'>Фильтры</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                align={!sidebarExpanded ? 'start' : 'center'}
+                side='bottom'
+              >
+                Фильтры
+              </TooltipContent>
+            </Tooltip>
+          )}
+          {!isMobile && (
+            <Button
+              variant='outline'
+              className='w-full sm:w-auto'
+              onClick={handleOpenFilter}
+            >
+              <Filter />
+              Фильтры
+            </Button>
+          )}
         </div>
 
-        <CitySelectionForm />
+        <Drawer
+          open={filterIsOpen}
+          onOpenChange={setFilterIsOpen}
+          onClose={handleFilterClose}
+        >
+          {/* <DrawerContent className='inset-x-auto right-2'> */}
+          <DrawerContent>
+            <RouteFilterForm />
+          </DrawerContent>
+          {/* </DrawerContent> */}
+        </Drawer>
 
         {isRegionsPending && (
           <div className='flex-1 flex items-center justify-center min-h-screen'>
@@ -174,14 +247,18 @@ function RoutesPage() {
           />
         ))}
 
-        <Drawer open={isOpen} onOpenChange={setIsOpen} onClose={handleClose}>
+        <Drawer
+          open={routeIsOpen}
+          onOpenChange={setRouteIsOpen}
+          onClose={handleRouteClose}
+        >
           {/* <DrawerContent className="inset-x-auto right-2"> */}
           <DrawerContent>
             <RouteForm
               sidebarExpanded={sidebarExpanded}
-              onClose={handleClose}
+              onClose={handleRouteClose}
               routeId={routeId}
-              drawerMode={mode}
+              drawerMode={routeMode}
             />
           </DrawerContent>
           {/* </DrawerContent> */}

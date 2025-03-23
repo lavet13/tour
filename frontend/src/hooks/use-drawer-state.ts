@@ -1,9 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 
-// Define all possible drawer modes
-export type DrawerMode = 'idle' | 'addRoute' | 'editRoute' | 'addSchedule' | 'editSchedule';
-
-interface UseDrawerStateOptions<T extends DrawerMode> {
+interface UseDrawerStateOptions<T extends string> {
   // Initial mode
   initialMode?: T;
   // Query param keys to watch
@@ -14,7 +11,7 @@ interface UseDrawerStateOptions<T extends DrawerMode> {
   autoClose?: boolean;
 }
 
-export function useDrawerState<T extends DrawerMode>({
+export function useDrawerState<T extends string>({
   initialMode = 'idle' as T,
   queryParams = {} as Record<T, string>,
   paramValues = {},

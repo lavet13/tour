@@ -33,7 +33,7 @@ class AuthenticatedGraphQLClient extends GraphQLClient {
       | RequestOptions<V, T>,
     ...variablesAndRequestHeaders: any[]
   ): Promise<T> {
-    console.log({ variablesAndRequestHeaders });
+    import.meta.env.DEV && console.log({ variablesAndRequestHeaders });
 
     try {
       return await (super.request as any)(

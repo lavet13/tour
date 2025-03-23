@@ -645,6 +645,7 @@ export const columns: ColumnDef<Booking, unknown>[] = [
     accessorKey: 'route',
     minSize: 200,
     size: 200,
+    enableSorting: false,
     cell: props => {
       const routeId = props.row.original.route?.id;
       const arrivalCity = props.row.original.route?.arrivalCity?.name;
@@ -778,7 +779,7 @@ function Header<TData>({ title, column, className }: HeaderProps<TData>) {
   const isSorted = column.getIsSorted();
 
   return (
-    <div className='flex flex-1 flex-col space-y-1'>
+    <div className='flex flex-1 flex-col space-y-0.5'>
       {column.getCanSort() ? (
         <Button
           className={cn('gap-0 [&_svg]:size-3.5 h-7', className)}
@@ -805,7 +806,7 @@ function Header<TData>({ title, column, className }: HeaderProps<TData>) {
           ) : null}
         </Button>
       ) : (
-        <span className='flex w-full justify-center items-center self-center h-9 px-3'>
+        <span className='flex w-full justify-center items-center self-center h-7 px-3'>
           {title}
         </span>
       )}

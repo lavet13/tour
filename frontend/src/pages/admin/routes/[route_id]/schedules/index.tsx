@@ -1,17 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { useSchedulesByRoute } from '@/features/schedule/api/queries';
-import { ArrowLeft, CalendarPlus } from 'lucide-react';
+import { CalendarPlus } from 'lucide-react';
 import {
   Link,
-  useNavigate,
   useParams,
   useSearchParams,
 } from 'react-router-dom';
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-} from '@/components/ui/tooltip';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { cn } from '@/lib/utils';
@@ -50,14 +44,12 @@ import {
   DrawerTitle,
 } from '@/components/ui/drawer';
 import { Separator } from '@/components/ui/separator';
-import { DataTablePagination } from '@/components/data-table-pagination';
 import { useViewportDimensions } from '@/hooks/use-viewport-dimentions';
 import { useDrawerState } from '@/hooks/use-drawer-state';
 import { ScheduleForm } from '@/features/schedule/components/schedule-form';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import {
   Breadcrumb,
-  BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
@@ -89,7 +81,6 @@ function Schedules() {
   const MOBILE_BREAKPOINT = 400;
   const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
   const { sidebarExpanded, contentWidth, height } = useViewportDimensions();
-  const navigate = useNavigate();
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -165,11 +156,7 @@ function Schedules() {
 
   const {
     data: routeData,
-    fetchStatus: routeFetchStatus,
-    status: routeStatus,
   } = useRouteById(routeId, { enabled: !!routeId });
-  const routeInitialLoading =
-    routeFetchStatus === 'fetching' && routeStatus === 'pending';
   const departureCityName = routeData?.routeById?.departureCity?.name ?? '';
   const arrivalCityName = routeData?.routeById?.arrivalCity?.name ?? '';
 

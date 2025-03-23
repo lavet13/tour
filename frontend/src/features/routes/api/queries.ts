@@ -1,8 +1,12 @@
 import { graphql } from '@/gql';
-import { GetRouteByIdQuery, GetRoutesQuery } from '@/gql/graphql';
+import {
+  GetRouteByIdQuery,
+  GetRoutesGalleryQuery,
+  GetRoutesQuery,
+} from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
 import { InitialDataOptions } from '@/react-query/types/initial-data-options';
-import { useQuery } from '@tanstack/react-query';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 
 import { InfiniteRoutesQuery } from '@/gql/graphql';
 import { useInfiniteQuery } from '@tanstack/react-query';
@@ -34,6 +38,7 @@ export const useRouteById = (
         isActive
         departureDate
         price
+        photo
       }
     }
   `);
@@ -88,6 +93,7 @@ export const useInfiniteRoutes = ({
             name
           }
           price
+          photo
           isActive
           departureDate
           arrivalCity {
@@ -186,6 +192,43 @@ export const useRoutes = (
       toastEnabled: false,
     },
     retry: false,
+    ...options,
+  });
+};
+
+type UseRoutesGalleryProps = {
+  limit?: number;
+  offset?: number;
+  options?: InitialDataOptions<GetRoutesGalleryQuery>;
+};
+
+export const useRoutesGallery = ({
+  limit = 20,
+  offset = 0,
+  options = {},
+}: UseRoutesGalleryProps) => {
+  const routesGallery = graphql(`
+    query GetRoutesGallery($limit: Int, $offset: Int) {
+      routesGallery(limit: $limit, offset: $offset) {
+        totalCount
+        images
+      }
+    }
+  `);
+
+  return useQuery({
+    queryKey: [
+      (routesGallery.definitions[0] as any).name.value,
+      { limit, offset },
+    ],
+    queryFn: async () => {
+      return await client.request(routesGallery, { limit, offset });
+    },
+    meta: {
+      toastEnabled: false,
+    },
+    retry: false,
+    placeholderData: keepPreviousData,
     ...options,
   });
 };

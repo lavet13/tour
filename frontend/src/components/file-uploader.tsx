@@ -10,7 +10,7 @@ import { cn, formatBytes } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { useBreakpoint, type BreakpointValues } from '@/hooks/use-breakpoint';
+import { useBreakpoint } from '@/hooks/use-breakpoint';
 
 interface FileUploaderProps extends React.HTMLAttributes<HTMLDivElement> {
   /**
@@ -170,8 +170,8 @@ export function FileUploader(props: FileUploaderProps) {
 
   function onRemove(index: number) {
     if (!files) return;
-    const newFiles = files.filter((_, i) => i !== index);
-    setFiles(newFiles);
+    const filteredFiles = files.filter((_, i) => i !== index);
+    setFiles(filteredFiles);
   }
 
   // Revoke preview url when component unmounts

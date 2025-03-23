@@ -5,6 +5,7 @@ import 'json-bigint-patch';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { useCookies } from '@whatwg-node/server-plugin-cookies';
 import { useGraphQLSSE } from '@graphql-yoga/plugin-graphql-sse';
+import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 
 import resolvers from '@/graphql/resolvers';
 import typeDefs from '@/graphql/types';
@@ -36,6 +37,7 @@ async function bootstrap() {
     plugins: [
       useGraphQLSSE(),
       useCookies(),
+      useDeferStream(),
     ],
   });
 

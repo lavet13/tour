@@ -38,6 +38,9 @@ import { Waypoint } from 'react-waypoint';
 import { Link } from 'react-router-dom';
 import { LazyImageWrapper } from '@/components/lazy-image';
 import { SonnerSpinner } from '@/components/sonner-spinner';
+import { PonyfillFile } from '@/types/file-types';
+import { Image } from '@/features/routes/components/route-gallery';
+import { Buffer } from 'buffer';
 
 interface RegionSectionProps {
   regionId?: string | null;
@@ -127,7 +130,7 @@ function RegionSection({
   return (
     <div
       className={cn(
-        'sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(17rem,_1fr))] gap-2 pb-4',
+        'sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(17rem,_1fr))] gap-2 pb-2',
         isFetching && 'opacity-80',
       )}
     >
@@ -213,12 +216,31 @@ function RouteCard({
     setIsAlertOpen(false);
   };
 
+  const photo: Image | null = useMemo(() => {
+    if (!route?.photo) return null;
+    const { name, lastModified, type, encoding, _size, blobParts } =
+      route.photo as PonyfillFile;
+    const buffer = Buffer.from(blobParts);
+    const image = new Blob([buffer], { type });
+    const imageUrl = URL.createObjectURL(image);
+
+    return {
+      name,
+      type,
+      encoding,
+      _size,
+      imageUrl,
+      buffer,
+      lastModified,
+    };
+  }, [route]);
+
   return (
     <Card className={cn('overflow-hidden transition-opacity')}>
       <CardContent className='p-0 h-full flex flex-col'>
         <LazyImageWrapper
           className='basis-2'
-          src='/placeholder.svg'
+          src={photo ? photo.imageUrl : '/placeholder.svg'}
           fallbackSrc='/placeholder.svg'
           alt='Изображение города'
         />

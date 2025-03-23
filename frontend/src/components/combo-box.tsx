@@ -75,7 +75,6 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     useEffect(() => {
       if (buttonRef.current) {
         const updateWidth = () => {
-          console.log('updateWidth');
           const width = buttonRef.current?.offsetWidth ?? 0;
           setPopoverWidth(width);
         };

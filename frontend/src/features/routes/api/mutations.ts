@@ -4,10 +4,13 @@ import {
   UpdateRouteMutationVariables,
   CreateRouteMutation,
   CreateRouteMutationVariables,
+  UploadPhotoRouteMutation,
+  UploadPhotoRouteMutationVariables,
 } from '@/gql/graphql';
 import { graphql } from '@/gql';
 import { client } from '@/graphql/graphql-request';
 import { client as queryClient } from '@/react-query';
+import { useCallback, useRef, useState } from 'react';
 
 export const useUpdateRoute = (
   options: UseMutationOptions<
@@ -36,7 +39,7 @@ export const useUpdateRoute = (
     onSettled(data) {
       const id = data?.updateRoute.id;
       const regionId = data?.updateRoute.region?.id ?? null;
-      console.log({ regionId });
+      console.log({ regionId, routeId: id });
 
       return Promise.all([
         queryClient.invalidateQueries({
@@ -80,6 +83,54 @@ export const useCreateRoute = (
         return queryClient.invalidateQueries({
           queryKey: ['InfiniteRoutes', { input: { regionId } }],
         });
+      },
+      ...options,
+    }),
+  };
+};
+
+export const useUploadPhotoRoute = (
+  options: UseMutationOptions<
+    UploadPhotoRouteMutation,
+    Error,
+    UploadPhotoRouteMutationVariables
+  > = {},
+) => {
+  const uploadPhotoRoute = graphql(`
+    mutation UploadPhotoRoute(
+      $file: File!
+      $isPhotoSelected: Boolean
+      $routeId: ID!
+    ) {
+      uploadPhotoRoute(
+        file: $file
+        isPhotoSelected: $isPhotoSelected
+        routeId: $routeId
+      ) {
+        photo
+        routeId
+        regionId
+      }
+    }
+  `);
+
+  return {
+    ...useMutation({
+      mutationFn: (variables: UploadPhotoRouteMutationVariables) => {
+        return client.request(uploadPhotoRoute, {
+          ...variables,
+        });
+      },
+      onSettled(data) {
+        const id = data?.uploadPhotoRoute.routeId;
+        const regionId = data?.uploadPhotoRoute.regionId;
+
+        return Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: ['InfiniteRoutes', { input: { regionId } }],
+          }),
+          queryClient.invalidateQueries({ queryKey: ['GetRouteById', { id }] }),
+        ]);
       },
       ...options,
     }),

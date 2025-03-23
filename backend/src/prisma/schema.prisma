@@ -111,6 +111,7 @@ model Route {
   departureCityId String
   arrivalCity     City       @relation("RouteArrivalCity", fields: [arrivalCityId], references: [id])
   arrivalCityId   String
+  photoName       String?
   schedules       Schedule[]
   region          Region?    @relation(fields: [regionId], references: [id])
   regionId        String?
