@@ -4,7 +4,12 @@ import { toast } from 'sonner';
 import { isPossiblePhoneNumber } from 'react-phone-number-input';
 import ru from 'react-phone-number-input/locale/ru.json';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { SubmitHandler, useController, useForm } from 'react-hook-form';
+import {
+  SubmitHandler,
+  useController,
+  useForm,
+  useFormContext,
+} from 'react-hook-form';
 import { z } from 'zod';
 
 import {
@@ -37,6 +42,8 @@ import {
   ArrowRightLeft,
   ArrowUpDown,
   CalendarIcon,
+  ChevronDown,
+  Clock,
   Minus,
   Plus,
 } from 'lucide-react';
@@ -49,10 +56,25 @@ import { format } from 'date-fns';
 import { ru as fnsRU } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
 import { useCreateBooking } from '@/features/booking/api/mutations';
-import { BookingInput } from '@/gql/graphql';
-import { AutosizeTextarea } from '@/components/autosize-textarea';
+import {
+  BookingInput,
+  DaysOfWeek,
+  GetSchedulesByIdsQuery,
+} from '@/gql/graphql';
 import { ComboBox } from '@/components/combo-box';
 import { NumericFormat } from 'react-number-format';
+import { useSchedulesByIds } from '@/features/schedule';
+import { daysOfWeekRu } from '@/pages/admin/routes/[route_id]/schedules/__columns';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+
+type ScheduleItem = Omit<
+  GetSchedulesByIdsQuery['schedulesByIds'][number],
+  '__typename'
+>;
 
 const FormSchema = z.object({
   firstName: z
@@ -117,6 +139,7 @@ const defaultValues: DefaultValues = {
 };
 
 const BookingBusPage: FC = () => {
+  const [isOpen, setIsOpen] = useState(false);
   const [phoneInputKey, setPhoneInputKey] = useState(0);
 
   // Search Params syncronization
@@ -129,12 +152,10 @@ const BookingBusPage: FC = () => {
   const {
     data: arrivalData,
     isPending: arrivalIsPending,
-    fetchStatus: arrivalFetchStatus,
+    isLoading: arrivalIsLoading,
   } = useArrivalCities(departureCityId, {
     enabled: !!departureCityId,
   });
-  const arrivalIsLoading =
-    arrivalFetchStatus === 'fetching' && arrivalIsPending;
   const arrivalCities = useMemo(
     () => arrivalData?.arrivalCities || [],
     [arrivalData],
@@ -147,6 +168,45 @@ const BookingBusPage: FC = () => {
     () => departureData?.departureCities || [],
     [departureData],
   );
+
+  const { data: schedulesData, isPending: isPendingSchedules } =
+    useSchedulesByIds({
+      arrivalCityId,
+      departureCityId,
+      options: {
+        enabled: !!arrivalCityId && !!departureCityId,
+      },
+    });
+  // Обновим функцию сортировки расписаний, чтобы правильно обрабатывать строковые значения enum
+  const schedules = useMemo(() => {
+    const schedulesArray = schedulesData?.schedulesByIds ?? [];
+
+    // Создадим маппинг для преобразования строковых значений enum в числа
+    const dayToNumber = {
+      MONDAY: 1,
+      TUESDAY: 2,
+      WEDNESDAY: 3,
+      THURSDAY: 4,
+      FRIDAY: 5,
+      SATURDAY: 6,
+      SUNDAY: 7,
+    };
+
+    return [...schedulesArray].sort((a, b) => {
+      // Получаем числовое значение для дня недели
+      const dayA =
+        typeof a.dayOfWeek === 'number'
+          ? a.dayOfWeek
+          : dayToNumber[a.dayOfWeek.toString() as DaysOfWeek];
+
+      const dayB =
+        typeof b.dayOfWeek === 'number'
+          ? b.dayOfWeek
+          : dayToNumber[b.dayOfWeek.toString() as DaysOfWeek];
+
+      return dayA - dayB;
+    });
+  }, [schedulesData]);
 
   const form = useForm<DefaultValues>({
     resolver: zodResolver(FormSchema),
@@ -413,6 +473,40 @@ const BookingBusPage: FC = () => {
                 />
               </div>
             </div>
+
+            {schedules.length !== 0 && (
+              <div className='px-6 p-4 border-b'>
+                <div className='border rounded-lg overflow-hidden transition-all duration-200'>
+                  <div
+                    className='p-3 flex justify-between items-center cursor-pointer'
+                    onClick={() => setIsOpen(!isOpen)}
+                  >
+                    <div className='flex-1 flex gap-1 items-center justify-between'>
+                      <h4 className='text-sm font-medium'>
+                        Доступные дни отправления
+                      </h4>
+
+                      <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
+                        <ChevronDown
+                          className={cn(
+                            'h-4 w-4 transition-transform',
+                            isOpen && 'transform rotate-180',
+                          )}
+                        />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {isOpen && (
+                    <div className='mt-2'>
+                      {schedules.map((schedule, index) => (
+                        <Schedule key={index} schedule={schedule} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             <div className='px-6 p-4 space-y-4 border-b'>
               <p className='text-center sm:text-start text-sm text-muted-foreground'>
@@ -749,5 +843,85 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
     );
   },
 );
+
+// Mobile-optimized Schedule component
+type ScheduleProps = {
+  schedule: ScheduleItem;
+};
+
+function Schedule({ schedule }: ScheduleProps) {
+  const dayOfWeek = daysOfWeekRu[schedule.dayOfWeek];
+  const { startTime, endTime, isActive } = schedule;
+
+  // Рассчитаем примерную продолжительность поездки
+  const calculateDuration = (start: string, end: string) => {
+    try {
+      const [startHours, startMinutes] = start.split(':').map(Number);
+      const [endHours, endMinutes] = end.split(':').map(Number);
+
+      let durationHours = endHours - startHours;
+      let durationMinutes = endMinutes - startMinutes;
+
+      if (durationMinutes < 0) {
+        durationHours -= 1;
+        durationMinutes += 60;
+      }
+
+      if (durationHours < 0) {
+        durationHours += 24; // Если поездка переходит на следующий день
+      }
+
+      return `${durationHours} ч ${durationMinutes > 0 ? durationMinutes + ' мин' : ''}`;
+    } catch {
+      return '~';
+    }
+  };
+
+  const duration = calculateDuration(startTime, endTime);
+
+  return (
+    <div
+      className={cn(
+        'flex flex-col sm:flex-row sm:items-center justify-between p-2 pl-4 border-b last:border-b-0 transition-colors',
+        isActive === false
+          ? 'bg-muted/20 border-dashed opacity-70'
+          : 'hover:bg-muted/10',
+      )}
+    >
+      <div className='flex items-center gap-2 mb-1 sm:mb-0'>
+        <div
+          className={cn(
+            'font-medium',
+            isActive === false && 'text-muted-foreground',
+          )}
+        >
+          {dayOfWeek}
+          {isActive === false && (
+            <span className='text-xs ml-2 text-muted-foreground'>
+              (нет рейса)
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className='flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end'>
+        <div className='text-xs text-muted-foreground order-1 sm:order-1'>
+          {duration}
+        </div>
+        <div className='flex items-center gap-1 order-2 sm:order-2 w-full sm:w-auto justify-end'>
+          <Clock className='h-3.5 w-3.5 text-muted-foreground' />
+          <span
+            className={cn(
+              'text-sm',
+              isActive === false && 'text-muted-foreground',
+            )}
+          >
+            {startTime} — {endTime}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default BookingBusPage;

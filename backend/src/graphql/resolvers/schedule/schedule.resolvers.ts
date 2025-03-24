@@ -84,6 +84,45 @@ const resolvers: Resolvers = {
 
       return schedule;
     },
+    async schedulesByIds(_, args, ctx) {
+      const { departureCityId, arrivalCityId } = args;
+
+      // Try both route directions
+      const [forwardRoute, reverseRoute] = await Promise.all([
+        ctx.prisma.route.findFirst({
+          where: {
+            departureCityId,
+            arrivalCityId,
+          },
+        }),
+        ctx.prisma.route.findFirst({
+          where: {
+            departureCityId: arrivalCityId,
+            arrivalCityId: departureCityId,
+          },
+        }),
+      ]);
+
+      // Use the first non-null route found
+      const route = forwardRoute || reverseRoute;
+
+      // If no route was found in either direction
+      if (!route) {
+        throw new GraphQLError(
+          'Неверный/Несуществующий маршрут, указанный для бронирования.',
+        );
+      }
+
+      const schedules = await ctx.prisma.schedule.findMany({
+        where: {
+          route: {
+            id: route.id,
+          },
+        },
+      });
+
+      return schedules;
+    },
   },
   Mutation: {
     async createSchedule(_, args, ctx) {

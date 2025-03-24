@@ -4,6 +4,7 @@ export default gql`
   type Query {
     schedulesByRoute(routeId: ID): [Schedule!]!
     scheduleById(scheduleId: ID): Schedule
+    schedulesByIds(departureCityId: ID, arrivalCityId: ID): [Schedule!]!
   }
 
   type Mutation {

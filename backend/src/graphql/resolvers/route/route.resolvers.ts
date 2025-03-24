@@ -261,8 +261,9 @@ const resolvers: Resolvers = {
 
       return { ...route, photo: null };
     },
-    async routesGallery(_, { limit = 20, offset = 0 }, ctx) {
+    async routesGallery(_, { limit = 20, offset = 0 }, _ctx) {
       const uploadsDir = path.resolve(process.cwd(), 'uploads', 'images');
+
       try {
         const dir = await readdir(uploadsDir);
 
@@ -552,10 +553,10 @@ const resolvers: Resolvers = {
 
 const resolversComposition: ResolversComposerMapping<any> = {
   'Query.routeById': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
-  'Query.infiniteRoutes': [
-    isAuthenticated(),
-    hasRoles([Role.MANAGER, Role.ADMIN]),
-  ],
+  // 'Query.infiniteRoutes': [
+  //   isAuthenticated(),
+  //   hasRoles([Role.MANAGER, Role.ADMIN]),
+  // ],
   'Mutation.uploadPhotoRoute': [
     isAuthenticated(),
     hasRoles([Role.MANAGER, Role.ADMIN]),
