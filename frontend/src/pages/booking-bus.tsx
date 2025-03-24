@@ -92,7 +92,6 @@ const FormSchema = z.object({
       },
       { message: 'Выберите сегодняшнюю или будущую дату!' },
     ),
-  commentary: z.string().nullable(),
   arrivalCityId: z
     .string({
       invalid_type_error: 'Выберите город прибытия!',
@@ -113,7 +112,6 @@ const defaultValues: DefaultValues = {
   phoneNumber: '',
   seatsCount: 0,
   travelDate: null,
-  commentary: null,
   arrivalCityId: '',
   departureCityId: '',
 };
@@ -214,19 +212,25 @@ const BookingBusPage: FC = () => {
         } else {
           // Clear invalid arrival city
           form.setValue('arrivalCityId', '', { shouldValidate: false });
-          setSearchParams(params => {
-            const query = new URLSearchParams(params.toString());
-            query.delete('arrivalCityId');
-            return query;
-          }, { replace: true });
+          setSearchParams(
+            params => {
+              const query = new URLSearchParams(params.toString());
+              query.delete('arrivalCityId');
+              return query;
+            },
+            { replace: true },
+          );
         }
       } else {
         form.setValue('arrivalCityId', '', { shouldValidate: false });
-        setSearchParams(params => {
-          const query = new URLSearchParams(params.toString());
-          query.delete('arrivalCityId');
-          return query;
-        }, { replace: true });
+        setSearchParams(
+          params => {
+            const query = new URLSearchParams(params.toString());
+            query.delete('arrivalCityId');
+            return query;
+          },
+          { replace: true },
+        );
       }
     } else {
       // Clear invalid departure city and related arrival city
@@ -539,25 +543,6 @@ const BookingBusPage: FC = () => {
                       </FormItem>
                     );
                   }}
-                />
-
-                <FormField
-                  control={form.control}
-                  name='commentary'
-                  render={({ field: { value, onChange, ...field } }) => (
-                    <FormItem className='sm:col-span-2'>
-                      <FormLabel>Комментарий(необязательно)</FormLabel>
-                      <FormControl>
-                        <AutosizeTextarea
-                          placeholder='Можете написать что-нибудь...'
-                          value={value ?? ''}
-                          onValueChange={onChange}
-                          maxHeight={200}
-                          {...field}
-                        />
-                      </FormControl>
-                    </FormItem>
-                  )}
                 />
               </div>
             </div>

@@ -132,7 +132,6 @@ model Booking {
   firstName   String
   lastName    String
   phoneNumber String
-  commentary  String?
   route       Route?        @relation(fields: [routeId], references: [id])
   routeId     String?
   travelDate  DateTime

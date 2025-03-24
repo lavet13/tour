@@ -24,7 +24,6 @@ export const useUpdateBooking = (
         phoneNumber
         travelDate
         seatsCount
-        commentary
         status
         createdAt
         updatedAt
@@ -58,7 +57,6 @@ export const useCreateBooking = (
         phoneNumber
         travelDate
         seatsCount
-        commentary
         status
         createdAt
         updatedAt

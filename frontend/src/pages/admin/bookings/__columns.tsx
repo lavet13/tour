@@ -414,145 +414,145 @@ export const columns: ColumnDef<Booking, unknown>[] = [
     },
     filterFn: 'inNumberRange',
   },
-  {
-    size: 160,
-    minSize: 160,
-    id: 'commentary',
-    accessorKey: 'commentary',
-    // @ts-ignore
-    accessorFn: row => row.commentary ?? '',
-    header: ({ column }) => {
-      return <Header title='Комментарий' column={column} />;
-    },
-    cell: ({
-      getValue,
-      row: {
-        original: { id: originalId },
-      },
-      column: { id: columnId },
-    }) => {
-      const initialValue = getValue() as string;
-      const [isEditing, setIsEditing] = useState(false);
-      const [previousValue, setPreviousValue] = useState(initialValue);
-
-      const { mutate: updateBooking, isPending } = useUpdateBooking();
-
-      const handleUpdate = (newValue: string) => {
-        if (newValue !== initialValue) {
-          setPreviousValue(initialValue);
-
-          const promise = new Promise((resolve, reject) => {
-            updateBooking(
-              { input: { id: originalId, [columnId]: newValue } },
-              {
-                onSuccess: async data => {
-                  await client.invalidateQueries({
-                    queryKey: ['InfiniteBookings'],
-                  });
-                  resolve(data);
-                },
-                onError(error) {
-                  reject(error);
-                },
-              },
-            );
-          });
-
-          toast.promise(promise, {
-            loading: `Обновление поля \`${columnTranslations[columnId as BookingColumns]}\`...`,
-            duration: 10000,
-            action: {
-              label: 'Отменить',
-              onClick() {
-                updateBooking(
-                  { input: { id: originalId, [columnId]: previousValue } },
-                  {
-                    async onSuccess() {
-                      await client.invalidateQueries({
-                        queryKey: ['InfiniteBookings'],
-                      });
-                      toast.success(
-                        `Отмена изменения поля \`${columnTranslations[columnId as BookingColumns]}\` выполненo успешно!`,
-                      );
-                    },
-                    onError() {
-                      toast.error(
-                        `Не удалось отменить изменения поля \`${columnTranslations[columnId as BookingColumns]}\`!`,
-                      );
-                    },
-                  },
-                );
-              },
-            },
-            success() {
-              return `\`${columnTranslations[columnId as BookingColumns]}\` изменёно ${initialValue} → ${newValue}!`;
-            },
-            error(error) {
-              if (isGraphQLRequestError(error)) {
-                return error.response.errors[0].message;
-              } else if (error instanceof Error) {
-                return error.message;
-              }
-              return 'Произошла ошибка!';
-            },
-          });
-        }
-        setIsEditing(false);
-      };
-
-      const onBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
-        handleUpdate(e.target.value);
-      };
-
-      const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
-          e.preventDefault();
-          handleUpdate(e.currentTarget.value);
-        }
-      };
-
-      if (isEditing) {
-        return (
-          <AutosizeTextarea
-            minHeight={32}
-            maxHeight={120}
-            className='p-1 px-2 h-8'
-            defaultValue={initialValue}
-            onBlur={onBlur}
-            onKeyDown={onKeyDown}
-            autoFocus
-          />
-        );
-      }
-
-      return (
-        <>
-          {initialValue.length ? (
-            <div
-              className='flex items-center overflow-hidden cursor-text gap-1'
-              onClick={() => setIsEditing(true)}
-            >
-              {isPending && (
-                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
-              )}
-              <span title={initialValue} className='truncate'>{initialValue}</span>
-            </div>
-          ) : (
-            <Button
-              className='size-8'
-              variant='outline'
-              onClick={() => setIsEditing(true)}
-            >
-              {!isPending && <Edit />}
-              {isPending && (
-                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
-              )}
-            </Button>
-          )}
-        </>
-      );
-    },
-  },
+  // {
+  //   size: 160,
+  //   minSize: 160,
+  //   id: 'commentary',
+  //   accessorKey: 'commentary',
+  //   // @ts-ignore
+  //   accessorFn: row => row.commentary ?? '',
+  //   header: ({ column }) => {
+  //     return <Header title='Комментарий' column={column} />;
+  //   },
+  //   cell: ({
+  //     getValue,
+  //     row: {
+  //       original: { id: originalId },
+  //     },
+  //     column: { id: columnId },
+  //   }) => {
+  //     const initialValue = getValue() as string;
+  //     const [isEditing, setIsEditing] = useState(false);
+  //     const [previousValue, setPreviousValue] = useState(initialValue);
+  //
+  //     const { mutate: updateBooking, isPending } = useUpdateBooking();
+  //
+  //     const handleUpdate = (newValue: string) => {
+  //       if (newValue !== initialValue) {
+  //         setPreviousValue(initialValue);
+  //
+  //         const promise = new Promise((resolve, reject) => {
+  //           updateBooking(
+  //             { input: { id: originalId, [columnId]: newValue } },
+  //             {
+  //               onSuccess: async data => {
+  //                 await client.invalidateQueries({
+  //                   queryKey: ['InfiniteBookings'],
+  //                 });
+  //                 resolve(data);
+  //               },
+  //               onError(error) {
+  //                 reject(error);
+  //               },
+  //             },
+  //           );
+  //         });
+  //
+  //         toast.promise(promise, {
+  //           loading: `Обновление поля \`${columnTranslations[columnId as BookingColumns]}\`...`,
+  //           duration: 10000,
+  //           action: {
+  //             label: 'Отменить',
+  //             onClick() {
+  //               updateBooking(
+  //                 { input: { id: originalId, [columnId]: previousValue } },
+  //                 {
+  //                   async onSuccess() {
+  //                     await client.invalidateQueries({
+  //                       queryKey: ['InfiniteBookings'],
+  //                     });
+  //                     toast.success(
+  //                       `Отмена изменения поля \`${columnTranslations[columnId as BookingColumns]}\` выполненo успешно!`,
+  //                     );
+  //                   },
+  //                   onError() {
+  //                     toast.error(
+  //                       `Не удалось отменить изменения поля \`${columnTranslations[columnId as BookingColumns]}\`!`,
+  //                     );
+  //                   },
+  //                 },
+  //               );
+  //             },
+  //           },
+  //           success() {
+  //             return `\`${columnTranslations[columnId as BookingColumns]}\` изменёно ${initialValue} → ${newValue}!`;
+  //           },
+  //           error(error) {
+  //             if (isGraphQLRequestError(error)) {
+  //               return error.response.errors[0].message;
+  //             } else if (error instanceof Error) {
+  //               return error.message;
+  //             }
+  //             return 'Произошла ошибка!';
+  //           },
+  //         });
+  //       }
+  //       setIsEditing(false);
+  //     };
+  //
+  //     const onBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+  //       handleUpdate(e.target.value);
+  //     };
+  //
+  //     const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+  //       if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+  //         e.preventDefault();
+  //         handleUpdate(e.currentTarget.value);
+  //       }
+  //     };
+  //
+  //     if (isEditing) {
+  //       return (
+  //         <AutosizeTextarea
+  //           minHeight={32}
+  //           maxHeight={120}
+  //           className='p-1 px-2 h-8'
+  //           defaultValue={initialValue}
+  //           onBlur={onBlur}
+  //           onKeyDown={onKeyDown}
+  //           autoFocus
+  //         />
+  //       );
+  //     }
+  //
+  //     return (
+  //       <>
+  //         {initialValue.length ? (
+  //           <div
+  //             className='flex items-center overflow-hidden cursor-text gap-1'
+  //             onClick={() => setIsEditing(true)}
+  //           >
+  //             {isPending && (
+  //               <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+  //             )}
+  //             <span title={initialValue} className='truncate'>{initialValue}</span>
+  //           </div>
+  //         ) : (
+  //           <Button
+  //             className='size-8'
+  //             variant='outline'
+  //             onClick={() => setIsEditing(true)}
+  //           >
+  //             {!isPending && <Edit />}
+  //             {isPending && (
+  //               <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+  //             )}
+  //           </Button>
+  //         )}
+  //       </>
+  //     );
+  //   },
+  // },
   {
     id: 'status',
     accessorKey: 'status',

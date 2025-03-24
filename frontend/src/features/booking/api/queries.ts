@@ -36,7 +36,6 @@ export const useInfiniteBookings = ({
           phoneNumber
           travelDate
           seatsCount
-          commentary
           route {
             id
             arrivalCity {

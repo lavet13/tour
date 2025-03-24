@@ -25,7 +25,6 @@ const resolvers: Resolvers = {
         'firstName',
         'phoneNumber',
         'seatsCount',
-        'commentary',
       ] as const satisfies BookingColumns[];
 
       // const query = args.input.query?.trim();
@@ -285,7 +284,6 @@ const resolvers: Resolvers = {
         status,
         lastName,
         firstName,
-        commentary,
         seatsCount,
         travelDate,
         phoneNumber,
@@ -307,7 +305,6 @@ const resolvers: Resolvers = {
           phoneNumber,
           travelDate,
           seatsCount,
-          commentary,
           firstName,
           lastName,
         },

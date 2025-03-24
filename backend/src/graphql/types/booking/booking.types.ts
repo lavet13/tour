@@ -19,7 +19,6 @@ export default gql`
     phoneNumber: String
     travelDate: Date
     seatsCount: Int
-    commentary: String
   }
 
   type Subscription {
@@ -73,7 +72,6 @@ export default gql`
     arrivalCityId: ID!
     travelDate: Date!
     seatsCount: Int!
-    commentary: String
   }
 
   type Booking {
@@ -84,7 +82,6 @@ export default gql`
     route: Route
     travelDate: Date!
     seatsCount: Int!
-    commentary: String
     status: BookingStatus!
     createdAt: Date!
     updatedAt: Date!
