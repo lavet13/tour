@@ -45,80 +45,129 @@ DrawerOverlay.displayName = DrawerPrimitive.Overlay.displayName;
 
 const DrawerContent = React.forwardRef<
   React.ElementRef<typeof DrawerPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content>
->(({ className, children, ...props }, ref) => {
-  const [{ md }] = useAtom(breakpointsAtom);
-  const isTablet = useMediaQuery(`(min-width: ${md}px)`);
-  const isTabletRef = React.useRef(isTablet);
-
-  // Keep isTablet as true if it was true before
-  isTabletRef.current = isTablet || isTabletRef.current;
-
-  const contentClassName = React.useMemo(() => {
-    return cn(
-      isTabletRef.current
-        ? 'fixed inset-x-0 bottom-2 top-2 z-50 mx-auto flex h-auto w-full max-w-lg flex-col rounded-[10px] bg-transparent outline-none'
-        : 'fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[80%] lg:h-[320px] flex-col rounded-t-[10px] border bg-background outline-none',
+  React.ComponentPropsWithoutRef<typeof DrawerPrimitive.Content> & {
+    isSidebar?: boolean;
+    direction?: 'left' | 'right';
+    showTheLine?: boolean;
+    showCloseButton?: boolean;
+    showCloseButtonOnMobile?: boolean;
+  }
+>(
+  (
+    {
       className,
+      isSidebar,
+      direction = 'left',
+      showCloseButton = true,
+      showCloseButtonOnMobile = false,
+      showTheLine = true,
+      children,
+      ...props
+    },
+    ref,
+  ) => {
+    const [{ md }] = useAtom(breakpointsAtom);
+    const isTablet = useMediaQuery(`(min-width: ${md}px)`);
+    const isTabletRef = React.useRef(isTablet);
+
+    // Keep isTablet as true if it was true before
+    isTabletRef.current = isTablet || isTabletRef.current;
+
+    const contentClassName = React.useMemo(() => {
+      return cn(
+        isSidebar
+          ? `fixed bottom-2 top-2 z-50 mx-auto flex h-auto w-full max-w-lg flex-col bg-transparent outline-none w-auto max-w-[300px] inset-x-auto w-full ${
+              direction === 'left'
+                ? 'left-0 border-r-2'
+                : 'right-0 border-l-2'
+            } top-0 bottom-0 bg-background`
+          : isTabletRef.current
+            ? 'fixed inset-x-0 bottom-2 top-2 z-50 mx-auto flex h-auto w-full max-w-lg flex-col rounded-[10px] bg-transparent outline-none'
+            : 'fixed inset-x-0 bottom-0 z-50 mt-24 flex h-[80vh] lg:h-[320px] flex-col rounded-t-[10px] border bg-background outline-none',
+        className,
+      );
+    }, [isTabletRef.current, className, isSidebar, direction]);
+
+    // This style fixes the blur on the drawer content
+    const fixBlurStyle = {
+      // Disable hardware acceleration and transforms that might cause blur
+      transform: 'translateZ(0)',
+      backfaceVisibility: 'hidden' as const,
+      WebkitFontSmoothing: 'subpixel-antialiased',
+      // Ensure crisp text rendering
+      textRendering: 'optimizeLegibility' as const,
+      // Prevent any subpixel rendering issues
+      willChange: 'auto',
+    };
+
+    return (
+      <DrawerPortal>
+        <DrawerOverlay />
+        <DrawerPrimitive.Content
+          ref={ref}
+          className={contentClassName}
+          style={fixBlurStyle}
+          {...props}
+        >
+          {isTabletRef.current ? (
+            <div
+              className={cn(
+                'bg-background border h-full rounded-[16px] w-full flex flex-col overflow-y-auto',
+                isSidebar &&
+                  direction === 'left' &&
+                  'rounded-l-none border-none border-r-2',
+                isSidebar &&
+                  direction === 'right' &&
+                  'rounded-r-none border-none border-l-2',
+              )}
+              style={fixBlurStyle}
+            >
+              {showCloseButton && (
+                <DrawerClose className='z-50' asChild>
+                  <Button
+                    className='absolute bg-background top-3 right-3 w-6 h-6'
+                    variant='ghost'
+                    size='icon'
+                  >
+                    <X />
+                    <span className='sr-only'>Закрыть модальное окно</span>
+                  </Button>
+                </DrawerClose>
+              )}
+              <div className='flex-1 overflow-y-auto' style={fixBlurStyle}>
+                {children}
+              </div>
+            </div>
+          ) : (
+            <div
+              className='flex flex-col flex-1 overflow-y-auto'
+              style={fixBlurStyle}
+            >
+                {showCloseButtonOnMobile && (
+                <DrawerClose className='z-50' asChild>
+                  <Button
+                    className='absolute bg-background top-3 right-3 w-6 h-6'
+                    variant='ghost'
+                    size='icon'
+                  >
+                    <X />
+                    <span className='sr-only'>Закрыть модальное окно</span>
+                  </Button>
+                </DrawerClose>
+              )}
+              {showTheLine && (
+                <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
+              )}
+              <div className='flex-1 overflow-y-auto' style={fixBlurStyle}>
+                {children}
+              </div>
+            </div>
+          )}
+        </DrawerPrimitive.Content>
+      </DrawerPortal>
     );
-  }, [isTabletRef.current, className]);
-
-  // This style fixes the blur on the drawer content
-  const fixBlurStyle = {
-    // Disable hardware acceleration and transforms that might cause blur
-    transform: 'translateZ(0)',
-    backfaceVisibility: 'hidden' as const,
-    WebkitFontSmoothing: 'subpixel-antialiased',
-    // Ensure crisp text rendering
-    textRendering: 'optimizeLegibility' as const,
-    // Prevent any subpixel rendering issues
-    willChange: 'auto',
-  };
-
-  return (
-    <DrawerPortal>
-      <DrawerOverlay />
-      <DrawerPrimitive.Content
-        ref={ref}
-        className={contentClassName}
-        style={fixBlurStyle}
-        {...props}
-      >
-        {isTabletRef.current ? (
-          <div
-            className='bg-background border h-full w-full flex flex-col rounded-[16px] overflow-y-auto'
-            style={fixBlurStyle}
-          >
-            <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
-            <DrawerClose className='z-50' asChild>
-              <Button
-                className='absolute bg-background top-3 right-3 w-6 h-6'
-                variant='ghost'
-                size='icon'
-              >
-                <X />
-                <span className='sr-only'>Закрыть модальное окно</span>
-              </Button>
-            </DrawerClose>
-            <div className='flex-1 overflow-y-auto' style={fixBlurStyle}>
-              {children}
-            </div>
-          </div>
-        ) : (
-          <div
-            className='flex flex-col flex-1 overflow-y-auto'
-            style={fixBlurStyle}
-          >
-            <div className='mx-auto mt-4 h-1 w-[100px] rounded-full bg-muted' />
-            <div className='flex-1 overflow-y-auto' style={fixBlurStyle}>
-              {children}
-            </div>
-          </div>
-        )}
-      </DrawerPrimitive.Content>
-    </DrawerPortal>
-  );
-});
+  },
+);
 DrawerContent.displayName = 'DrawerContent';
 
 const DrawerHeader = ({

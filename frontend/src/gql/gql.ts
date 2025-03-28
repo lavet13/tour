@@ -22,9 +22,9 @@ const documents = {
     "\n    mutation UpdateBooking($input: UpdateBookingInput!) {\n      updateBooking(input: $input) {\n        id\n        firstName\n        lastName\n        phoneNumber\n        travelDate\n        seatsCount\n        status\n        createdAt\n        updatedAt\n      }\n    }\n  ": types.UpdateBookingDocument,
     "\n    mutation CreateBooking($input: BookingInput!) {\n      createBooking(input: $input) {\n        id\n        firstName\n        lastName\n        phoneNumber\n        travelDate\n        seatsCount\n        status\n        createdAt\n        updatedAt\n      }\n    }\n  ": types.CreateBookingDocument,
     "\n    query InfiniteBookings($input: BookingsInput!) {\n      bookings(input: $input) {\n        edges {\n          id\n          firstName\n          lastName\n          phoneNumber\n          travelDate\n          seatsCount\n          route {\n            id\n            arrivalCity {\n              name\n            }\n            departureCity {\n              name\n            }\n          }\n          status\n          createdAt\n          updatedAt\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  ": types.InfiniteBookingsDocument,
-    "\n    query GetArrivalCities($cityId: ID) {\n      arrivalCities(cityId: $cityId) {\n        id\n        name\n      }\n    }\n  ": types.GetArrivalCitiesDocument,
+    "\n    query GetArrivalCities($cityId: ID, $includeInactiveCities: Boolean) {\n      arrivalCities(cityId: $cityId, includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  ": types.GetArrivalCitiesDocument,
     "\n    query GetCities {\n      cities {\n        id\n        name\n      }\n    }\n  ": types.GetCitiesDocument,
-    "\n    query GetDepartureCities {\n      departureCities {\n        id\n        name\n      }\n    }\n  ": types.GetDepartureCitiesDocument,
+    "\n    query GetDepartureCities($includeInactiveCities: Boolean) {\n      departureCities(includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  ": types.GetDepartureCitiesDocument,
     "\n    query RegionByName($regionName: String!) {\n      regionByName(regionName: $regionName) {\n        id\n        name\n      }\n    }\n  ": types.RegionByNameDocument,
     "\n    query GetRegionForRoute($departureCityId: ID, $arrivalCityId: ID) {\n      regionForRoute(\n        departureCityId: $departureCityId\n        arrivalCityId: $arrivalCityId\n      ) {\n        id\n        name\n      }\n    }\n  ": types.GetRegionForRouteDocument,
     "\n    query Regions {\n      regions {\n        id\n        name\n      }\n    }\n  ": types.RegionsDocument,
@@ -94,7 +94,7 @@ export function graphql(source: "\n    query InfiniteBookings($input: BookingsIn
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    query GetArrivalCities($cityId: ID) {\n      arrivalCities(cityId: $cityId) {\n        id\n        name\n      }\n    }\n  "): (typeof documents)["\n    query GetArrivalCities($cityId: ID) {\n      arrivalCities(cityId: $cityId) {\n        id\n        name\n      }\n    }\n  "];
+export function graphql(source: "\n    query GetArrivalCities($cityId: ID, $includeInactiveCities: Boolean) {\n      arrivalCities(cityId: $cityId, includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  "): (typeof documents)["\n    query GetArrivalCities($cityId: ID, $includeInactiveCities: Boolean) {\n      arrivalCities(cityId: $cityId, includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -102,7 +102,7 @@ export function graphql(source: "\n    query GetCities {\n      cities {\n      
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    query GetDepartureCities {\n      departureCities {\n        id\n        name\n      }\n    }\n  "): (typeof documents)["\n    query GetDepartureCities {\n      departureCities {\n        id\n        name\n      }\n    }\n  "];
+export function graphql(source: "\n    query GetDepartureCities($includeInactiveCities: Boolean) {\n      departureCities(includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  "): (typeof documents)["\n    query GetDepartureCities($includeInactiveCities: Boolean) {\n      departureCities(includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

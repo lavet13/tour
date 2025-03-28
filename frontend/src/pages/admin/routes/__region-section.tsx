@@ -35,15 +35,16 @@ import {
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Waypoint } from 'react-waypoint';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { LazyImageWrapper } from '@/components/lazy-image';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { PonyfillFile } from '@/types/file-types';
 import { Image } from '@/features/routes/components/route-gallery';
 import { Buffer } from 'buffer';
+import { formatDate } from '@/lib/utils';
 
 interface RegionSectionProps {
-  regionId?: string | null;
+  regionId: string | null;
   regionName?: string;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -60,8 +61,12 @@ function RegionSection({
   regionId,
   regionName,
 }: RegionSectionProps) {
+  const [searchParams] = useSearchParams();
   const take = import.meta.env.DEV ? 15 : 30;
   const [showLoadMoreButton, setShowLoadMoreButton] = useState(true);
+
+  const departureCityId = searchParams.get('departureCityId');
+  const arrivalCityId = searchParams.get('arrivalCityId');
 
   const handleLoadMore = () => {
     fetchNextPage();
@@ -86,7 +91,11 @@ function RegionSection({
   } = useInfiniteRoutes({
     take,
     initialLoading: true,
-    regionId,
+    regionIds: [regionId].filter(regionId => regionId !== null),
+    includeInactiveRegions: regionId === null,
+    includeInactiveCities: true,
+    departureCityId,
+    arrivalCityId,
   });
 
   const routes = useMemo(
@@ -203,8 +212,6 @@ function RouteCard({
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }) {
-  const MOBILE_BREAKPOINT = 340;
-  const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
   const [isAlertOpen, setIsAlertOpen] = useState(false);
 
   const handleEdit = () => {
@@ -290,8 +297,8 @@ function RouteCard({
               </span>
             </div>
           </div>
-          <div className='flex justify-between space-x-2'>
-            <Tooltip delayDuration={700}>
+          <div className='flex justify-between space-x-1'>
+            <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   className='shrink-0 w-9 h-9'
@@ -306,61 +313,38 @@ function RouteCard({
               </TooltipTrigger>
               <TooltipContent side='bottom'>Расписание</TooltipContent>
             </Tooltip>
-            <div className='flex space-x-2'>
-              {isMobile && (
-                <Tooltip delayDuration={700}>
-                  <TooltipTrigger asChild>
-                    <Button
-                      className='size-9 gap-0'
-                      variant='outline'
-                      size='icon'
-                      onClick={handleEdit}
-                    >
-                      <Edit className='h-4 w-4' />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side='bottom'>Изменить</TooltipContent>
-                </Tooltip>
-              )}
-              {!isMobile && (
-                <Button
-                  className='gap-0 px-2'
-                  variant='outline'
-                  size='sm'
-                  onClick={handleEdit}
-                >
-                  <Edit className='h-4 w-4 mr-2' />
-                  Изменить
-                </Button>
-              )}
+            <div className='flex space-x-1'>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    className='size-9 gap-0'
+                    variant='outline'
+                    size='icon'
+                    onClick={handleEdit}
+                  >
+                    <Edit className='h-4 w-4' />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side='bottom'>Изменить</TooltipContent>
+              </Tooltip>
               <AlertDialog open={isAlertOpen} onOpenChange={setIsAlertOpen}>
-                <AlertDialogTrigger asChild>
-                  {isMobile ? (
-                    <Tooltip delayDuration={700}>
-                      <TooltipTrigger asChild>
-                        <Button
-                          className='size-9 gap-0 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'
-                          variant='outline'
-                          size='sm'
-                        >
-                          <Trash className='h-4 w-4' />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side='bottom' align='end'>
-                        Удалить
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    <Button
-                      className='gap-0 px-2 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'
-                      variant='outline'
-                      size='sm'
-                    >
-                      <Trash className='h-4 w-4 mr-2' />
-                      Удалить
-                    </Button>
-                  )}
-                </AlertDialogTrigger>
+                <Tooltip>
+                  <AlertDialogTrigger asChild>
+                    <TooltipTrigger asChild>
+                      <Button
+                        onClick={() => setIsAlertOpen(!isAlertOpen)}
+                        className='size-9 gap-0 border border-destructive/20 text-destructive hover:bg-destructive/20 hover:text-destructive focus:ring-destructive focus-visible:ring-destructive'
+                        variant='outline'
+                        size='sm'
+                      >
+                        <Trash className='h-4 w-4' />
+                      </Button>
+                    </TooltipTrigger>
+                  </AlertDialogTrigger>
+                  <TooltipContent side='bottom' align='end'>
+                    Удалить
+                  </TooltipContent>
+                </Tooltip>
                 <AlertDialogContent>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Вы уверены?</AlertDialogTitle>
@@ -388,14 +372,6 @@ function RouteCard({
       </CardContent>
     </Card>
   );
-}
-
-function formatDate(date: Date): string {
-  return date.toLocaleDateString('ru-RU', {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
 }
 
 function SkeletonRouteCard() {

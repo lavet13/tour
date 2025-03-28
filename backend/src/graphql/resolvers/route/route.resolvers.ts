@@ -11,7 +11,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { applyConstraints } from '@/helpers/apply-constraints';
 import { hasRoles, isAuthenticated } from '@/graphql/composition/authorization';
 import { mkdir, readdir, stat, unlink, access, constants } from 'fs/promises';
-import { createReadStream, createWriteStream, existsSync } from 'fs';
+import { createReadStream, createWriteStream } from 'fs';
 import path from 'path';
 import { PonyfillFile } from '@/types/file';
 import { pipeline } from 'stream/promises';
@@ -20,8 +20,6 @@ import { Writable } from 'stream';
 const resolvers: Resolvers = {
   Query: {
     async infiniteRoutes(_, args, ctx) {
-      const query = args.input.query;
-
       enum PaginationDirection {
         NONE = 'NONE',
         FORWARD = 'FORWARD',
@@ -70,7 +68,20 @@ const resolvers: Resolvers = {
           })
         : [{ updatedAt: 'desc' }, { id: 'asc' }];
 
-      const regionId = args.input.regionId;
+      const query = args.input.query || '';
+      const regionIds = args.input.regionIds;
+      const arrivalCityId = args.input.arrivalCityId ?? undefined;
+      const departureCityId = args.input.departureCityId ?? undefined;
+      const includeInactiveRegions = args.input.includeInactiveRegions || false;
+      const includeInactiveCities = args.input.includeInactiveCities || false;
+      console.log({
+        arrivalCityId,
+        departureCityId,
+        regionIds,
+        query,
+        includeInactiveRegions,
+        includeInactiveCities,
+      });
 
       // fetching routes with extra one, so to determine if there's more to fetch
       let routes = await ctx.prisma.route.findMany({
@@ -92,7 +103,29 @@ const resolvers: Resolvers = {
               },
             },
           ],
-          regionId,
+          ...(departureCityId || arrivalCityId
+            ? {
+                OR: [
+                  {
+                    departureCityId: arrivalCityId,
+                    arrivalCityId: departureCityId,
+                  },
+                  {
+                    departureCityId,
+                    arrivalCityId,
+                  },
+                ],
+              }
+            : {}),
+          regionId: {
+            ...(includeInactiveRegions
+              ? { equals: null }
+              : {
+                  in: regionIds,
+                  not: null,
+                }),
+          },
+          ...(includeInactiveCities ? {} : { isActive: true }),
         },
       });
 
@@ -114,31 +147,33 @@ const resolvers: Resolvers = {
         }
       };
 
-      routes = await Promise.all(routes.map(async route => {
-        const { photoName: fileName } = route;
+      routes = await Promise.all(
+        routes.map(async route => {
+          const { photoName: fileName } = route;
 
-        if (!fileName) {
-          return route;
-        }
+          if (!fileName) {
+            return route;
+          }
 
-        const uploadsDir = path.resolve(process.cwd(), 'uploads', 'images');
-        const filePath = path.join(uploadsDir, fileName);
-        const stats = await stat(filePath);
-        const fileType = mime.lookup(filePath) || 'application/octet-stream';
-        const buffer = await readFile(filePath);
+          const uploadsDir = path.resolve(process.cwd(), 'uploads', 'images');
+          const filePath = path.join(uploadsDir, fileName);
+          const stats = await stat(filePath);
+          const fileType = mime.lookup(filePath) || 'application/octet-stream';
+          const buffer = await readFile(filePath);
 
-        return {
-          photo: {
-            name: fileName,
-            blobParts: buffer,
-            _size: stats.size,
-            type: fileType,
-            encoding: 'utf-8',
-            lastModified: stats.mtimeMs,
-          },
-          ...route,
-        };
-      }));
+          return {
+            photo: {
+              name: fileName,
+              blobParts: buffer,
+              _size: stats.size,
+              type: fileType,
+              encoding: 'utf-8',
+              lastModified: stats.mtimeMs,
+            },
+            ...route,
+          };
+        }),
+      );
 
       if (routes.length === 0) {
         return {

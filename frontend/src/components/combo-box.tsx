@@ -62,7 +62,7 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
       setOpen(false); // Close the popover or drawer
     };
 
-     // Merge the forwarded ref with our local ref
+    // Merge the forwarded ref with our local ref
     useEffect(() => {
       if (typeof ref === 'function') {
         ref(buttonRef.current);
@@ -85,6 +85,11 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
       }
     }, [open]);
 
+    const displayValue = (value: string) => {
+      const castedValue = value === 'null' ? null : value;
+      return items.find(item => item.id === castedValue)?.name || label;
+    };
+
     const renderTrigger = () => {
       return (
         <FormControl>
@@ -101,11 +106,11 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
           >
             {isLoading ? (
               <div className='w-full select-none flex justify-between items-center gap-2'>
-                Загрузка городов...
+                Загрузка...
                 <SonnerSpinner className='bg-foreground' />
               </div>
             ) : value ? (
-              items.find(item => item.id === value)?.name || label
+              displayValue(value)
             ) : (
               label
             )}
@@ -120,7 +125,7 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     const renderContent = () => {
       // TODO: find a solution for scroll lock
       const commandList = (
-        <CommandList onWheelCapture={(e) => e.stopPropagation()}>
+        <CommandList onWheelCapture={e => e.stopPropagation()}>
           {items.length >= 7 && <CommandEmpty>{emptyLabel}</CommandEmpty>}
           <CommandGroup>
             {items.length !== 0 &&
@@ -151,7 +156,7 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
         <Command>
           {items.length >= 7 && <CommandInput placeholder={inputPlaceholder} />}
           {isDesktop ? (
-            <ScrollArea className={cn("max-h-fit overflow-y-auto h-[30vh]")}>
+            <ScrollArea className={cn('max-h-fit overflow-y-auto h-[30vh]')}>
               {commandList}
             </ScrollArea>
           ) : (
@@ -164,7 +169,9 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     return isDesktop ? (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
-        <PopoverContent style={{ width: `${popoverWidth}px` }} className='p-0'>{renderContent()}</PopoverContent>
+        <PopoverContent style={{ width: `${popoverWidth}px` }} className='p-0'>
+          {renderContent()}
+        </PopoverContent>
       </Popover>
     ) : (
       <Drawer open={open} onOpenChange={setOpen}>

@@ -235,7 +235,7 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
 
     return (
       <>
-        <DrawerHeader className='pt-4 pb-2 md:pt-4 md:pb-2 md:px-5 flex flex-wrap items-center gap-2'>
+        <DrawerHeader className='pt-4 pb-2 md:pt-8 md:pb-2 md:px-5 flex flex-wrap items-center gap-2'>
           <DrawerTitle className='flex-1'>
             {drawerMode === 'addRoute' && (
               <span className='flex justify-center flex-wrap gap-2'>

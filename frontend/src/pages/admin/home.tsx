@@ -16,10 +16,10 @@ function AdminPage() {
       <div className='relative container px-1 sm:px-4 mx-auto overflow-hidden space-y-2 flex-1 pt-3 md:pt-4 lg:pt-6'>
         {sidebarNav.map(nav => (
           <React.Fragment key={nav.title}>
-            <h3 className="scroll-m-20 text-2xl font-semibold tracking-tight indent-3">
+            <h3 className="scroll-m-20 text-center sm:text-left text-xl font-semibold tracking-tight indent-3">
               {nav.title}
             </h3>
-            <div className='block flex-1 sm:grid sm:grid-cols-[repeat(auto-fill,_minmax(19rem,_1fr))]'>
+            <div className='flex-1 grid sm:grid-cols-[repeat(auto-fill,_minmax(18.5rem,_1fr))] grid-cols-[repeat(auto-fill,_minmax(14.5rem,_1fr))]'>
               {nav.items?.map(item => (
                 <ListItem key={item.title} item={item}>
                   {item.description}

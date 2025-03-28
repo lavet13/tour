@@ -13,7 +13,11 @@ const resolvers: Resolvers = {
 
       return cities;
     },
-    async arrivalCities(_, { cityId }, { prisma }) {
+    async arrivalCities(
+      _,
+      { cityId, includeInactiveCities = false },
+      { prisma },
+    ) {
       if (cityId === null) {
         return [];
       }
@@ -23,7 +27,7 @@ const resolvers: Resolvers = {
         where: {
           departureCityId: cityId,
           OR: [{ departureDate: null }, { departureDate: { lte: new Date() } }],
-          isActive: true,
+          ...(includeInactiveCities ? {} : { isActive: true }),
         },
         select: {
           arrivalCity: true,
@@ -35,7 +39,7 @@ const resolvers: Resolvers = {
         where: {
           arrivalCityId: cityId,
           OR: [{ departureDate: null }, { departureDate: { lte: new Date() } }],
-          isActive: true,
+          ...(includeInactiveCities ? {} : { isActive: true }),
         },
         select: {
           departureCity: true,
@@ -61,7 +65,7 @@ const resolvers: Resolvers = {
 
       return Array.from(citiesMap.values());
     },
-    async departureCities(_, __, { prisma }) {
+    async departureCities(_, { includeInactiveCities = false }, { prisma }) {
       // Find cities that are departure cities for the given region
       const departureCitiesQuery = await prisma.city.findMany({
         where: {
@@ -71,7 +75,7 @@ const resolvers: Resolvers = {
                 { departureDate: null },
                 { departureDate: { lte: new Date() } },
               ],
-              isActive: true,
+              ...(includeInactiveCities ? {} : { isActive: true }),
             },
           },
         },
@@ -87,7 +91,7 @@ const resolvers: Resolvers = {
                 { departureDate: null },
                 { departureDate: { lte: new Date() } },
               ],
-              isActive: true,
+              ...(includeInactiveCities ? {} : { isActive: true }),
             },
           },
         },

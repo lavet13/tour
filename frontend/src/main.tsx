@@ -8,7 +8,7 @@ import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import { Toaster } from '@/components/ui/toaster';
 import { type ToasterProps } from 'sonner';
 import { CookiesProvider } from 'react-cookie';
-import { TooltipProvider } from '@/components/ui/tooltip';
+import { TooltipProvider } from '@radix-ui/react-tooltip';
 
 const toastOptions = {
   classNames: {
@@ -34,7 +34,11 @@ createRoot(document.getElementById('root')!).render(
             pauseWhenPageIsHidden
           />
           <Toaster />
-          <TooltipProvider>
+          <TooltipProvider
+            disableHoverableContent={true}
+            delayDuration={0}
+            skipDelayDuration={0}
+          >
             <App />
           </TooltipProvider>
         </ReactQueryProvider>

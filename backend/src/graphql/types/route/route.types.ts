@@ -49,9 +49,13 @@ export default gql`
     after: ID
     before: ID
 
-    query: String!
+    query: String
     sorting: [SortingState!]!
-    regionId: ID
+    regionIds: [ID!]!
+    arrivalCityId: ID
+    departureCityId: ID
+    includeInactiveRegions: Boolean
+    includeInactiveCities: Boolean
   }
 
   type PageInfo {

@@ -10,7 +10,6 @@ import {
 import { graphql } from '@/gql';
 import { client } from '@/graphql/graphql-request';
 import { client as queryClient } from '@/react-query';
-import { useCallback, useRef, useState } from 'react';
 
 export const useUpdateRoute = (
   options: UseMutationOptions<
@@ -43,7 +42,7 @@ export const useUpdateRoute = (
 
       return Promise.all([
         queryClient.invalidateQueries({
-          queryKey: ['InfiniteRoutes', { input: { regionId } }],
+          queryKey: ['InfiniteRoutes', { input: { regionIds: [regionId].filter(Boolean) } }],
         }),
         queryClient.invalidateQueries({ queryKey: ['GetRouteById', { id }] }),
       ]);
@@ -81,7 +80,7 @@ export const useCreateRoute = (
         const regionId = data?.createRoute.region?.id ?? null;
 
         return queryClient.invalidateQueries({
-          queryKey: ['InfiniteRoutes', { input: { regionId } }],
+          queryKey: ['InfiniteRoutes', { input: { regionIds: [regionId].filter(Boolean) } }],
         });
       },
       ...options,
@@ -127,7 +126,7 @@ export const useUploadPhotoRoute = (
 
         return Promise.all([
           queryClient.invalidateQueries({
-            queryKey: ['InfiniteRoutes', { input: { regionId } }],
+            queryKey: ['InfiniteRoutes', { input: { regionIds: [regionId].filter(Boolean) } }],
           }),
           queryClient.invalidateQueries({ queryKey: ['GetRouteById', { id }] }),
         ]);

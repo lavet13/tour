@@ -42,41 +42,41 @@ const Footer: FC = () => {
   return (
     <footer className="py-6 md:px-8 md:py-8">
       <div className="container grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-12 gap-y-8 min-h-24 max-w-7xl">
+        {/* <div className="flex flex-col"> */}
+        {/*   <h4 className="p-2 scroll-m-20 text-xl font-semibold tracking-tight"> */}
+        {/*     Ссылки */}
+        {/*   </h4> */}
+        {/*   <nav className="flex flex-col space-y-2 p-2"> */}
+        {/*   </nav> */}
+        {/* </div> */}
         <div className="flex flex-col">
-          <h4 className="p-2 scroll-m-20 text-xl font-semibold tracking-tight">
-            Ссылки
-          </h4>
-          <nav className="flex flex-col space-y-2 p-2">
-          </nav>
-        </div>
-        <div className="flex flex-col">
-          <h4 className="p-2 scroll-m-20 text-xl font-semibold tracking-tight">
+          <h4 className="p-2 pl-4 scroll-m-20 text-xl font-semibold tracking-tight">
             Связаться
           </h4>
-          <div className="flex items-center pl-1">
+          <div className="flex flex-col items-center pl-1">
             <Link
               className={cn(
-                buttonVariants({ variant: 'ghost', size: 'icon' }),
-                '[&_svg]:size-5'
+                buttonVariants({ variant: 'link', size: 'sm' }),
+                '[&_svg]:size-5 self-start'
               )}
               target='_blank'
               rel='noreferrer'
               to='https://vk.com/go_to_krym'
             >
               <Icons.vkontakte className='fill-foreground transition-colors' />
-              <span className='sr-only'>Вконтакте</span>
+              <span>Мы Вконтакте</span>
             </Link>
             <Link
               className={cn(
-                buttonVariants({ variant: 'ghost', size: 'icon' }),
-                '[&_svg]:size-5'
+                buttonVariants({ variant: 'link', size: 'sm' }),
+                '[&_svg]:size-5 self-start'
               )}
               target='_blank'
               rel='noreferrer'
               to='https://t.me/Donbass_Tur'
             >
               <Icons.telegram className="fill-foreground transition-colors" />
-              <span className='sr-only'>Telegram</span>
+              <span>Мы в Телеграме</span>
             </Link>
           </div>
         </div>

@@ -4,12 +4,7 @@ import { toast } from 'sonner';
 import { isPossiblePhoneNumber } from 'react-phone-number-input';
 import ru from 'react-phone-number-input/locale/ru.json';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {
-  SubmitHandler,
-  useController,
-  useForm,
-  useFormContext,
-} from 'react-hook-form';
+import { SubmitHandler, useController, useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 import {
@@ -65,11 +60,6 @@ import { ComboBox } from '@/components/combo-box';
 import { NumericFormat } from 'react-number-format';
 import { useSchedulesByIds } from '@/features/schedule';
 import { daysOfWeekRu } from '@/pages/admin/routes/[route_id]/schedules/__columns';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 
 type ScheduleItem = Omit<
   GetSchedulesByIdsQuery['schedulesByIds'][number],
@@ -146,15 +136,11 @@ const BookingBusPage: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const departureCityId = searchParams.get('departureCityId')!;
   const arrivalCityId = searchParams.get('arrivalCityId')!;
-  console.log({ departureCityId, arrivalCityId });
 
   // arrivalCities
-  const {
-    data: arrivalData,
-    isPending: arrivalIsPending,
-    isLoading: arrivalIsLoading,
-  } = useArrivalCities(departureCityId, {
-    enabled: !!departureCityId,
+  const { data: arrivalData, isLoading: arrivalIsLoading } = useArrivalCities({
+    cityId: departureCityId,
+    options: { enabled: !!departureCityId },
   });
   const arrivalCities = useMemo(
     () => arrivalData?.arrivalCities || [],
@@ -169,14 +155,13 @@ const BookingBusPage: FC = () => {
     [departureData],
   );
 
-  const { data: schedulesData, isPending: isPendingSchedules } =
-    useSchedulesByIds({
-      arrivalCityId,
-      departureCityId,
-      options: {
-        enabled: !!arrivalCityId && !!departureCityId,
-      },
-    });
+  const { data: schedulesData } = useSchedulesByIds({
+    arrivalCityId,
+    departureCityId,
+    options: {
+      enabled: !!arrivalCityId && !!departureCityId,
+    },
+  });
   // Обновим функцию сортировки расписаний, чтобы правильно обрабатывать строковые значения enum
   const schedules = useMemo(() => {
     const schedulesArray = schedulesData?.schedulesByIds ?? [];
@@ -354,7 +339,7 @@ const BookingBusPage: FC = () => {
           className='w-full sm:max-w-screen-sm space-y-6 mx-auto'
         >
           <div className='relative overflow-hidden w-full h-full border rounded-xl'>
-            <div className='flex flex-col space-y-3 sm:space-y-3.5 mb-4 p-6 pb-0'>
+            <div className='flex flex-col space-y-3 sm:space-y-3.5 mb-3 p-4 sm:mb-4 sm:p-6 pb-0'>
               <div className='flex flex-col sm:flex-row items-center gap-y-3 sm:gap-y-1 gap-x-2 font-semibold tracking-tight text-xl'>
                 <span className='leading-6 text-center'>
                   Бронирование рейса
@@ -366,13 +351,13 @@ const BookingBusPage: FC = () => {
                   )}
                 >
                   <Separator orientation={'vertical'} />
-                  <span className='leading-5 text-center'>
+                  <span className='text-lg sm:text-xl leading-5 text-center'>
                     {departureIsPending ? (
                       <Skeleton className='h-6 w-24' />
                     ) : (
                       (departureCities.find(city => city.id === departureCityId)
                         ?.name ?? (
-                        <span className='text-sm text-muted-foreground'>
+                        <span className='text-sm font-normal text-muted-foreground'>
                           Город отправления
                         </span>
                       ))
@@ -381,15 +366,15 @@ const BookingBusPage: FC = () => {
                   {isMobile ? (
                     <ArrowUpDown className='size-4 mt-1.5' />
                   ) : (
-                    <ArrowRightLeft className='size-4 self-end' />
+                    <ArrowRightLeft className='size-4 self-center' />
                   )}
-                  <span className='leading-5 text-center'>
+                  <span className='text-lg sm:text-xl leading-5 text-center'>
                     {arrivalIsLoading ? (
                       <Skeleton className='h-6 w-24' />
                     ) : (
                       (arrivalCities.find(city => city.id === arrivalCityId)
                         ?.name ?? (
-                        <span className='text-sm text-muted-foreground text-center'>
+                        <span className='text-sm font-normal text-muted-foreground text-center'>
                           Город прибытия
                         </span>
                       ))
@@ -399,9 +384,9 @@ const BookingBusPage: FC = () => {
               </div>
             </div>
 
-            <div className='px-6 p-4 space-y-4 border-y'>
+            <div className='px-4 sm:px-6 p-4 space-y-4 border-y'>
               <p className='text-center sm:text-start text-sm text-muted-foreground'>
-                Выберите пункт отправления и назначения
+                Выберите пункт отправления и прибытия
               </p>
               <div className='sm:grid sm:grid-cols-[repeat(auto-fill,_minmax(17rem,_1fr))] space-y-3 sm:space-y-0 sm:gap-y-4 sm:gap-x-2'>
                 <FormField
@@ -423,7 +408,6 @@ const BookingBusPage: FC = () => {
                               shouldValidate: false,
                             });
                             setSearchParams(params => {
-                              console.log({ params });
                               const query = new URLSearchParams(
                                 params.toString(),
                               );
@@ -475,10 +459,10 @@ const BookingBusPage: FC = () => {
             </div>
 
             {schedules.length !== 0 && (
-              <div className='px-6 p-4 border-b'>
+              <div className='sm:px-6 px-4 p-4 border-b'>
                 <div className='border rounded-lg overflow-hidden transition-all duration-200'>
                   <div
-                    className='p-3 flex justify-between items-center cursor-pointer'
+                    className='p-3 py-1 pr-1 flex justify-between items-center cursor-pointer'
                     onClick={() => setIsOpen(!isOpen)}
                   >
                     <div className='flex-1 flex gap-1 items-center justify-between'>
@@ -486,7 +470,12 @@ const BookingBusPage: FC = () => {
                         Доступные дни отправления
                       </h4>
 
-                      <Button variant='ghost' size='sm' className='h-8 w-8 p-0'>
+                      <Button
+                        type='button'
+                        variant='ghost'
+                        size='sm'
+                        className='h-8 w-8 p-0'
+                      >
                         <ChevronDown
                           className={cn(
                             'h-4 w-4 transition-transform',
@@ -508,7 +497,7 @@ const BookingBusPage: FC = () => {
               </div>
             )}
 
-            <div className='px-6 p-4 space-y-4 border-b'>
+            <div className='sm:px-6 px-4 p-4 space-y-4 border-b'>
               <p className='text-center sm:text-start text-sm text-muted-foreground'>
                 Введите информацию для оформления бронирования.
               </p>
@@ -640,7 +629,7 @@ const BookingBusPage: FC = () => {
                 />
               </div>
             </div>
-            <div className='p-4 px-6 space-y-4'>
+            <div className='p-4 sm:px-6 px-4 space-y-4'>
               <div className='sm:grid sm:grid-cols-[repeat(auto-fill,_minmax(17rem,_1fr))] gap-1 gap-y-2'>
                 <Button
                   disabled={isSubmitting}
@@ -895,7 +884,7 @@ function Schedule({ schedule }: ScheduleProps) {
             isActive === false && 'text-muted-foreground',
           )}
         >
-          {dayOfWeek}
+          <span className='text-sm'>{dayOfWeek}</span>
           {isActive === false && (
             <span className='text-xs ml-2 text-muted-foreground'>
               (нет рейса)

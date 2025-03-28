@@ -8,13 +8,22 @@ import { client } from '@/graphql/graphql-request';
 import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
 
-export const useArrivalCities = (
-  cityId: string,
-  options?: InitialDataOptions<GetArrivalCitiesQuery>,
-) => {
+type UseArrivalCitiesProps = {
+  options?: InitialDataOptions<GetArrivalCitiesQuery>;
+  cityId: string;
+  includeInactiveCities?: boolean;
+};
+
+export const useArrivalCities = (props: UseArrivalCitiesProps) => {
+  const {
+    options = {},
+    cityId,
+    includeInactiveCities,
+  } = props;
+
   const arrivalCities = graphql(`
-    query GetArrivalCities($cityId: ID) {
-      arrivalCities(cityId: $cityId) {
+    query GetArrivalCities($cityId: ID, $includeInactiveCities: Boolean) {
+      arrivalCities(cityId: $cityId, includeInactiveCities: $includeInactiveCities) {
         id
         name
       }
@@ -22,9 +31,9 @@ export const useArrivalCities = (
   `);
 
   return useQuery({
-    queryKey: [(arrivalCities.definitions[0] as any).name.value, { cityId }],
+    queryKey: [(arrivalCities.definitions[0] as any).name.value, { cityId, includeInactiveCities }],
     queryFn: async () => {
-      return await client.request(arrivalCities, { cityId });
+      return await client.request(arrivalCities, { cityId, includeInactiveCities });
     },
     meta: {
       toastEnabled: true,
@@ -57,12 +66,20 @@ export const useCities = (options?: InitialDataOptions<GetCitiesQuery>) => {
   });
 };
 
-export const useDepartureCities = (
-  options?: InitialDataOptions<GetDepartureCitiesQuery>,
-) => {
+type UseDepartureCitiesProps = {
+  options?: InitialDataOptions<GetDepartureCitiesQuery>;
+  includeInactiveCities?: boolean;
+};
+
+export const useDepartureCities = (props: UseDepartureCitiesProps = {}) => {
+  const {
+    options = {},
+    includeInactiveCities,
+  } = props;
+
   const departureCities = graphql(`
-    query GetDepartureCities {
-      departureCities {
+    query GetDepartureCities($includeInactiveCities: Boolean) {
+      departureCities(includeInactiveCities: $includeInactiveCities) {
         id
         name
       }
@@ -70,9 +87,9 @@ export const useDepartureCities = (
   `);
 
   return useQuery({
-    queryKey: [(departureCities.definitions[0] as any).name.value],
+    queryKey: [(departureCities.definitions[0] as any).name.value, { includeInactiveCities }],
     queryFn: async () => {
-      return await client.request(departureCities);
+      return await client.request(departureCities, { includeInactiveCities });
     },
     meta: {
       toastEnabled: true,

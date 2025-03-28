@@ -66,16 +66,24 @@ type UseInfiniteRoutesProps = {
   query?: string;
   sorting?: SortingState;
   options?: InitialDataInfiniteOptions<InfiniteRoutesQuery, TPageParam>;
-  regionId?: string | null;
+  regionIds: string[];
+  departureCityId?: string | null;
+  arrivalCityId?: string | null;
+  includeInactiveRegions?: boolean;
+  includeInactiveCities?: boolean;
 };
 
 export const useInfiniteRoutes = ({
-  query = '',
+  query,
   initialLoading = false,
   take = 30,
   sorting = [],
   options = {},
-  regionId,
+  regionIds,
+  departureCityId,
+  arrivalCityId,
+  includeInactiveRegions,
+  includeInactiveCities,
 }: UseInfiniteRoutesProps) => {
   const navigate = useNavigate();
 
@@ -117,7 +125,18 @@ export const useInfiniteRoutes = ({
   return useInfiniteQuery({
     queryKey: [
       (infiniteRoutes.definitions[0] as any).name.value,
-      { input: { take, query, sorting, regionId } },
+      {
+        input: {
+          take,
+          query,
+          sorting,
+          regionIds,
+          departureCityId,
+          arrivalCityId,
+          includeInactiveRegions,
+          includeInactiveCities,
+        },
+      },
     ],
     queryFn: async ({ pageParam }) => {
       try {
@@ -132,7 +151,11 @@ export const useInfiniteRoutes = ({
             take,
             after: pageParam.after,
             sorting,
-            regionId: regionId ?? null,
+            regionIds,
+            departureCityId,
+            arrivalCityId,
+            includeInactiveRegions,
+            includeInactiveCities,
           },
         });
 

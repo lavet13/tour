@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Slot, Slottable } from '@radix-ui/react-slot';
 import { cn } from '@/lib/utils';
-import { ChevronRightIcon } from '@radix-ui/react-icons';
 
 interface RainbowButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement> {
@@ -12,7 +11,6 @@ interface RainbowButtonProps
 const RainbowButton = React.forwardRef<HTMLButtonElement, RainbowButtonProps>(
   ({ children, className, rightElement, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : 'button';
-    console.log({ children });
 
     return (
       <Comp
