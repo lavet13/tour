@@ -1,5 +1,4 @@
-import { Resolvers, SearchTypeRegions } from '@/graphql/__generated__/types';
-import { Prisma, Role } from '@prisma/client';
+import { Resolvers } from '@/graphql/__generated__/types';
 
 import {
   ResolversComposerMapping,
@@ -7,8 +6,6 @@ import {
 } from '@graphql-tools/resolvers-composition';
 import { GraphQLError } from 'graphql';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
-import { applyConstraints } from '@/helpers/apply-constraints';
-import { hasRoles, isAuthenticated } from '@/graphql/composition/authorization';
 
 const resolvers: Resolvers = {
   Query: {

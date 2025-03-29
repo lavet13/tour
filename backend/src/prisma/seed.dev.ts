@@ -177,7 +177,10 @@ export default async function seed() {
 function getRandomTime() {
   const now = new Date();
   const randomHours = Math.floor(Math.random() * 5) + 5; // Random time 5–10 hours from now
-  return new Date(now.setHours(now.getHours() + randomHours));
+  now.setHours(now.getHours() + randomHours);
+
+  // Format time as HH:MM
+  return now.toTimeString().slice(0, 5);
 }
 
 function getRandomInteger(min: number, max: number) {

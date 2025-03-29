@@ -1,11 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { useSchedulesByRoute } from '@/features/schedule/api/queries';
 import { CalendarPlus } from 'lucide-react';
-import {
-  Link,
-  useParams,
-  useSearchParams,
-} from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { cn } from '@/lib/utils';
@@ -154,9 +150,10 @@ function Schedules() {
     isError: scheduleIsError,
   } = useSchedulesByRoute(routeId, { enabled: !!routeId });
 
-  const {
-    data: routeData,
-  } = useRouteById(routeId, { enabled: !!routeId });
+  const { data: routeData } = useRouteById({
+    id: routeId,
+    options: { enabled: !!routeId },
+  });
   const departureCityName = routeData?.routeById?.departureCity?.name ?? '';
   const arrivalCityName = routeData?.routeById?.arrivalCity?.name ?? '';
 
@@ -234,12 +231,12 @@ function Schedules() {
 
         {!scheduleInitialLoading && (
           <>
-            <Breadcrumb className="px-2 py-2">
+            <Breadcrumb className='px-2 py-2'>
               <BreadcrumbList>
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <Link
-                      className="flex items-center gap-2"
+                      className='flex items-center gap-2'
                       to={`/admin/home`}
                     >
                       Главная
@@ -250,7 +247,7 @@ function Schedules() {
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <Link
-                      className="flex items-center gap-2"
+                      className='flex items-center gap-2'
                       to={`/admin/routes`}
                     >
                       Маршруты
@@ -261,7 +258,7 @@ function Schedules() {
                 <BreadcrumbItem>
                   <BreadcrumbLink asChild>
                     <Link
-                      className="flex items-center gap-2"
+                      className='flex items-center gap-2'
                       to={`/admin/routes/?route_id=${routeData?.routeById?.id}`}
                     >
                       <span>{departureCityName}</span>⇆

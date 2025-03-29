@@ -5,6 +5,7 @@ export default gql`
     routes(regionId: ID!): [Route!]!
     infiniteRoutes(input: RoutesInput!): RoutesResponse!
     routeById(id: ID): Route
+    routeByIds(departureCityId: ID, arrivalCityId: ID): Route
     routesGallery(limit: Int, offset: Int): GalleryResponse!
   }
 

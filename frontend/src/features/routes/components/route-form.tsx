@@ -61,8 +61,11 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
       status: routeStatus,
       isSuccess: routeIsSuccess,
       isFetching: routeIsFetching,
-    } = useRouteById(routeId, {
-      enabled: !!routeId,
+    } = useRouteById({
+      id: routeId,
+      options: {
+        enabled: !!routeId,
+      },
     });
 
     const [isPhotoSelected, setIsPhotoSelected] = useState(false);

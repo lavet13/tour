@@ -252,7 +252,7 @@ const BookingsPage: FC = () => {
               )}
               {isFetchingNextPage && (
                 <>
-                  <Loader2 className='animate-spin' /> Загружаем...
+                  <SonnerSpinner /> Загружаем...
                 </>
               )}
             </Button>

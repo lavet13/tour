@@ -1,5 +1,6 @@
 import { graphql } from '@/gql';
 import {
+  GetRouteByIdsQuery,
   GetRouteByIdQuery,
   GetRoutesGalleryQuery,
   GetRoutesQuery,
@@ -15,10 +16,72 @@ import { useNavigate } from 'react-router-dom';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { SortingState } from '@tanstack/react-table';
 
-export const useRouteById = (
+type UseRouteByIdsProps = {
+  departureCityId?: string;
+  arrivalCityId?: string;
+  options?: InitialDataOptions<GetRouteByIdsQuery>;
+};
+
+export const useRouteByIds = ({
+  departureCityId,
+  arrivalCityId,
+  options = {},
+}: UseRouteByIdsProps) => {
+  const routeByIds = graphql(`
+    query GetRouteByIds($departureCityId: ID, $arrivalCityId: ID) {
+      routeByIds(
+        departureCityId: $departureCityId
+        arrivalCityId: $arrivalCityId
+      ) {
+        id
+        departureCity {
+          id
+          name
+        }
+        arrivalCity {
+          id
+          name
+        }
+        region {
+          id
+          name
+        }
+        isActive
+        departureDate
+        price
+        photo
+      }
+    }
+  `);
+
+  return useQuery({
+    queryKey: [
+      (routeByIds.definitions[0] as any).name.value,
+      { departureCityId, arrivalCityId },
+    ],
+    queryFn: async () => {
+      return await client.request(routeByIds, {
+        departureCityId,
+        arrivalCityId,
+      });
+    },
+    meta: {
+      toastEnabled: false,
+    },
+    retry: false,
+    ...options,
+  });
+};
+
+type UseRouteByIdProps = {
   id: string | null,
   options?: InitialDataOptions<GetRouteByIdQuery>,
-) => {
+};
+
+export const useRouteById = ({
+  id,
+  options = {},
+}: UseRouteByIdProps) => {
   const routeById = graphql(`
     query GetRouteById($id: ID) {
       routeById(id: $id) {

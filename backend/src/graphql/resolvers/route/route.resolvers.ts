@@ -74,14 +74,14 @@ const resolvers: Resolvers = {
       const departureCityId = args.input.departureCityId ?? undefined;
       const includeInactiveRegions = args.input.includeInactiveRegions || false;
       const includeInactiveCities = args.input.includeInactiveCities || false;
-      console.log({
-        arrivalCityId,
-        departureCityId,
-        regionIds,
-        query,
-        includeInactiveRegions,
-        includeInactiveCities,
-      });
+      // console.log({
+      //   arrivalCityId,
+      //   departureCityId,
+      //   regionIds,
+      //   query,
+      //   includeInactiveRegions,
+      //   includeInactiveCities,
+      // });
 
       // fetching routes with extra one, so to determine if there's more to fetch
       let routes = await ctx.prisma.route.findMany({
@@ -228,6 +228,77 @@ const resolvers: Resolvers = {
 
       return routes;
     },
+    async routeByIds(_, args, ctx) {
+      const { departureCityId, arrivalCityId } = args;
+
+      // Try both route directions
+      const [forwardRoute, reverseRoute] = await Promise.all([
+        ctx.prisma.route.findFirst({
+          where: {
+            departureCityId,
+            arrivalCityId,
+          },
+        }),
+        ctx.prisma.route.findFirst({
+          where: {
+            departureCityId: arrivalCityId,
+            arrivalCityId: departureCityId,
+          },
+        }),
+      ]);
+
+      // Use the first non-null route found
+      const route = forwardRoute || reverseRoute;
+
+      // If no route was found in either direction
+      if (!route) {
+        throw new GraphQLError(
+          'Неверный/Несуществующий маршрут, указанный для бронирования.',
+        );
+      }
+
+      if (route.photoName) {
+        const { photoName: fileName } = route;
+
+        const readFile = async (filePath: string): Promise<Buffer> => {
+          const readStream = createReadStream(filePath);
+          const chunks: Buffer[] = [];
+          const collectChunks = new Writable({
+            write(chunk, enc, cb) {
+              chunks.push(chunk);
+              cb();
+            },
+          });
+          try {
+            await pipeline(readStream, collectChunks);
+            return Buffer.concat(chunks);
+          } catch (error: any) {
+            console.error(`Error reading file: ${error.message}`);
+            throw new GraphQLError(`Error reading file at path: ${filePath}`);
+          }
+        };
+
+        const uploadsDir = path.resolve(process.cwd(), 'uploads', 'images');
+        const filePath = path.join(uploadsDir, fileName);
+        const stats = await stat(filePath);
+        const fileType = mime.lookup(filePath) || 'application/octet-stream';
+        const buffer = await readFile(filePath);
+
+        return {
+          photo: {
+            name: fileName,
+            blobParts: buffer,
+            _size: stats.size,
+            type: fileType,
+            encoding: 'utf-8',
+            lastModified: stats.mtimeMs,
+          },
+          ...route,
+        };
+      }
+
+      return route;
+    },
     async routeById(_, args, ctx) {
       const id = args.id;
 
@@ -253,7 +324,7 @@ const resolvers: Resolvers = {
           throw new GraphQLError('Unknown error!');
         });
 
-      console.log({ photoName: route.photoName });
+      // console.log({ photoName: route.photoName });
       if (route.photoName) {
         const { photoName: fileName } = route;
 
@@ -391,7 +462,7 @@ const resolvers: Resolvers = {
 
       try {
         await access(uploadDir, constants.F_OK);
-        console.log('👽 Folder is already exists. Do nothing.');
+        // console.log('👽 Folder is already exists. Do nothing.');
       } catch (error: any) {
         // Directory doesn't exist, create it
         try {

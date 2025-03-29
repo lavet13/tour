@@ -39,6 +39,7 @@ import {
   CalendarIcon,
   ChevronDown,
   Clock,
+  MapPin,
   Minus,
   Plus,
 } from 'lucide-react';
@@ -60,6 +61,12 @@ import { ComboBox } from '@/components/combo-box';
 import { NumericFormat } from 'react-number-format';
 import { useSchedulesByIds } from '@/features/schedule';
 import { daysOfWeekRu } from '@/pages/admin/routes/[route_id]/schedules/__columns';
+import { useRouteByIds } from '@/features/routes';
+import { LazyImageWrapper } from '@/components/lazy-image';
+import { Card } from '@/components/ui/card';
+import { PonyfillFile } from '@/types/file-types';
+import { Image } from '@/features/routes/components/route-gallery';
+import { Buffer } from 'buffer';
 
 type ScheduleItem = Omit<
   GetSchedulesByIdsQuery['schedulesByIds'][number],
@@ -155,13 +162,47 @@ const BookingBusPage: FC = () => {
     [departureData],
   );
 
-  const { data: schedulesData } = useSchedulesByIds({
+  const { data: routeData } = useRouteByIds({
     arrivalCityId,
     departureCityId,
     options: {
       enabled: !!arrivalCityId && !!departureCityId,
     },
   });
+
+  const route = useMemo(() => routeData?.routeByIds || null, [routeData]);
+  console.log({ route });
+
+  // Generate a placeholder image URL if no photo is available
+  const photo: Image | null = useMemo(() => {
+    if (!route?.photo) return null;
+    const { name, lastModified, type, encoding, _size, blobParts } =
+      route.photo as PonyfillFile;
+    const buffer = Buffer.from(blobParts);
+    const image = new Blob([buffer], { type });
+    const imageUrl = URL.createObjectURL(image);
+
+    return {
+      name,
+      type,
+      encoding,
+      _size,
+      imageUrl,
+      buffer,
+      lastModified,
+    };
+  }, [route]);
+  console.log({ photo });
+
+  const { data: schedulesData, isLoading: schedulesIsLoading } =
+    useSchedulesByIds({
+      arrivalCityId,
+      departureCityId,
+      options: {
+        enabled: !!arrivalCityId && !!departureCityId,
+      },
+    });
+
   // Обновим функцию сортировки расписаний, чтобы правильно обрабатывать строковые значения enum
   const schedules = useMemo(() => {
     const schedulesArray = schedulesData?.schedulesByIds ?? [];
@@ -332,7 +373,63 @@ const BookingBusPage: FC = () => {
   const isMobile = useMediaQuery('(max-width: 400px)');
 
   return (
-    <div className='container mt-5 mb-10'>
+    <div className='container mt-5 mb-10 flex flex-col gap-2'>
+      <div className='w-full sm:max-w-screen-sm space-y-6 mx-auto'>
+        {route && (
+          <Card className='mb-6 h-fit overflow-hidden border rounded-xl'>
+            <div className='grid grid-cols-1 gap-0'>
+              {/* Route Image */}
+              <div className='relative'>
+                <LazyImageWrapper
+                  src={photo?.imageUrl || '/placeholder.svg'}
+                  fallbackSrc={'/placeholder.svg'}
+                  alt={`Route from ${route.departureCity?.name} to ${route.arrivalCity?.name}`}
+                  className='object-cover h-full w-full'
+                />
+
+                {/* Region badge */}
+                {route.region && (
+                  <div className='absolute top-4 left-4 z-[2] flex items-center gap-1.5 bg-background/90 backdrop-blur-sm text-foreground px-3 py-1.5 rounded-full text-xs font-medium shadow-sm'>
+                    <MapPin className='h-3 w-3 text-primary' />
+                    <span>{route.region.name}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Route Details */}
+              <div className='p-5 flex flex-col'>
+                <div className='flex items-center justify-between mb-4'>
+                  <h2 className='text-xl font-bold'>Информация о маршруте</h2>
+                  <div className='text-xl font-bold text-primary'>
+                    {route.price} ₽
+                  </div>
+                </div>
+
+                <div className='flex items-center gap-3 mb-4'>
+                  <div>
+                    <div className='text-base font-medium'>
+                      {route.departureCity?.name}
+                    </div>
+                  </div>
+
+                  {isMobile ? (
+                    <ArrowUpDown className='size-4' />
+                  ) : (
+                    <ArrowRightLeft className='size-4' />
+                  )}
+
+                  <div>
+                    <div className='text-base font-medium'>
+                      {route.arrivalCity?.name}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        )}
+      </div>
+
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
