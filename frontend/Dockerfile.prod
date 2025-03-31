@@ -1,0 +1,30 @@
+# Stage 1: Build Vite app
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Копируем файлы package.json и yarn.lock перед исходниками,
+# чтобы кешировать слои с зависимостями
+COPY package.json yarn.lock ./
+
+# Устанавливаем только необходимые зависимости (без devDependencies)
+RUN yarn install --frozen-lockfile
+
+# Копируем исходный код проекта
+COPY . .
+
+# Собираем проект Vite
+RUN yarn build
+
+# Stage 2: nginx-certbot
+FROM jonasal/nginx-certbot:latest
+
+# Копируем собранный фронтенд из предыдущего контейнера
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Копируем кастомные конфиги для Nginx
+COPY .nginx/prod/user_conf.d /etc/nginx/user_conf.d
+
+# Открываем порты
+EXPOSE 80 443
+

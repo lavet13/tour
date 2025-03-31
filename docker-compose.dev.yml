@@ -7,10 +7,10 @@ services:
     image: jonasal/nginx-certbot:latest
     restart: unless-stopped
     env_file:
-      - ./frontend/nginx-certbot.env
+      - ./frontend/nginx-certbot.env.dev
     volumes:
       - ./frontend/dist:/usr/share/nginx/html:ro
-      - ./frontend/.nginx/user_conf.d:/etc/nginx/user_conf.d:ro
+      - ./frontend/.nginx/dev/user_conf.d:/etc/nginx/user_conf.d:ro
       - nginx_secrets:/etc/letsencrypt
     ports:
       - "80:80"
@@ -18,22 +18,22 @@ services:
     networks:
       - webnet
 
-  # Backend (PostgreSQL)
-  tour-backend:
-    container_name: tour-backend
+  # Database (PostgreSQL)
+  tour-db:
+    container_name: tour-db
     image: bitnami/postgresql:16.0.0
     restart: always
     env_file:
       - ./backend/.env
     volumes:
-      - backend:/bitnami/postgresql
+      - postgres_data:/bitnami/postgresql
     ports:
       - "${DB_PORT:-5431}:5432"
     networks:
       - webnet
 
 volumes:
-  backend:
+  postgres_data:
   nginx_secrets:  # Add this volume for storing certificates
 
 networks:

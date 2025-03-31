@@ -150,7 +150,6 @@ const resolvers: Resolvers = {
           ...(columnConditions.length > 0 ? columnConditions : []),
         ],
       };
-      console.log(inspect(conditions, { depth: Infinity, colors: true }));
 
       // Prepare sorting
       const sorting = args.input.sorting || [];

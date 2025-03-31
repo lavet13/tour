@@ -111,7 +111,7 @@ export function RouteCard({ route }: RouteCardProps) {
             'p-3 text-sm font-medium',
             isAvailable
               ? 'bg-emerald-500 text-white'
-              : 'bg-amber-500 text-white',
+              : 'bg-secondary text-muted-foreground',
           )}
         >
           {isAvailable ? (

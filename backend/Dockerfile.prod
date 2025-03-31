@@ -1,0 +1,29 @@
+FROM node:20-alpine
+
+# Install OpenSSL and other required dependencies
+RUN apk add --no-cache openssl openssl-dev
+
+WORKDIR /app
+
+# Install dependencies using Yarn
+COPY package.json ./
+COPY yarn.lock ./
+RUN yarn install --frozen-lockfile
+
+# Copy source code
+COPY . .
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Build the application
+RUN npm run build
+
+# Create the startup script directly
+RUN printf '#!/bin/sh\necho "Running database migrations..."\nnpx prisma migrate deploy\necho "Starting server..."\nyarn preview\n' > /app/start.sh
+
+# Make it executable
+RUN chmod +x /app/start.sh
+
+# Use the startup script as the entrypoint
+CMD ["/app/start.sh"]

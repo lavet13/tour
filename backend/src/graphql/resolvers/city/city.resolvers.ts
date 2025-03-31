@@ -110,7 +110,6 @@ const resolvers: Resolvers = {
       // Convert map values to array
       const cities = Array.from(citiesMap.values());
 
-      console.log(inspect(cities, { depth: Infinity, colors: true }));
       return cities;
     },
   },
