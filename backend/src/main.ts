@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import { config } from 'dotenv';
 import express, { Application } from 'express';
 import 'json-bigint-patch';
 
@@ -12,6 +12,10 @@ import typeDefs from '@/graphql/types';
 
 import { ContextValue, createContext } from '@/context';
 import { YogaServerInstance, createYoga } from 'graphql-yoga';
+
+const envFile = import.meta.env.PROD ? '.env.prod' : '.env.dev';
+config({ path: envFile });
+console.log(`Loaded environment from ${envFile}`);
 
 const schema = makeExecutableSchema({
   typeDefs,
