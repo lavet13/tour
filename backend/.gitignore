@@ -8,6 +8,8 @@ pnpm-debug.log*
 lerna-debug.log*
 /src/graphql/__generated__
 
+uploads
+
 node_modules
 dist
 dist-ssr
