@@ -24,7 +24,7 @@ services:
     image: bitnami/postgresql:16.0.0
     restart: always
     env_file:
-      - ./backend/.env
+      - ./backend/.env.development
     volumes:
       - postgres_data:/bitnami/postgresql
     ports:
