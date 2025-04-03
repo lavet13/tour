@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  # Frontend (nginx with certbot)
+  tour-frontend:
+    container_name: tour-frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.temp
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    networks:
+      - webnet
+
+  # GraphQL Server
+  tour-graphql:
+    container_name: tour-graphql
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.prod
+    restart: always
+    env_file:
+      - ./backend/.env.production
+    depends_on:
+      - tour-db
+    volumes:
+      - ./backend/uploads:/app/uploads # Add this volume mount
+    ports:
+      - "4000:4000"
+    networks:
+      - webnet
+
+  # Database (PostgreSQL)
+  tour-db:
+    container_name: tour-db
+    image: bitnami/postgresql:16.0.0
+    restart: always
+    env_file:
+      - ./backend/.env.production
+    volumes:
+      - postgres_data:/bitnami/postgresql
+    ports:
+      - "${DB_PORT:-5431}:5432"
+    networks:
+      - webnet
+
+volumes:
+  postgres_data:
+
+networks:
+  webnet:
+    driver: bridge
