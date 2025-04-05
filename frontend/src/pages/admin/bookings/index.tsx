@@ -123,7 +123,7 @@ const BookingsPage: FC = () => {
       const [isEditing, setIsEditing] = useState(false);
       const [previousValue, setPreviousValue] = useState(initialValue);
 
-      const { mutate: updateBooking, isPending: bookingIsPending } =
+      const { mutate: updateBooking, isPending } =
         useUpdateBooking();
 
       const handleUpdate = (newValue: string) => {
@@ -217,7 +217,7 @@ const BookingsPage: FC = () => {
               className='flex items-center overflow-hidden cursor-text gap-1'
               onClick={() => setIsEditing(true)}
             >
-              {bookingIsPending && (
+              {isPending && (
                 <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
               )}
               <span title={initialValue} className='truncate'>
@@ -230,8 +230,8 @@ const BookingsPage: FC = () => {
               variant='outline'
               onClick={() => setIsEditing(true)}
             >
-              {!bookingIsPending && <Edit />}
-              {bookingIsPending && (
+              {!isPending && <Edit />}
+              {isPending && (
                 <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
               )}
             </Button>

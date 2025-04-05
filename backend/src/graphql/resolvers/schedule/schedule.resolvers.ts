@@ -1,4 +1,4 @@
-import { DaysOfWeek, Resolvers } from '@/graphql/__generated__/types';
+import { Resolvers } from '@/graphql/__generated__/types';
 import { isAuthenticated } from '@/graphql/composition/authorization';
 import { hasRoles } from '@/graphql/composition/authorization';
 
@@ -9,16 +9,6 @@ import {
 import { Role } from '@prisma/client';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { GraphQLError } from 'graphql';
-
-export const daysOfWeekRu = {
-  [DaysOfWeek.Monday]: 'Понедельник',
-  [DaysOfWeek.Tuesday]: 'Вторник',
-  [DaysOfWeek.Wednesday]: 'Среда',
-  [DaysOfWeek.Thursday]: 'Четверг',
-  [DaysOfWeek.Friday]: 'Пятница',
-  [DaysOfWeek.Saturday]: 'Суббота',
-  [DaysOfWeek.Sunday]: 'Воскресенье',
-};
 
 const resolvers: Resolvers = {
   Query: {
@@ -49,9 +39,6 @@ const resolvers: Resolvers = {
       const schedules = await ctx.prisma.schedule.findMany({
         where: {
           routeId: route.id,
-        },
-        orderBy: {
-          dayOfWeek: 'asc',
         },
       });
 
@@ -126,7 +113,14 @@ const resolvers: Resolvers = {
   },
   Mutation: {
     async createSchedule(_, args, ctx) {
-      const { routeId, endTime, startTime, isActive, dayOfWeek } = args.input;
+      const {
+        routeId,
+        isActive,
+        stopName,
+        arrivalTime,
+        departureTime,
+        direction,
+      } = args.input;
 
       const route = await ctx.prisma.route.findUnique({
         where: {
@@ -138,56 +132,35 @@ const resolvers: Resolvers = {
         throw new GraphQLError(`Route with ID ${routeId} not found.`);
       }
 
-      const schedule = await ctx.prisma.schedule
-        .create({
-          data: {
-            dayOfWeek,
-            routeId,
-            startTime,
-            endTime,
-            isActive,
-          },
-        })
-        .catch((err: unknown) => {
-          if (err instanceof PrismaClientKnownRequestError) {
-            if (err.code === 'P2002') {
-              throw new GraphQLError(
-                `День недели \`${daysOfWeekRu[dayOfWeek as DaysOfWeek]}\` уже определен(а)!`,
-              );
-            }
-          }
-          console.log({ err });
-          throw new GraphQLError('Произошла ошибка!');
-        });
+      const schedule = await ctx.prisma.schedule.create({
+        data: {
+          routeId,
+          direction,
+          stopName,
+          departureTime,
+          arrivalTime,
+          isActive,
+        },
+      });
 
       return schedule;
     },
     async updateSchedule(_, args, ctx) {
-      const { isActive, id, endTime, startTime, dayOfWeek } = args.input;
+      const { stopName, arrivalTime, departureTime, id, isActive, direction } =
+        args.input;
 
-      const schedule = await ctx.prisma.schedule
-        .update({
-          where: {
-            id,
-          },
-          data: {
-            isActive,
-            dayOfWeek,
-            startTime,
-            endTime,
-          },
-        })
-        .catch((err: unknown) => {
-          if (err instanceof PrismaClientKnownRequestError) {
-            if (err.code === 'P2002') {
-              throw new GraphQLError(
-                `День недели \`${daysOfWeekRu[dayOfWeek as DaysOfWeek]}\` уже определен(a)!`,
-              );
-            }
-          }
-          console.log({ err });
-          throw new GraphQLError('Произошла ошибка!');
-        });
+      const schedule = await ctx.prisma.schedule.update({
+        where: {
+          id,
+        },
+        data: {
+          isActive,
+          stopName,
+          arrivalTime,
+          departureTime,
+          direction,
+        },
+      });
 
       return schedule;
     },

@@ -1,11 +1,4 @@
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenuTrigger,
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuLabel,
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { useUpdateBooking } from '@/features/booking/api/mutations';
 import { InfiniteBookingsQuery, BookingStatus } from '@/gql/graphql';
@@ -28,10 +21,8 @@ import {
   List,
   Loader2,
   LucideProps,
-  MoreHorizontal,
-  Trash,
 } from 'lucide-react';
-import React, {
+import {
   ForwardRefExoticComponent,
   KeyboardEvent,
   RefAttributes,
@@ -41,7 +32,6 @@ import React, {
 import { toast } from 'sonner';
 import { ComboBox } from '@/components/combo-box-filter';
 import { DatePicker } from '@/components/date-picker-filter';
-import { AutosizeTextarea } from '@/components/autosize-textarea';
 import { NumberFormatValues, NumericFormat } from 'react-number-format';
 import { Link } from 'react-router-dom';
 
@@ -55,7 +45,6 @@ export const columnTranslations = {
   id: 'ID',
   firstName: 'Имя',
   lastName: 'Фамилия',
-  commentary: 'Комментарий',
   seatsCount: 'Кол-во мест',
   status: 'Статус',
   createdAt: 'Создано',

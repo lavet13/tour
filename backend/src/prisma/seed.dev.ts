@@ -1,6 +1,6 @@
 import prisma from '@/prisma';
 import generatePasswordHash from '@/helpers/generate-password-hash';
-import { DaysOfWeek, Role } from '@prisma/client';
+import { RouteDirection, Role } from '@prisma/client';
 
 let countDown = 0;
 
@@ -85,25 +85,29 @@ export default async function seed() {
       },
     });
 
-    const dayOfWeek = getRandomDayOfWeek();
-    // Проверяем, существует ли уже расписание с таким routeId и dayOfWeek
-    const existingSchedule = await prisma.schedule.findFirst({
-      where: {
+    // Создание прямого расписания (FORWARD - из города в Мариуполь)
+    await prisma.schedule.create({
+      data: {
         routeId: route.id,
-        dayOfWeek,
+        direction: RouteDirection.FORWARD,
+        departureTime: getRandomTime(),
+        arrivalTime: getRandomTime(true), // Прибытие после отправления
+        stopName: `Автовокзал ${city}`,
+        isActive: true,
       },
     });
 
-    if (!existingSchedule) {
-      await prisma.schedule.create({
-        data: {
-          routeId: route.id,
-          dayOfWeek,
-          startTime: getRandomTime(),
-          endTime: getRandomTime(),
-        },
-      });
-    }
+    // Создание обратного расписания (BACKWARD - из Мариуполя в город)
+    await prisma.schedule.create({
+      data: {
+        routeId: route.id,
+        direction: RouteDirection.BACKWARD,
+        departureTime: getRandomTime(),
+        arrivalTime: getRandomTime(true), // Прибытие после отправления
+        stopName: 'Автовокзал Мариуполь',
+        isActive: true,
+      },
+    });
 
     // Создание бронирования для маршрута
     await prisma.booking.create({
@@ -131,26 +135,29 @@ export default async function seed() {
       },
     });
 
-    const dayOfWeek = getRandomDayOfWeek();
-
-    // Проверяем, существует ли уже расписание с таким routeId и dayOfWeek
-    const existingSchedule = await prisma.schedule.findFirst({
-      where: {
+    // Создание прямого расписания (FORWARD - из Мариуполя на побережье)
+    await prisma.schedule.create({
+      data: {
         routeId: route.id,
-        dayOfWeek,
+        direction: RouteDirection.FORWARD,
+        departureTime: getRandomTime(),
+        arrivalTime: getRandomTime(true), // Прибытие после отправления
+        stopName: 'Автовокзал Мариуполь',
+        isActive: true,
       },
     });
 
-    if (!existingSchedule) {
-      await prisma.schedule.create({
-        data: {
-          routeId: route.id,
-          dayOfWeek,
-          startTime: getRandomTime(),
-          endTime: getRandomTime(),
-        },
-      });
-    }
+    // Создание обратного расписания (BACKWARD - с побережья в Мариуполь)
+    await prisma.schedule.create({
+      data: {
+        routeId: route.id,
+        direction: RouteDirection.BACKWARD,
+        departureTime: getRandomTime(),
+        arrivalTime: getRandomTime(true), // Прибытие после отправления
+        stopName: `Автостанция ${city}`,
+        isActive: true,
+      },
+    });
 
     // Создание бронирования для маршрута
     await prisma.booking.create({
@@ -174,9 +181,17 @@ export default async function seed() {
   console.log('Seed completed successfully');
 }
 
-function getRandomTime() {
+function getRandomTime(isArrival = false) {
   const now = new Date();
-  const randomHours = Math.floor(Math.random() * 5) + 5; // Random time 5–10 hours from now
+
+  // For departure time: random time 5-10 hours from now
+  let randomHours = Math.floor(Math.random() * 5) + 5;
+
+  // For arrival time: add 1-3 more hours to ensure arrival is after departure
+  if (isArrival) {
+    randomHours += Math.floor(Math.random() * 3) + 1;
+  }
+
   now.setHours(now.getHours() + randomHours);
 
   // Format time as HH:MM
@@ -187,11 +202,6 @@ function getRandomInteger(min: number, max: number) {
   min = Math.ceil(min);
   max = Math.floor(max);
   return Math.floor(Math.random() * (max - min)) + min;
-}
-
-function getRandomDayOfWeek() {
-  const allDays = Object.values(DaysOfWeek);
-  return allDays[Math.floor(Math.random() * allDays.length)];
 }
 
 async function createUsers(hashedPassword: string) {

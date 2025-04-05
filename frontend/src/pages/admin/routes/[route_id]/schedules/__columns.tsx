@@ -11,6 +11,7 @@ import {
   CircleMinus,
   Loader2,
   Edit,
+  CircleCheck,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
@@ -32,11 +33,9 @@ import {
   useDeleteSchedule,
   useUpdateSchedule,
 } from '@/features/schedule/api/mutations';
-import { client as queryClient } from '@/react-query';
 import { toast } from 'sonner';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
-import { DaysOfWeek } from '@/gql/graphql';
-import { client } from '@/react-query';
+import { RouteDirection } from '@/gql/graphql';
 import {
   Select,
   SelectContent,
@@ -50,48 +49,42 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogDescription,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 
 export type ScheduleColumns = Exclude<keyof Schedule, '__typename' | 'route'>;
 export const columnTranslations = {
   id: 'ID',
-  dayOfWeek: 'День недели',
-  startTime: 'Время отправления',
-  endTime: 'Время прибытия',
+  direction: 'Путь',
+  stopName: 'Название остановки',
+  departureTime: 'Время отправления',
+  arrivalTime: 'Время прибытия',
   isActive: 'Активный рейс',
   createdAt: 'Создано',
   updatedAt: 'Обновлено',
 } as const satisfies Record<ScheduleColumns, string>;
 
-export const daysOfWeekRu = {
-  [DaysOfWeek.Monday]: 'Понедельник',
-  [DaysOfWeek.Tuesday]: 'Вторник',
-  [DaysOfWeek.Wednesday]: 'Среда',
-  [DaysOfWeek.Thursday]: 'Четверг',
-  [DaysOfWeek.Friday]: 'Пятница',
-  [DaysOfWeek.Saturday]: 'Суббота',
-  [DaysOfWeek.Sunday]: 'Воскресенье',
+export const directionRu = {
+  [RouteDirection.Forward]: 'Туда',
+  [RouteDirection.Backward]: 'Обратно',
 };
 
 const allIsActiveOptions = [
-  ['Все', '', List],
-  ['Активно', true, CirclePlus],
-  ['Не активно', false, CircleMinus],
+  ['Показать все', '', List],
+  ['Активные', true, CircleCheck],
+  ['Не активные', false, CircleMinus],
 ] as Array<[string, boolean | string, typeof List]>;
 
 export const columns: ColumnDef<Schedule, unknown>[] = [
   {
-    minSize: 170,
-    size: 170,
-    id: 'dayOfWeek',
-    accessorKey: 'dayOfWeek',
+    minSize: 180,
+    size: 180,
+    id: 'direction',
+    accessorKey: 'direction',
     header: ({ column }) => {
-      return <Header title={columnTranslations['dayOfWeek']} column={column} />;
+      return <Header title={columnTranslations['direction']} column={column} />;
     },
     cell({
       getValue,
@@ -103,7 +96,7 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
       const enumValue = getValue() as string;
       const [isEditing, setIsEditing] = useState(false);
       const [value, setValue] = useState(enumValue);
-      const [previousValue, setPreviousValue] = useState(enumValue);
+      const [previousValue] = useState(enumValue);
 
       const { mutate: updateSchedule, isPending } = useUpdateSchedule();
 
@@ -116,8 +109,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
           return setIsEditing(false);
         }
 
-        setPreviousValue(enumValue);
-
         const toastId = toast.loading(
           `Обновление поля \`${columnTranslations[columnId as ScheduleColumns]}\`...`,
         );
@@ -129,7 +120,7 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
               // On success, dismiss the loading toast and create a new success toast with the action button
               toast.dismiss(toastId);
               toast.success(
-                `\`${columnTranslations[columnId as ScheduleColumns]}\` изменёно ${daysOfWeekRu[enumValue as DaysOfWeek]} → ${daysOfWeekRu[newValue as DaysOfWeek]}`,
+                `\`${columnTranslations[columnId as ScheduleColumns]}\` изменёно ${directionRu[enumValue as RouteDirection]} → ${directionRu[newValue as RouteDirection]}`,
                 {
                   duration: 10000,
                   action: {
@@ -177,10 +168,10 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
       return (
         <Select value={value} onValueChange={handleUpdate}>
           <SelectTrigger className='h-8'>
-            <SelectValue placeholder='Выберите день' />
+            <SelectValue placeholder='Выберите направление' />
           </SelectTrigger>
           <SelectContent>
-            {Object.entries(daysOfWeekRu)?.map(([key, value]) => (
+            {Object.entries(directionRu)?.map(([key, value]) => (
               <SelectItem key={key} value={key}>
                 {value}
               </SelectItem>
@@ -191,17 +182,18 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
     },
     meta: {
       filterVariant: 'select',
-      items: [['ALL', 'Все дни'], ...Object.entries(daysOfWeekRu)],
+      items: [['ALL', 'Все направления'], ...Object.entries(directionRu)],
     },
   },
   {
     minSize: 190,
     size: 190,
-    id: 'startTime',
-    accessorKey: 'startTime',
+    id: 'departureTime',
+    accessorKey: 'departureTime',
     header: ({ column }) => {
-      console.log({ column });
-      return <Header title={columnTranslations['startTime']} column={column} />;
+      return (
+        <Header title={columnTranslations['departureTime']} column={column} />
+      );
     },
     cell: ({
       getValue,
@@ -279,7 +271,7 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
 
       const onBlur = () => {
         if (value === undefined) {
-          return toast.error('Укажите кол-во мест!');
+          return toast.error('Укажите время отправления!');
         }
         handleUpdate(value);
       };
@@ -288,7 +280,7 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
         if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
           e.preventDefault();
           if (value === undefined) {
-            return toast.error('Укажите кол-во мест!');
+            return toast.error('Укажите время отправления!');
           }
           handleUpdate(value);
         }
@@ -327,11 +319,13 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
   {
     minSize: 180,
     size: 180,
-    id: 'endTime',
-    accessorKey: 'endTime',
+    id: 'arrivalTime',
+    accessorKey: 'arrivalTime',
     header: ({ column }) => {
       console.log({ column });
-      return <Header title={columnTranslations['endTime']} column={column} />;
+      return (
+        <Header title={columnTranslations['arrivalTime']} column={column} />
+      );
     },
     cell: ({
       getValue,
@@ -439,19 +433,47 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
       }
 
       return (
-        <div
-          className='flex items-center overflow-hidden cursor-text gap-1'
-          onClick={() => setIsEditing(true)}
-        >
-          {isPending && (
-            <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+        <>
+          {initialValue.length ? (
+            <div
+              className='flex items-center overflow-hidden cursor-text gap-1'
+              onClick={() => setIsEditing(true)}
+            >
+              {isPending && (
+                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+              )}
+              <span title={initialValue} className='truncate'>
+                {initialValue}
+              </span>
+            </div>
+          ) : (
+            <Button
+              className='size-8'
+              variant='outline'
+              onClick={() => setIsEditing(true)}
+            >
+              {!isPending && <Edit />}
+              {isPending && (
+                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+              )}
+            </Button>
           )}
-          <span className='truncate'>{initialValue}</span>
-        </div>
+        </>
       );
     },
     meta: {
       filterVariant: 'timeRange',
+    },
+  },
+  {
+    minSize: 180,
+    size: 180,
+    id: 'stopName',
+    accessorKey: 'stopName',
+    header: ({ column }) => {
+      return (
+        <Header title={columnTranslations['stopName']} column={column} />
+      );
     },
   },
   {
@@ -524,8 +546,8 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
   {
     id: 'isActive',
     accessorKey: 'isActive',
-    minSize: 190,
-    size: 190,
+    minSize: 200,
+    size: 200,
     header: ({ column }) => (
       <Header title={columnTranslations['isActive']} column={column} />
     ),

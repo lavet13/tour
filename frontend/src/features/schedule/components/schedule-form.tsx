@@ -1,4 +1,3 @@
-import { DrawerMode } from '@/hooks/use-drawer-state';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import {
@@ -35,11 +34,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { daysOfWeekRu } from '@/pages/admin/routes/[route_id]/schedules/__columns';
+import { directionRu } from '@/pages/admin/routes/[route_id]/schedules/__columns';
 import { useCreateSchedule, useUpdateSchedule } from '../api/mutations';
 
-interface ScheduleFormProps {
-  drawerMode: Extract<DrawerMode, 'addSchedule' | 'editSchedule' | 'idle'>;
+interface ScheduleFormProps<T extends string> {
+  drawerMode: T;
   scheduleId: string | null;
   routeId: string;
   onClose: () => void;
@@ -50,7 +49,7 @@ export function ScheduleForm({
   scheduleId,
   routeId,
   onClose,
-}: ScheduleFormProps) {
+}: ScheduleFormProps<'addSchedule' | 'editSchedule' | 'idle'>) {
   const {
     data: scheduleData,
     fetchStatus: scheduleFetchStatus,
@@ -63,9 +62,10 @@ export function ScheduleForm({
 
   const values = scheduleData?.scheduleById
     ? {
-        startTime: scheduleData.scheduleById.startTime as string,
-        endTime: scheduleData.scheduleById.endTime as string,
-        dayOfWeek: scheduleData.scheduleById.dayOfWeek,
+        departureTime: scheduleData.scheduleById.departureTime as string,
+        arrivalTime: scheduleData.scheduleById.arrivalTime as string,
+        direction: scheduleData.scheduleById.direction,
+        stopName: scheduleData.scheduleById.stopName as string,
         isActive: scheduleData.scheduleById.isActive,
       }
     : undefined;
@@ -151,7 +151,7 @@ export function ScheduleForm({
             <div className='sm:grid sm:grid-cols-[repeat(auto-fit,_minmax(14rem,_1fr))] space-y-3 sm:space-y-0 sm:gap-y-4 sm:gap-x-2 px-4 sm:px-5'>
               <FormField
                 control={form.control}
-                name='startTime'
+                name='departureTime'
                 render={({ field }) => {
                   return (
                     <FormItem>
@@ -171,7 +171,7 @@ export function ScheduleForm({
 
               <FormField
                 control={form.control}
-                name='endTime'
+                name='arrivalTime'
                 render={({ field }) => {
                   return (
                     <FormItem>
@@ -191,21 +191,24 @@ export function ScheduleForm({
 
               <FormField
                 control={form.control}
-                name='dayOfWeek'
+                name='direction'
                 render={({ field: { onChange, value } }) => {
                   return (
                     <FormItem>
-                      <FormLabel>День недели</FormLabel>
-                      <Select value={value ?? undefined} onValueChange={onChange}>
+                      <FormLabel>Направление поездки</FormLabel>
+                      <Select
+                        value={value ?? undefined}
+                        onValueChange={onChange}
+                      >
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder={'Выберите день недели'} />
+                            <SelectValue placeholder={'Выберите направление'} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectGroup>
-                            <SelectLabel>Дни недели</SelectLabel>
-                            {Object.entries(daysOfWeekRu)?.map(
+                            <SelectLabel>Направление поездки</SelectLabel>
+                            {Object.entries(directionRu)?.map(
                               ([key, value]) => (
                                 <SelectItem key={key} value={key}>
                                   {value}
@@ -215,6 +218,22 @@ export function ScheduleForm({
                           </SelectGroup>
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
+              />
+
+              <FormField
+                control={form.control}
+                name='stopName'
+                render={({ field }) => {
+                  return (
+                    <FormItem>
+                      <FormLabel>Название остановки</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Необязательно" className="h-9" {...field} />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   );

@@ -68,31 +68,26 @@ model City {
   @@map("cities")
 }
 
-enum DaysOfWeek {
-  MONDAY
-  TUESDAY
-  WEDNESDAY
-  THURSDAY
-  FRIDAY
-  SATURDAY
-  SUNDAY
+model Schedule {
+  id            String         @id @default(cuid())
+  route         Route          @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  routeId       String
+  direction     RouteDirection // FORWARD = A → B, BACKWARD = B → A
+  stopName      String?
+  departureTime String?
+  arrivalTime   String?
+  isActive      Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([routeId, direction, isActive])
+  @@index([departureTime]) // Опционально: ускоряет сортировку по времени отправления
+  @@map("schedules")
 }
 
-model Schedule {
-  id        String     @id @default(cuid())
-  route     Route      @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  routeId   String
-  dayOfWeek DaysOfWeek
-  startTime String
-  endTime   String
-  isActive  Boolean    @default(true)
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([routeId, dayOfWeek])
-  @@index([routeId, isActive])
-  @@map("schedules")
+enum RouteDirection {
+  FORWARD
+  BACKWARD
 }
 
 model Region {

@@ -26,9 +26,10 @@ export const useUpdateSchedule = (
           id
         }
         isActive
-        dayOfWeek
-        startTime
-        endTime
+        direction
+        stopName
+        departureTime
+        arrivalTime
         createdAt
         updatedAt
       }
@@ -71,9 +72,10 @@ export const useCreateSchedule = (
           id
         }
         isActive
-        dayOfWeek
-        startTime
-        endTime
+        direction
+        stopName
+        departureTime
+        arrivalTime
         createdAt
         updatedAt
       }

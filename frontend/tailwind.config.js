@@ -15,6 +15,9 @@ export default {
       },
     },
     extend: {
+      screens: {
+        xs: "480px",
+      },
       fontFamily: {
         nunito: ['Nunito', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],

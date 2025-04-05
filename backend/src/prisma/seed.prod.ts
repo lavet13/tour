@@ -1,28 +1,78 @@
 import prisma from '@/prisma';
 import generatePasswordHash from '@/helpers/generate-password-hash';
-import { Role } from '@prisma/client';
 
 export default async function seed() {
-  const password = 'zECIVumADy5g0l4V';
+  const password = 'password';
   const hashedPassword = await generatePasswordHash(password);
+
+  const regions = {
+    LDNR: await prisma.region.create({ data: { name: 'ЛДНР' } }),
+    COASTAL: await prisma.region.create({
+      data: { name: 'Азовское побережье' },
+    }),
+  };
+
+  const ldnrCities = [
+    'Горловка',
+    'Енакиево',
+    'Юнокоммунарск',
+    'Ждановка',
+    'Кировское',
+    'Кр. Луч',
+    'Снежное',
+    'Шахтерск',
+    'Зугрес',
+    'Торез',
+    'Харцызск',
+    'Макеевка',
+    'Донецк',
+  ];
+
+  // Добавление городов
+  const cityIds = await createCities(ldnrCities);
+
+  // Добавление Мариуполя и прибрежных городов
+  const mariupol = await prisma.city.create({
+    data: { name: 'Мариуполь' },
+  });
+
+  const coastalCities = [
+    'Урзуф',
+    'Юрьевка',
+    'Ялта (Азов)',
+    'Белосарайская коса',
+    'Мелекино',
+    'Мангуш',
+  ];
+
+  const coastalCityIds = await createCities(coastalCities);
+
 
   // Create users with different role combinations
   await prisma.user.create({
     data: {
-      name: 'iba',
-      email: 'iba@iba.com',
+      name: 'Anna',
+      email: 'aistpost@rambler.ru',
       password: hashedPassword,
       roles: {
-        create: [
-          { role: Role.USER },
-          { role: Role.ADMIN },
-          { role: Role.MANAGER },
-        ],
+        create: [{ role: 'USER' }, { role: 'ADMIN' }, { role: 'MANAGER' }],
       },
     },
   });
+  console.log('User created!');
 
-  console.log('Seed completed successfully');
+  console.log('Production seed completed successfully');
+}
+
+async function createCities(names: string[]) {
+  const cityIds: { [name: string]: string } = {};
+
+  for (const name of names) {
+    const city = await prisma.city.create({ data: { name } });
+    cityIds[name] = city.id;
+  }
+
+  return cityIds;
 }
 
 seed().catch(error => console.error('Error seeding database: ', error));

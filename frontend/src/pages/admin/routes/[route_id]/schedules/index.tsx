@@ -1,8 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { useSchedulesByRoute } from '@/features/schedule/api/queries';
-import { CalendarPlus } from 'lucide-react';
+import { CalendarPlus, Edit, Loader2 } from 'lucide-react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { KeyboardEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { cn } from '@/lib/utils';
 import {
@@ -20,10 +20,11 @@ import {
   useReactTable,
   Table as ReactTable,
   PaginationState,
+  ColumnDef,
 } from '@tanstack/react-table';
 import { GetSchedulesByRouteQuery } from '@/gql/graphql';
 import { rankItem } from '@tanstack/match-sorter-utils';
-import { columns } from '@/pages/admin/routes/[route_id]/schedules/__columns';
+import { columns, columnTranslations } from '@/pages/admin/routes/[route_id]/schedules/__columns';
 import {
   Table,
   TableBody,
@@ -53,6 +54,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { useRouteById } from '@/features/routes';
+import { toast } from 'sonner';
 
 export interface ScheduleParams {
   route_id: string;
@@ -62,6 +64,11 @@ export type Schedule = Omit<
   GetSchedulesByRouteQuery['schedulesByRoute'][number],
   '__typename'
 >;
+
+import { ScheduleColumns } from '@/pages/admin/routes/[route_id]/schedules/__columns';
+import { useUpdateSchedule } from '@/features/schedule';
+import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
+import { AutosizeTextarea } from '@/components/autosize-textarea';
 
 export type DrawerMode = 'idle' | 'editSchedule' | 'addSchedule';
 
@@ -148,6 +155,7 @@ function Schedules() {
     isPending: scheduleIsPending,
     isSuccess: scheduleIsSuccess,
     isError: scheduleIsError,
+    refetch: refetchSchedules,
   } = useSchedulesByRoute(routeId, { enabled: !!routeId });
 
   const { data: routeData } = useRouteById({
@@ -167,8 +175,138 @@ function Schedules() {
 
   const columnResizeModeRef = useRef<ColumnResizeMode>('onChange');
 
+  const defaultColumn: Partial<ColumnDef<Schedule>> = {
+    cell: ({
+      getValue,
+      row: {
+        original: { id: originalId },
+      },
+      column: { id: columnId },
+    }) => {
+      const initialValue = getValue() as string;
+      const [isEditing, setIsEditing] = useState(false);
+      const [previousValue, setPreviousValue] = useState(initialValue);
+
+      const { mutate: updateSchedule, isPending } = useUpdateSchedule();
+
+      const handleUpdate = (newValue: string) => {
+        if (newValue !== initialValue) {
+          setPreviousValue(initialValue);
+
+          const promise = new Promise((resolve, reject) => {
+            updateSchedule(
+              { input: { id: originalId, [columnId]: newValue } },
+              {
+                onSuccess: async data => {
+                  await refetchSchedules();
+                  resolve(data);
+                },
+                onError(error) {
+                  reject(error);
+                },
+              },
+            );
+          });
+
+          toast.promise(promise, {
+            loading: `Обновление поля \`${columnTranslations[columnId as ScheduleColumns]}\`...`,
+            duration: 10000,
+            action: {
+              label: 'Отменить',
+              onClick() {
+                updateSchedule(
+                  { input: { id: originalId, [columnId]: previousValue } },
+                  {
+                    async onSuccess() {
+                      refetchSchedules();
+                      toast.success(
+                        `Отмена изменения поля \`${columnTranslations[columnId as ScheduleColumns]}\` выполненo успешно!`,
+                      );
+                    },
+                    onError() {
+                      toast.error(
+                        `Не удалось отменить изменения поля \`${columnTranslations[columnId as ScheduleColumns]}\`!`,
+                      );
+                    },
+                  },
+                );
+              },
+            },
+            success() {
+              return `\`${columnTranslations[columnId as ScheduleColumns]}\` изменёно ${initialValue} → ${newValue}!`;
+            },
+            error(error) {
+              if (isGraphQLRequestError(error)) {
+                return error.response.errors[0].message;
+              } else if (error instanceof Error) {
+                return error.message;
+              }
+              return 'Произошла ошибка!';
+            },
+          });
+        }
+        setIsEditing(false);
+      };
+
+      const onBlur = (e: React.FocusEvent<HTMLTextAreaElement>) => {
+        handleUpdate(e.target.value);
+      };
+
+      const onKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+          e.preventDefault();
+          handleUpdate(e.currentTarget.value);
+        }
+      };
+
+      if (isEditing) {
+        return (
+          <AutosizeTextarea
+            minHeight={32}
+            maxHeight={120}
+            className='p-1 px-2 h-8'
+            defaultValue={initialValue}
+            onBlur={onBlur}
+            onKeyDown={onKeyDown}
+            autoFocus
+          />
+        );
+      }
+
+      return (
+        <>
+          {initialValue.length ? (
+            <div
+              className='flex items-center overflow-hidden cursor-text gap-1'
+              onClick={() => setIsEditing(true)}
+            >
+              {isPending && (
+                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+              )}
+              <span title={initialValue} className='truncate'>
+                {initialValue}
+              </span>
+            </div>
+          ) : (
+            <Button
+              className='size-8'
+              variant='outline'
+              onClick={() => setIsEditing(true)}
+            >
+              {!isPending && <Edit />}
+              {isPending && (
+                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+              )}
+            </Button>
+          )}
+        </>
+      );
+    },
+  };
+
   const table = useReactTable({
     data: schedules,
+    defaultColumn,
     columns,
     filterFns: {
       fuzzy: fuzzyFilter,

@@ -15,38 +15,36 @@ export default gql`
 
   input UpdateScheduleInput {
     id: ID!
-    dayOfWeek: DaysOfWeek
-    startTime: Time
-    endTime: Time
+    direction: RouteDirection
+    stopName: String
+    departureTime: Time
+    arrivalTime: Time
     isActive: Boolean
   }
 
   input CreateScheduleInput {
     routeId: ID!
-    dayOfWeek: DaysOfWeek!
-    startTime: Time!
-    endTime: Time!
+    direction: RouteDirection!
+    stopName: String
+    departureTime: Time
+    arrivalTime: Time
     isActive: Boolean!
   }
 
   type Schedule {
     id: ID!
     route: Route
-    dayOfWeek: DaysOfWeek!
-    startTime: Time!
-    endTime: Time!
+    direction: RouteDirection!
+    stopName: String
+    departureTime: Time
+    arrivalTime: Time
     isActive: Boolean!
     createdAt: Date!
     updatedAt: Date!
   }
 
-  enum DaysOfWeek {
-    MONDAY
-    TUESDAY
-    WEDNESDAY
-    THURSDAY
-    FRIDAY
-    SATURDAY
-    SUNDAY
+  enum RouteDirection {
+    FORWARD
+    BACKWARD
   }
 `;

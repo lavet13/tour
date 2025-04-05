@@ -12,7 +12,7 @@ import {
 } from 'react';
 import { Icons } from '@/components/icons';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
-import { ChevronRight, Search, Shield } from 'lucide-react';
+import { ChevronRight, ExternalLink, Search } from 'lucide-react';
 import { useGetMe } from '@/features/auth';
 import {
   processCityRoutes,
@@ -264,8 +264,8 @@ const MobileNav = () => {
                   className='w-fit px-2 py-0 space-x-1 h-9'
                   asChild
                 >
-                  <Link to='/admin' rel='noreferrer'>
-                    <Shield />
+                  <Link target="_blank" to='/admin' rel='noreferrer'>
+                    <ExternalLink />
                     <span>Админ панель</span>
                   </Link>
                 </Button>
@@ -282,7 +282,7 @@ const MobileNav = () => {
                   rel='noreferrer'
                 >
                   <Icons.vkontakte className='basis-5 fill-foreground transition-colors' />
-                  <span>Вконтакте</span>
+                  <span>Мы Вконтакте</span>
                 </Link>
               </Button>
 
@@ -297,7 +297,7 @@ const MobileNav = () => {
                   rel='noreferrer'
                 >
                   <Icons.telegram className='basis-5 fill-foreground transition-colors' />
-                  <span>Telegram</span>
+                  <span>Мы в Телеграме</span>
                 </Link>
               </Button>
             </div>

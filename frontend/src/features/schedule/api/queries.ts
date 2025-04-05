@@ -1,5 +1,9 @@
 import { graphql } from '@/gql';
-import { GetSchedulesByRouteQuery, GetScheduleByIdQuery, GetSchedulesByIdsQuery } from '@/gql/graphql';
+import {
+  GetSchedulesByRouteQuery,
+  GetScheduleByIdQuery,
+  GetSchedulesByIdsQuery,
+} from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
 import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
@@ -12,9 +16,10 @@ export const useSchedulesByRoute = (
     query GetSchedulesByRoute($routeId: ID) {
       schedulesByRoute(routeId: $routeId) {
         id
-        dayOfWeek
-        startTime
-        endTime
+        direction
+        stopName
+        departureTime
+        arrivalTime
         isActive
         createdAt
         updatedAt
@@ -46,9 +51,10 @@ export const useScheduleById = (
     query GetScheduleById($scheduleId: ID) {
       scheduleById(scheduleId: $scheduleId) {
         id
-        dayOfWeek
-        startTime
-        endTime
+        direction
+        stopName
+        departureTime
+        arrivalTime
         isActive
       }
     }
@@ -84,9 +90,10 @@ export const useSchedulesByIds = ({
         departureCityId: $departureCityId
         arrivalCityId: $arrivalCityId
       ) {
-        dayOfWeek
-        startTime
-        endTime
+        direction
+        stopName
+        departureTime
+        arrivalTime
         isActive
       }
     }

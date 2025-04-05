@@ -3,7 +3,6 @@ import {
   FC,
   forwardRef,
   ReactNode,
-  useCallback,
   useMemo,
   useState,
 } from 'react';
@@ -23,7 +22,7 @@ import {
   NavigationMenuViewport,
 } from '@/components/ui/navigation-menu';
 import { Button, buttonVariants } from './ui/button';
-import { ChevronDown, Shield } from 'lucide-react';
+import { ChevronDown, Route, ExternalLink } from 'lucide-react';
 import { Separator } from './ui/separator';
 import { ScrollArea } from './ui/scroll-area';
 import {
@@ -48,16 +47,7 @@ type NavLinkProps = Omit<RouterLinkProps, 'className'> & {
   className?: string;
 };
 
-export const NavLink: FC<NavLinkProps> = ({
-  to,
-  children,
-  className,
-  ...props
-}) => {
-  const handleClick = useCallback(() => {
-    window.scrollTo({ top: 0 });
-  }, []);
-
+export const NavLink: FC<NavLinkProps> = ({ to, className, ...props }) => {
   return (
     <RouterLink
       to={to}
@@ -65,16 +55,13 @@ export const NavLink: FC<NavLinkProps> = ({
         cn(
           'transition-colors font-semibold whitespace-nowrap',
           isActive
-            ? 'text-foreground hover:text-foreground/90'
+            ? 'text-foreground underline-offset-4 underline bg-background/5 hover:text-foreground/90'
             : 'hover:text-foreground/80 text-foreground/60',
           className,
         )
       }
-      onClick={handleClick}
       {...props}
-    >
-      {children}
-    </RouterLink>
+    />
   );
 };
 
@@ -150,6 +137,23 @@ const MainNav: FC = () => {
       >
         <NavigationMenuList>
           <NavigationMenuItem>
+            <NavigationMenuLink
+              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
+              asChild
+            >
+              <NavLink
+                onClick={() => {
+                  window.scrollTo({ top: 0 });
+                }}
+                to={'/bookings'}
+              >
+                <Route />
+                Все рейсы
+              </NavLink>
+            </NavigationMenuLink>
+          </NavigationMenuItem>
+
+          <NavigationMenuItem>
             <NavigationMenuTrigger
               className={cn(
                 'submenu-trigger bg-transparent',
@@ -163,21 +167,21 @@ const MainNav: FC = () => {
               <RadixNavigationMenuSub className='flex'>
                 <ScrollArea className='max-h-[400px]'>
                   <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 pt-2 pl-2 pb-2'>
-                    <Button
-                      className='px-3 underline decoration-dotted hover:decoration-solid h-fit'
-                      variant='link'
-                      asChild
-                    >
-                      <Link
-                        onClick={() => {
-                          window.scrollTo({ top: 0 });
-                          setOpen('');
-                        }}
-                        to={'/bookings'}
-                      >
-                        Показать все
-                      </Link>
-                    </Button>
+                    {/* <Button */}
+                    {/*   className='px-3 underline decoration-dotted hover:decoration-solid h-fit' */}
+                    {/*   variant='link' */}
+                    {/*   asChild */}
+                    {/* > */}
+                    {/*   <Link */}
+                    {/*     onClick={() => { */}
+                    {/*       window.scrollTo({ top: 0 }); */}
+                    {/*       setOpen(''); */}
+                    {/*     }} */}
+                    {/*     to={'/bookings'} */}
+                    {/*   > */}
+                    {/*     Показать все */}
+                    {/*   </Link> */}
+                    {/* </Button> */}
                     <NavigationMenuItem>
                       <NavigationRoutes title='ЛДНР' routes={processedLDNR} />
                     </NavigationMenuItem>
@@ -205,12 +209,13 @@ const MainNav: FC = () => {
             <NavigationMenuItem>
               <NavigationMenuLink
                 className={cn(
-                  buttonVariants({ variant: 'outline', size: 'sm' }),
+                  buttonVariants({ variant: 'ghost', size: 'sm' }),
+                  'bg-background/10',
                 )}
                 asChild
               >
-                <Link to={'/admin'}>
-                  <Shield />
+                <Link target="_blank" to={'/admin'}>
+                  <ExternalLink />
                   Админ панель
                 </Link>
               </NavigationMenuLink>

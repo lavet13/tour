@@ -34,7 +34,10 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import {
+  ArrowDown,
+  ArrowRight,
   ArrowRightLeft,
+  ArrowUp,
   ArrowUpDown,
   CalendarIcon,
   ChevronDown,
@@ -54,19 +57,20 @@ import { Calendar } from '@/components/ui/calendar';
 import { useCreateBooking } from '@/features/booking/api/mutations';
 import {
   BookingInput,
-  DaysOfWeek,
+  RouteDirection,
   GetSchedulesByIdsQuery,
 } from '@/gql/graphql';
 import { ComboBox } from '@/components/combo-box';
 import { NumericFormat } from 'react-number-format';
 import { useSchedulesByIds } from '@/features/schedule';
-import { daysOfWeekRu } from '@/pages/admin/routes/[route_id]/schedules/__columns';
+import { directionRu } from '@/pages/admin/routes/[route_id]/schedules/__columns';
 import { useRouteByIds } from '@/features/routes';
 import { LazyImageWrapper } from '@/components/lazy-image';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { PonyfillFile } from '@/types/file-types';
 import { Image } from '@/features/routes/components/route-gallery';
 import { Buffer } from 'buffer';
+import { Badge } from '@/components/ui/badge';
 
 type ScheduleItem = Omit<
   GetSchedulesByIdsQuery['schedulesByIds'][number],
@@ -205,33 +209,7 @@ const BookingBusPage: FC = () => {
 
   // Обновим функцию сортировки расписаний, чтобы правильно обрабатывать строковые значения enum
   const schedules = useMemo(() => {
-    const schedulesArray = schedulesData?.schedulesByIds ?? [];
-
-    // Создадим маппинг для преобразования строковых значений enum в числа
-    const dayToNumber = {
-      MONDAY: 1,
-      TUESDAY: 2,
-      WEDNESDAY: 3,
-      THURSDAY: 4,
-      FRIDAY: 5,
-      SATURDAY: 6,
-      SUNDAY: 7,
-    };
-
-    return [...schedulesArray].sort((a, b) => {
-      // Получаем числовое значение для дня недели
-      const dayA =
-        typeof a.dayOfWeek === 'number'
-          ? a.dayOfWeek
-          : dayToNumber[a.dayOfWeek.toString() as DaysOfWeek];
-
-      const dayB =
-        typeof b.dayOfWeek === 'number'
-          ? b.dayOfWeek
-          : dayToNumber[b.dayOfWeek.toString() as DaysOfWeek];
-
-      return dayA - dayB;
-    });
+    return schedulesData?.schedulesByIds ?? [];
   }, [schedulesData]);
 
   const form = useForm<DefaultValues>({
@@ -374,62 +352,6 @@ const BookingBusPage: FC = () => {
 
   return (
     <div className='container mt-5 mb-10 flex flex-col gap-2'>
-      <div className='w-full sm:max-w-screen-sm space-y-6 mx-auto'>
-        {route && (
-          <Card className='mb-6 h-fit overflow-hidden border rounded-xl'>
-            <div className='grid grid-cols-1 gap-0'>
-              {/* Route Image */}
-              <div className='relative'>
-                <LazyImageWrapper
-                  src={photo?.imageUrl || '/placeholder.svg'}
-                  fallbackSrc={'/placeholder.svg'}
-                  alt={`Route from ${route.departureCity?.name} to ${route.arrivalCity?.name}`}
-                  className='object-cover h-full w-full'
-                />
-
-                {/* Region badge */}
-                {route.region && (
-                  <div className='absolute top-4 left-4 z-[2] flex items-center gap-1.5 bg-background/90 backdrop-blur-sm text-foreground px-3 py-1.5 rounded-full text-xs font-medium shadow-sm'>
-                    <MapPin className='h-3 w-3 text-primary' />
-                    <span>{route.region.name}</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Route Details */}
-              <div className='p-5 flex flex-col'>
-                <div className='flex items-center justify-between mb-4'>
-                  <h2 className='text-xl font-bold'>Информация о маршруте</h2>
-                  <div className='text-xl font-bold text-primary'>
-                    {route.price} ₽
-                  </div>
-                </div>
-
-                <div className='flex items-center gap-3 mb-4'>
-                  <div>
-                    <div className='text-base font-medium'>
-                      {route.departureCity?.name}
-                    </div>
-                  </div>
-
-                  {isMobile ? (
-                    <ArrowUpDown className='size-4' />
-                  ) : (
-                    <ArrowRightLeft className='size-4' />
-                  )}
-
-                  <div>
-                    <div className='text-base font-medium'>
-                      {route.arrivalCity?.name}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </Card>
-        )}
-      </div>
-
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -555,41 +477,73 @@ const BookingBusPage: FC = () => {
               </div>
             </div>
 
-            {schedules.length !== 0 && (
+            {/* Route information card - now inside the form */}
+            {route && (
               <div className='sm:px-6 px-4 p-4 border-b'>
-                <div className='border rounded-lg overflow-hidden transition-all duration-200'>
-                  <div
-                    className='p-3 py-1 pr-1 flex justify-between items-center cursor-pointer'
-                    onClick={() => setIsOpen(!isOpen)}
-                  >
-                    <div className='flex-1 flex gap-1 items-center justify-between'>
-                      <h4 className='text-sm font-medium'>
-                        Доступные дни отправления
-                      </h4>
+                <Card className='h-fit overflow-hidden border rounded-xl'>
+                  <div className='grid grid-cols-1 gap-0'>
+                    {/* Route Image */}
+                    <div className='relative'>
+                      <LazyImageWrapper
+                        src={photo?.imageUrl || '/placeholder.svg'}
+                        fallbackSrc={'/placeholder.svg'}
+                        alt={`Route from ${route.departureCity?.name} to ${route.arrivalCity?.name}`}
+                        className='object-cover h-full w-full'
+                      />
 
-                      <Button
-                        type='button'
-                        variant='ghost'
-                        size='sm'
-                        className='h-8 w-8 p-0'
-                      >
-                        <ChevronDown
-                          className={cn(
-                            'h-4 w-4 transition-transform',
-                            isOpen && 'transform rotate-180',
-                          )}
-                        />
-                      </Button>
+                      {/* Region badge */}
+                      {route.region && (
+                        <div className='absolute top-4 left-4 z-[2] flex items-center gap-1.5 bg-background/90 backdrop-blur-sm text-foreground px-3 py-1.5 rounded-full text-xs font-medium'>
+                          <MapPin className='h-3 w-3 text-primary' />
+                          <span>{route.region.name}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Route Details */}
+                    <div className='p-5 flex flex-col'>
+                      <div className='flex items-center justify-between mb-4'>
+                        <h2 className='text-xl font-bold'>
+                          Информация о маршруте
+                        </h2>
+                        <div className='text-xl font-bold text-primary'>
+                          {route.price} ₽
+                        </div>
+                      </div>
+
+                      <div className='flex items-center gap-3 mb-4'>
+                        <div>
+                          <div className='text-base font-medium'>
+                            {route.departureCity?.name}
+                          </div>
+                        </div>
+
+                        {isMobile ? (
+                          <ArrowUpDown className='size-4' />
+                        ) : (
+                          <ArrowRightLeft className='size-4' />
+                        )}
+
+                        <div>
+                          <div className='text-base font-medium'>
+                            {route.arrivalCity?.name}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   </div>
+                </Card>
+              </div>
+            )}
 
-                  {isOpen && (
-                    <div className='mt-2'>
-                      {schedules.map((schedule, index) => (
-                        <Schedule key={index} schedule={schedule} />
-                      ))}
-                    </div>
-                  )}
+            {schedules.length !== 0 && (
+              <div className='sm:px-6 px-4 p-4 border-b'>
+                <div className='mt-2'>
+                  <EnhancedRouteScheduleSection
+                    departureCityName={route?.departureCity?.name || ''}
+                    arrivalCityName={route?.arrivalCity?.name || ''}
+                    schedules={schedules}
+                  />
                 </div>
               </div>
             )}
@@ -930,84 +884,316 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
   },
 );
 
-// Mobile-optimized Schedule component
-type ScheduleProps = {
-  schedule: ScheduleItem;
+interface EnhancedRouteScheduleListProps {
+  schedules: ScheduleItem[];
+  departureCityName: string;
+  arrivalCityName: string;
+  className?: string;
+}
+
+export const EnhancedRouteScheduleList: FC<EnhancedRouteScheduleListProps> = ({
+  schedules,
+  departureCityName,
+  arrivalCityName,
+  className,
+}) => {
+  // Group schedules by direction
+  const forwardSchedules = schedules.filter(
+    s => s.direction === RouteDirection.Forward,
+  );
+  const backwardSchedules = schedules.filter(
+    s => s.direction === RouteDirection.Backward,
+  );
+
+  // For forward direction, we need to group by arrival time
+  const forwardArrivalTimes = [
+    ...new Set(forwardSchedules.map(s => s.arrivalTime)),
+  ];
+
+  // For backward direction, we need to group by departure time
+  const backwardDepartureTimes = [
+    ...new Set(backwardSchedules.map(s => s.departureTime)),
+  ];
+
+  return (
+    <div className={cn('space-y-1', className)}>
+      {forwardSchedules.length > 0 && (
+        <Card className='overflow-hidden rounded-t-none rounded-b-none border-b-0 border-muted/60'>
+          <CardContent className='p-0'>
+            <div className='bg-muted/30 p-2 sm:p-3 border-b'>
+              <div className='flex flex-wrap items-center gap-1.5 sm:gap-2'>
+                <Badge
+                  variant='outline'
+                  className='bg-primary/10 border-primary/20 text-xs sm:text-sm'
+                >
+                  <ArrowDown className='h-3 w-3 mr-1 rotate-45 text-primary' />
+                  <span className='hidden xs:inline'>Прямое направление</span>
+                  <span className='xs:hidden'>Прямое</span>
+                </Badge>
+                <span className='text-xs sm:text-sm font-medium'>
+                  {departureCityName} → {arrivalCityName}
+                </span>
+              </div>
+            </div>
+
+            <div className='p-3 sm:p-4'>
+              <div className='mb-3 sm:mb-4'>
+                <div className='flex items-center gap-2 mb-2'>
+                  <div className='size-5 sm:size-6 rounded-full bg-primary/10 flex items-center justify-center'>
+                    <Clock className='h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary' />
+                  </div>
+                  <div className='text-xs sm:text-sm font-medium'>
+                    Отправление
+                  </div>
+                </div>
+
+                <div className='space-y-2 pl-7 sm:pl-8'>
+                  {forwardSchedules.map((schedule, index) => (
+                    <div
+                      key={`forward-dep-${index}`}
+                      className={cn(
+                        'flex flex-wrap items-center gap-x-2 gap-y-1 group transition-colors',
+                        !schedule.isActive && 'opacity-60',
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'text-sm sm:text-base font-medium transition-colors',
+                          !schedule.isActive &&
+                            'line-through text-muted-foreground',
+                        )}
+                      >
+                        {schedule.departureTime}
+                      </div>
+
+                      {schedule.stopName && (
+                        <div className='flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-muted-foreground group-hover:text-foreground/80 transition-colors'>
+                          <MapPin className='h-2.5 w-2.5 sm:h-3 sm:w-3' />
+                          {schedule.stopName}
+                        </div>
+                      )}
+
+                      {!schedule.isActive && (
+                        <Badge
+                          variant='outline'
+                          className='ml-auto text-[10px] sm:text-xs px-1 sm:px-1.5 py-0 h-4 sm:h-5 bg-destructive/5 text-destructive border-destructive/20'
+                        >
+                          Не активен
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator className='my-2 sm:my-3' />
+
+              <div>
+                <div className='flex items-center gap-2 mb-2'>
+                  <div className='size-5 sm:size-6 rounded-full bg-primary/10 flex items-center justify-center'>
+                    <Clock className='h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary' />
+                  </div>
+                  <div className='text-xs sm:text-sm font-medium'>Прибытие</div>
+                </div>
+
+                <div className='space-y-2 pl-7 sm:pl-8'>
+                  {forwardArrivalTimes.map((time, index) => (
+                    <div
+                      key={`forward-arr-${index}`}
+                      className='text-sm sm:text-base font-medium'
+                    >
+                      {time}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {backwardSchedules.length > 0 && (
+        <Card className='overflow-hidden rounded-t-none rounded-b-none border-muted/60'>
+          <CardContent className='p-0'>
+            <div className='bg-muted/30 p-2 sm:p-3 border-b'>
+              <div className='flex flex-wrap items-center gap-1.5 sm:gap-2'>
+                <Badge
+                  variant='outline'
+                  className='bg-primary/10 border-primary/20 text-xs sm:text-sm'
+                >
+                  <ArrowUp className='h-3 w-3 mr-1 rotate-45 text-primary' />
+                  <span className='hidden xs:inline'>Обратное направление</span>
+                  <span className='xs:hidden'>Обратное</span>
+                </Badge>
+                <span className='text-xs sm:text-sm font-medium'>
+                  {arrivalCityName} → {departureCityName}
+                </span>
+              </div>
+            </div>
+
+            <div className='p-3 sm:p-4'>
+              <div className='mb-3 sm:mb-4'>
+                <div className='flex items-center gap-2 mb-2'>
+                  <div className='size-5 sm:size-6 rounded-full bg-primary/10 flex items-center justify-center'>
+                    <Clock className='h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary' />
+                  </div>
+                  <div className='text-xs sm:text-sm font-medium'>
+                    Отправление
+                  </div>
+                </div>
+
+                <div className='space-y-2 pl-7 sm:pl-8'>
+                  {backwardDepartureTimes.map((time, index) => (
+                    <div
+                      key={`backward-dep-${index}`}
+                      className='text-sm sm:text-base font-medium'
+                    >
+                      {time}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Separator className='my-2 sm:my-3' />
+
+              <div>
+                <div className='flex items-center gap-2 mb-2'>
+                  <div className='size-5 sm:size-6 rounded-full bg-primary/10 flex items-center justify-center'>
+                    <Clock className='h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary' />
+                  </div>
+                  <div className='text-xs sm:text-sm font-medium'>Прибытие</div>
+                </div>
+
+                <div className='space-y-2 pl-7 sm:pl-8'>
+                  {backwardSchedules.map((schedule, index) => (
+                    <div
+                      key={`backward-arr-${index}`}
+                      className={cn(
+                        'flex flex-wrap items-center gap-x-2 gap-y-1 group transition-colors',
+                        !schedule.isActive && 'opacity-60',
+                      )}
+                    >
+                      <div
+                        className={cn(
+                          'text-sm sm:text-base font-medium transition-colors',
+                          !schedule.isActive &&
+                            'line-through text-muted-foreground',
+                        )}
+                      >
+                        {schedule.arrivalTime}
+                      </div>
+
+                      {schedule.stopName && (
+                        <div className='flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-muted-foreground group-hover:text-foreground/80 transition-colors'>
+                          <MapPin className='h-2.5 w-2.5 sm:h-3 sm:w-3' />
+                          {schedule.stopName}
+                        </div>
+                      )}
+
+                      {!schedule.isActive && (
+                        <Badge
+                          variant='outline'
+                          className='ml-auto text-[10px] sm:text-xs px-1 sm:px-1.5 py-0 h-4 sm:h-5 bg-destructive/5 text-destructive border-destructive/20'
+                        >
+                          Не активен
+                        </Badge>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {schedules.length === 0 && (
+        <div className='text-center py-4 sm:py-6 text-muted-foreground text-sm'>
+          Расписание не найдено
+        </div>
+      )}
+    </div>
+  );
 };
 
-function Schedule({ schedule }: ScheduleProps) {
-  const dayOfWeek = daysOfWeekRu[schedule.dayOfWeek];
-  const { startTime, endTime, isActive } = schedule;
+interface EnhancedRouteScheduleSectionProps {
+  schedules: ScheduleItem[];
+  departureCityName: string;
+  arrivalCityName: string;
+  className?: string;
+}
 
-  // Рассчитаем примерную продолжительность поездки
-  const calculateDuration = (start: string, end: string) => {
-    try {
-      const [startHours, startMinutes] = start.split(':').map(Number);
-      const [endHours, endMinutes] = end.split(':').map(Number);
+export const EnhancedRouteScheduleSection: FC<
+  EnhancedRouteScheduleSectionProps
+> = ({ schedules, departureCityName, arrivalCityName, className }) => {
+  const [isOpen, setIsOpen] = useState(false);
 
-      let durationHours = endHours - startHours;
-      let durationMinutes = endMinutes - startMinutes;
+  if (schedules.length === 0) {
+    return null;
+  }
 
-      if (durationMinutes < 0) {
-        durationHours -= 1;
-        durationMinutes += 60;
-      }
-
-      if (durationHours < 0) {
-        durationHours += 24; // Если поездка переходит на следующий день
-      }
-
-      return `${durationHours} ч ${durationMinutes > 0 ? durationMinutes + ' мин' : ''}`;
-    } catch {
-      return '~';
-    }
-  };
-
-  const duration = calculateDuration(startTime, endTime);
+  // Count active schedules
+  const activeSchedules = schedules.filter(s => s.isActive).length;
 
   return (
     <div
-      className={cn(
-        'flex flex-col sm:flex-row sm:items-center justify-between p-2 pl-4 border-b last:border-b-0 transition-colors',
-        isActive === false
-          ? 'bg-muted/20 border-dashed opacity-70'
-          : 'hover:bg-muted/10',
-      )}
+      className={cn('border rounded-lg overflow-hidden shadow-sm', className)}
     >
-      <div className='flex items-center gap-2 mb-1 sm:mb-0'>
-        <div
-          className={cn(
-            'font-medium',
-            isActive === false && 'text-muted-foreground',
-          )}
-        >
-          <span className='text-sm'>{dayOfWeek}</span>
-          {isActive === false && (
-            <span className='text-xs ml-2 text-muted-foreground'>
-              (нет рейса)
-            </span>
-          )}
+      <div
+        className='p-2.5 sm:p-3 flex justify-between items-center cursor-pointer hover:bg-muted/30 transition-colors'
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <div className='flex items-center gap-2 sm:gap-3'>
+          <div className='size-7 sm:size-8 rounded-full bg-primary/10 flex items-center justify-center'>
+            <Clock className='h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary' />
+          </div>
+
+          <div>
+            <h4 className='text-xs sm:text-sm font-medium'>
+              Расписание рейсов
+            </h4>
+            <div className='text-[10px] sm:text-xs text-muted-foreground'>
+              {activeSchedules} из {schedules.length}{' '}
+              {schedules.length === 1
+                ? 'рейс активен'
+                : schedules.length < 5
+                  ? 'рейса активны'
+                  : 'рейсов активны'}
+            </div>
+          </div>
         </div>
+
+        <Button
+          type='button'
+          variant='ghost'
+          size='sm'
+          className='h-7 w-7 sm:h-8 sm:w-8 p-0'
+        >
+          <ChevronDown
+            className={cn(
+              'h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform duration-300',
+              isOpen && 'transform rotate-180',
+            )}
+          />
+        </Button>
       </div>
 
-      <div className='flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end'>
-        <div className='text-xs text-muted-foreground order-1 sm:order-1'>
-          {duration}
-        </div>
-        <div className='flex items-center gap-1 order-2 sm:order-2 w-full sm:w-auto justify-end'>
-          <Clock className='h-3.5 w-3.5 text-muted-foreground' />
-          <span
-            className={cn(
-              'text-sm',
-              isActive === false && 'text-muted-foreground',
-            )}
-          >
-            {startTime} — {endTime}
-          </span>
+      <div
+        className={cn(
+          'overflow-hidden transition-all duration-300',
+          isOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0',
+        )}
+      >
+        <div className='p-0'>
+          <EnhancedRouteScheduleList
+            schedules={schedules}
+            departureCityName={departureCityName}
+            arrivalCityName={arrivalCityName}
+          />
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default BookingBusPage;

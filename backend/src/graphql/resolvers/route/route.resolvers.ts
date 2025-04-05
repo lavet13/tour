@@ -418,7 +418,7 @@ const resolvers: Resolvers = {
         return { images, totalCount };
       } catch (error: any) {
         console.error(`Error reading gallery: ${error.message}`);
-        throw new GraphQLError(`Не удалось прочитать файлы`);
+        return { images: [], totalCount: 0 };
       }
     },
   },
