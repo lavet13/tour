@@ -37,10 +37,12 @@ export const useRouteByIds = ({
         departureCity {
           id
           name
+          description
         }
         arrivalCity {
           id
           name
+          description
         }
         region {
           id

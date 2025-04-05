@@ -14,6 +14,7 @@ export default gql`
   type City {
     id: ID!
     name: String!
+    description: String
     departureTrips: [Route!]!
     arrivalTrips: [Route!]!
     createdAt: Date!

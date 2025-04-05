@@ -502,33 +502,34 @@ const BookingBusPage: FC = () => {
 
                     {/* Route Details */}
                     <div className='p-5 flex flex-col'>
-                      <div className='flex items-center justify-between mb-4'>
+                      <div className='flex flex-wrap gap-1 items-center justify-between mb-4'>
                         <h2 className='text-xl font-bold'>
                           Информация о маршруте
                         </h2>
-                        <div className='text-xl font-bold text-primary'>
-                          {route.price} ₽
+                        <div className='flex gap-1 text-lg sm:text-xl ml-auto font-bold text-primary'>
+                          <span>{route.price}</span>
+                          <span>₽</span>
                         </div>
                       </div>
 
-                      <div className='flex items-center gap-3 mb-4'>
-                        <div>
-                          <div className='text-base font-medium'>
-                            {route.departureCity?.name}
-                          </div>
-                        </div>
-
-                        {isMobile ? (
-                          <ArrowUpDown className='size-4' />
-                        ) : (
-                          <ArrowRightLeft className='size-4' />
+                      <div className='text-base flex flex-wrap items-center gap-1 font-medium'>
+                        <span className='self-start'>
+                          {route.departureCity?.name}
+                        </span>
+                        {route.departureCity?.description && (
+                          <span className='text-muted-foreground text-xs'>
+                            ({route.departureCity.description})
+                          </span>
                         )}
 
-                        <div>
-                          <div className='text-base font-medium'>
-                            {route.arrivalCity?.name}
-                          </div>
-                        </div>
+                        <ArrowRightLeft className='self-start relative top-1 min-w-4 min-h-4 size-4' />
+
+                        {route.arrivalCity?.name}
+                        {route.arrivalCity?.description && (
+                          <span className='text-muted-foreground text-xs'>
+                            ({route.arrivalCity.description})
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

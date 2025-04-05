@@ -1,9 +1,36 @@
 import prisma from '@/prisma';
 import generatePasswordHash from '@/helpers/generate-password-hash';
+import { RouteDirection, Role } from '@prisma/client';
+
+let countDown = 0;
 
 export default async function seed() {
+  if (countDown > 0) {
+    return;
+  }
+
+  countDown++;
+
   const password = 'password';
   const hashedPassword = await generatePasswordHash(password);
+
+  const deletedUsers = prisma.user.deleteMany({});
+  const deletedRoles = prisma.userRole.deleteMany({});
+  const deletedBookings = prisma.booking.deleteMany({});
+  const deletedSchedules = prisma.schedule.deleteMany({});
+  const deletedRoutes = prisma.route.deleteMany({});
+  const deletedCities = prisma.city.deleteMany({});
+  const deletedRegions = prisma.region.deleteMany({});
+
+  await prisma.$transaction([
+    deletedUsers,
+    deletedRoles,
+    deletedBookings,
+    deletedSchedules,
+    deletedRoutes,
+    deletedCities,
+    deletedRegions,
+  ]);
 
   const regions = {
     LDNR: await prisma.region.create({ data: { name: 'ЛДНР' } }),
@@ -15,7 +42,6 @@ export default async function seed() {
   const ldnrCities = [
     'Горловка',
     'Енакиево',
-    'Юнокоммунарск',
     'Ждановка',
     'Кировское',
     'Кр. Луч',
@@ -38,15 +64,15 @@ export default async function seed() {
 
   const coastalCities = [
     'Урзуф',
-    'Юрьевка',
     'Ялта (Азов)',
     'Белосарайская коса',
     'Мелекино',
-    'Мангуш',
+    'Мариуполь',
   ];
 
   const coastalCityIds = await createCities(coastalCities);
 
+  console.log('Маршруты и данные успешно добавлены');
 
   // Create users with different role combinations
   await prisma.user.create({
@@ -55,13 +81,16 @@ export default async function seed() {
       email: 'aistpost@rambler.ru',
       password: hashedPassword,
       roles: {
-        create: [{ role: 'USER' }, { role: 'ADMIN' }, { role: 'MANAGER' }],
+        create: [
+          { role: Role.USER },
+          { role: Role.ADMIN },
+          { role: Role.MANAGER },
+        ],
       },
     },
   });
-  console.log('User created!');
 
-  console.log('Production seed completed successfully');
+  console.log('Seed completed successfully');
 }
 
 async function createCities(names: string[]) {
