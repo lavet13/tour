@@ -146,22 +146,45 @@ export default async function seed() {
   const password = 'password';
   const hashedPassword = await generatePasswordHash(password);
 
-  await prisma.user.create({
-    data: {
-      name: 'anna gorban',
-      email: 'aistpost@rambler.ru',
-      password: hashedPassword,
-      roles: {
-        create: [
-          { role: Role.USER },
-          { role: Role.ADMIN },
-          { role: Role.MANAGER },
-        ],
-      },
-    },
-  });
+  await createUsers(hashedPassword);
 
   console.log('Seed completed successfully');
+}
+
+async function createUsers(hashedPassword: string) {
+  const users = [
+    { name: 'Regular User', email: 'user@mail.com', roles: [Role.USER] },
+    {
+      name: 'Admin User',
+      email: 'admin@mail.com',
+      roles: [Role.USER, Role.ADMIN],
+    },
+    {
+      name: 'Manager User',
+      email: 'manager@mail.com',
+      roles: [Role.USER, Role.MANAGER],
+    },
+    {
+      name: 'Super User',
+      email: 'super@mail.com',
+      roles: [Role.USER, Role.ADMIN, Role.MANAGER],
+    },
+  ];
+
+  for (const user of users) {
+    await prisma.user.create({
+      data: {
+        name: user.name,
+        email: user.email,
+        password: hashedPassword,
+        roles: {
+          create: user.roles.map(role => ({
+            role,
+          })),
+        },
+      },
+    });
+  }
 }
 
 // Helper function to get price for a specific route

@@ -1,11 +1,5 @@
 import { cn } from '@/lib/utils';
-import {
-  FC,
-  forwardRef,
-  ReactNode,
-  useMemo,
-  useState,
-} from 'react';
+import { FC, forwardRef, ReactNode, useMemo, useState } from 'react';
 import { Link, LinkProps } from 'react-router-dom';
 import {
   NavLink as RouterLink,
@@ -47,23 +41,33 @@ type NavLinkProps = Omit<RouterLinkProps, 'className'> & {
   className?: string;
 };
 
-export const NavLink: FC<NavLinkProps> = ({ to, className, ...props }) => {
-  return (
-    <RouterLink
-      to={to}
-      className={({ isActive }) =>
-        cn(
-          'transition-colors font-semibold whitespace-nowrap',
-          isActive
-            ? 'text-foreground underline-offset-4 underline bg-background/5 hover:text-foreground/90'
-            : 'hover:text-foreground/80 text-foreground/60',
-          className,
-        )
-      }
-      {...props}
-    />
-  );
-};
+export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(
+  ({ to, className, onClick, ...props }, ref) => {
+    // Combine the scroll behavior with any custom onClick handler
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+      window.scrollTo({ top: 0 });
+      onClick?.(e); // Call the custom onClick if provided
+    };
+
+    return (
+      <RouterLink
+        to={to}
+        ref={ref}
+        onClick={handleClick}
+        className={({ isActive }) =>
+          cn(
+            'transition-colors font-semibold whitespace-nowrap',
+            isActive
+              ? 'text-foreground underline-offset-4 underline bg-background/5 hover:text-foreground/90'
+              : 'hover:text-foreground/80 text-foreground/60',
+            className,
+          )
+        }
+        {...props}
+      />
+    );
+  },
+);
 
 function onNavChange() {
   setTimeout(() => {
@@ -141,12 +145,7 @@ const MainNav: FC = () => {
               className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
               asChild
             >
-              <NavLink
-                onClick={() => {
-                  window.scrollTo({ top: 0 });
-                }}
-                to={'/bookings'}
-              >
+              <NavLink to={'/bookings'}>
                 <Route />
                 Все рейсы
               </NavLink>
@@ -214,7 +213,7 @@ const MainNav: FC = () => {
                 )}
                 asChild
               >
-                <Link target="_blank" to={'/admin'}>
+                <Link target='_blank' to={'/admin'}>
                   <ExternalLink />
                   Админ панель
                 </Link>

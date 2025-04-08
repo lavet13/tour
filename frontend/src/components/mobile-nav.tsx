@@ -9,6 +9,7 @@ import {
   useMemo,
   useState,
   useEffect,
+  forwardRef,
 } from 'react';
 import { Icons } from '@/components/icons';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
@@ -28,13 +29,10 @@ type SheetLinkProps = Omit<NavLinkProps, 'className'> & {
   onOpenChange: (open: boolean) => void;
 };
 
-const SheetLink: FC<SheetLinkProps> = ({
-  to,
-  children,
-  className,
-  onOpenChange,
-  ...props
-}) => {
+const SheetLink: FC<SheetLinkProps> = forwardRef<
+  HTMLAnchorElement,
+  SheetLinkProps
+>(({ to, children, className, onOpenChange, ...props }, ref) => {
   const handleClick = useCallback(() => {
     onOpenChange(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -52,13 +50,14 @@ const SheetLink: FC<SheetLinkProps> = ({
           className,
         )
       }
+      ref={ref}
       onClick={handleClick}
       {...props}
     >
       {children}
     </NavLink>
   );
-};
+});
 
 const MobileNav = () => {
   const [open, setOpen] = useState(false);
@@ -146,7 +145,12 @@ const MobileNav = () => {
           <span className='sr-only'>Toggle menu</span>
         </Button>
       </DrawerTrigger>
-      <DrawerContent isSidebar direction="left" showCloseButton={false} showTheLine={false}>
+      <DrawerContent
+        isSidebar
+        direction='left'
+        showCloseButton={false}
+        showTheLine={false}
+      >
         <div className='flex items-center p-4'>
           <Link
             to='/'
@@ -264,7 +268,7 @@ const MobileNav = () => {
                   className='w-fit px-2 py-0 space-x-1 h-9'
                   asChild
                 >
-                  <Link target="_blank" to='/admin' rel='noreferrer'>
+                  <Link target='_blank' to='/admin' rel='noreferrer'>
                     <ExternalLink />
                     <span>Админ панель</span>
                   </Link>
@@ -335,7 +339,11 @@ const RegionSection = ({
           )}
         />
       </button>
-      {isExpanded && <div className="border-t border-b dark:bg-muted/15 bg-muted/30">{children}</div>}
+      {isExpanded && (
+        <div className='border-t border-b dark:bg-muted/15 bg-muted/30'>
+          {children}
+        </div>
+      )}
     </div>
   );
 };
@@ -357,7 +365,9 @@ const CitySection = ({
     <div className='border-t first:border-t-0'>
       <button
         onClick={onToggle}
-        className={cn('flex items-center justify-between w-full px-4 py-3 text-left pl-6')}
+        className={cn(
+          'flex items-center justify-between w-full px-4 py-3 text-left pl-6',
+        )}
       >
         <span className='text-sm'>Из {city.name}</span>
         <ChevronRight
@@ -378,7 +388,10 @@ const CitySection = ({
               : null;
 
             return (
-              <div key={connection.id} className={cn(index !== 0 && 'border-t border-dashed')}>
+              <div
+                key={connection.id}
+                className={cn(index !== 0 && 'border-t border-dashed')}
+              >
                 {isAvailable ? (
                   <Link
                     to={`booking-bus?departureCityId=${city.id}&arrivalCityId=${connection.id}`}

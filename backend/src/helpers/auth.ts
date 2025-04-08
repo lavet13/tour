@@ -5,9 +5,12 @@ import { ErrorCode } from '@/helpers/error-codes';
 
 export function verifyAccessToken(token: string) {
   try {
-    return jwt.verify(token, import.meta.env.VITE_JWT_SECRET) as jwt.JwtPayload;
+    return <jwt.JwtPayload>(jwt.verify(token, import.meta.env.VITE_JWT_SECRET));
   } catch (error: any) {
-    if(error instanceof jwt.TokenExpiredError && error.message === 'jwt expired') {
+    if (
+      error instanceof jwt.TokenExpiredError &&
+      error.message === 'jwt expired'
+    ) {
       throw new GraphQLError('Access token has expired', {
         extensions: { code: ErrorCode.TOKEN_EXPIRED },
       });
@@ -20,12 +23,14 @@ export function verifyAccessToken(token: string) {
 
 export function verifyRefreshToken(token: string) {
   try {
-    return jwt.verify(
-      token,
-      import.meta.env.VITE_REFRESH_TOKEN_SECRET,
-    ) as jwt.JwtPayload;
+    return <jwt.JwtPayload>(
+      jwt.verify(token, import.meta.env.VITE_REFRESH_TOKEN_SECRET)
+    );
   } catch (error: any) {
-    if(error instanceof jwt.TokenExpiredError && error.message === 'jwt expired') {
+    if (
+      error instanceof jwt.TokenExpiredError &&
+      error.message === 'jwt expired'
+    ) {
       throw new GraphQLError('Refresh token has expired', {
         extensions: { code: ErrorCode.AUTHENTICATION_REQUIRED },
       });

@@ -24,102 +24,153 @@ const resolvers: Resolvers = {
   },
   Mutation: {
     async refreshToken(_, __, ctx) {
-      const refreshToken = await ctx.request.cookieStore?.get('refreshToken');
-      if (!refreshToken) {
+      const refreshTokenCookie =
+        await ctx.request.cookieStore?.get('refreshToken');
+
+      if (!refreshTokenCookie) {
         await ctx.request.cookieStore?.delete('accessToken');
         await ctx.request.cookieStore?.delete('refreshToken');
-        console.log('tokens are deleted');
+        console.log('Tokens deleted: no refresh token in cookies');
 
         throw new GraphQLError('Refresh token not found', {
           extensions: { code: ErrorCode.AUTHENTICATION_REQUIRED },
         });
       }
 
-      const tokenRecord = await ctx.prisma.refreshToken.findUnique({
-        where: {
-          token: refreshToken.value,
-        },
-        include: {
-          user: {
-            include: {
-              roles: true,
-            },
-          },
-        },
-      });
-
-      if (!tokenRecord) {
-        await ctx.request.cookieStore?.delete('accessToken');
-        await ctx.request.cookieStore?.delete('refreshToken');
-        console.log('tokens deleted from database');
-
-        throw new GraphQLError('Cannot find token in database', {
-          extensions: { code: ErrorCode.AUTHENTICATION_REQUIRED },
-        });
-      }
+      let transactionResult;
 
       try {
-        verifyRefreshToken(refreshToken.value);
-      } catch (error: any) {
-        console.log({ error });
-        if (
-          error instanceof GraphQLError &&
-          error.extensions.code === ErrorCode.AUTHENTICATION_REQUIRED
-        ) {
-          await ctx.prisma.refreshToken.delete({
-            where: { token: tokenRecord.token, userId: tokenRecord.userId },
+        // Run the entire token refresh process in a transaction
+        transactionResult = await ctx.prisma.$transaction(async tx => {
+          // Try to find the refresh token record
+          const tokenRecord = await tx.refreshToken.findUnique({
+            where: {
+              token: refreshTokenCookie.value,
+            },
+            include: {
+              user: true,
+            },
           });
 
+          // If token doesn't exist in database
+          if (!tokenRecord) {
+            console.log('Refresh token not found in database');
+
+            throw new GraphQLError('Cannot find token in database', {
+              extensions: { code: ErrorCode.AUTHENTICATION_REQUIRED },
+            });
+          }
+
+          // Verify the refresh token
+          try {
+            verifyRefreshToken(refreshTokenCookie.value);
+          } catch (error: any) {
+            console.log({ error });
+
+            // Clean up if token is expired or invalid
+            if (error instanceof GraphQLError) {
+              try {
+                await tx.refreshToken.delete({
+                  where: {
+                    token: tokenRecord.token,
+                    userId: tokenRecord.userId,
+                  },
+                });
+                console.log('Deleted expired/invalid token from database');
+              } catch (deleteError) {
+                console.error(
+                  'Failed to delete token from database: ' + deleteError,
+                );
+              }
+            }
+
+            // Re-throw the original error to fail the transaction
+            throw error;
+          }
+
+          // Generate new tokens
+          const { accessToken, refreshToken: newRefreshToken } = createTokens(
+            tokenRecord.user,
+          );
+
+          // Update refresh token in database
+          try {
+            await tx.refreshToken.update({
+              where: {
+                token: tokenRecord.token,
+              },
+              data: {
+                token: newRefreshToken,
+              },
+            });
+          } catch (error) {
+            if (
+              error instanceof PrismaClientKnownRequestError &&
+              error.code === 'P2025'
+            ) {
+              throw new GraphQLError(
+                `Refresh token was not found. Can\'t update`,
+              );
+            }
+            throw error;
+          }
+
+          console.log(`Tokens refreshed successfully`);
+          return {
+            accessToken,
+            refreshToken: newRefreshToken,
+            originalToken: tokenRecord,
+          };
+        });
+      } catch (error) {
+        // Transaction failed, clean up cookies and ensure database consistency
+        try {
+          // First clean up cookies
           await ctx.request.cookieStore?.delete('accessToken');
           await ctx.request.cookieStore?.delete('refreshToken');
-          console.log('tokens deleted from database');
+          console.log('Cookies deleted due to failed token refresh');
+        } catch (cookieError) {
+          console.error('Failed to delete cookies:', cookieError);
         }
+
+        // Re-throw the original error
         throw error;
       }
 
-      const { accessToken, refreshToken: newRefreshToken } = createTokens(
-        tokenRecord.user,
-      );
-
-      await ctx.prisma.refreshToken
-        .update({
-          where: {
-            token: tokenRecord.token,
-          },
-          data: {
-            token: newRefreshToken,
-          },
-        })
-        .catch(async err => {
-          if (err instanceof PrismaClientKnownRequestError) {
-            if (err.code === 'P2025') {
-              return Promise.reject(
-                new GraphQLError(`Refresh token was not found. Can\'t update`),
-              );
-            }
-          }
-
-          return Promise.reject(err);
-        });
-
+      // If transaction succeeded, set the new cookies
       try {
         await ctx.request.cookieStore?.set({
           name: 'accessToken',
-          value: accessToken,
+          value: transactionResult.accessToken,
           ...cookieOpts,
         });
-
         await ctx.request.cookieStore?.set({
           name: 'refreshToken',
-          value: newRefreshToken,
+          value: transactionResult.refreshToken,
           ...cookieOpts,
         });
+        console.log('New cookies set successfully');
       } catch (reason) {
-        console.error(`It failed: ${reason}`);
-        throw new GraphQLError(`Failed while setting the cookie`);
+        console.error('Failed to set cookies: ' + reason);
+
+        // Attempt to roll back the token update if cookie setting fails
+        try {
+          await ctx.prisma.refreshToken.update({
+            where: { id: transactionResult.originalToken.id },
+            data: { token: transactionResult.originalToken.token },
+          });
+          console.log('Rolled back token update due to cookie setting failure');
+        } catch (rollbackError) {
+          console.error('Failed to rollback token update: ' + rollbackError);
+        }
+
+        throw new GraphQLError('Failed while setting the cookie');
       }
 
-      return { accessToken, refreshToken: newRefreshToken };
+      return {
+        accessToken: transactionResult.accessToken,
+        refreshToken: transactionResult.refreshToken,
+      };
     },
     async login(_, args, ctx) {
       const { login, password } = args.loginInput;
@@ -231,7 +282,7 @@ const resolvers: Resolvers = {
       console.log({ roles });
 
       return roles;
-    }
+    },
   },
 };
 
