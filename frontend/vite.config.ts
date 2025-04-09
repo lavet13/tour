@@ -4,6 +4,7 @@ import path from 'path';
 import codegen from 'vite-plugin-graphql-codegen';
 import dynamicImport from 'vite-plugin-dynamic-import';
 import commonjs from 'vite-plugin-commonjs';
+import mkcert from'vite-plugin-mkcert'
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -21,6 +22,7 @@ export default defineConfig(({ mode }) => {
       codegen({ matchOnSchemas: true, debug: true, throwOnBuild: false }),
       dynamicImport(),
       commonjs(),
+      mkcert(),
     ],
     resolve: {
       alias: {
@@ -38,19 +40,12 @@ export default defineConfig(({ mode }) => {
       },
       proxy: {
         '/graphql': {
-          target: 'http://localhost:4000',
+          target: 'http://localhost',
           changeOrigin: true,
-          secure: false,
         },
-        '/api': {
-          target: 'http://localhost:4000',
+        '/uploads': {
+          target: 'http://localhost',
           changeOrigin: true,
-          secure: false,
-        },
-        '/assets': {
-          target: 'http://localhost:4000',
-          changeOrigin: true,
-          secure: false,
         },
       },
     },

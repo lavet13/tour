@@ -8,6 +8,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.temp
     restart: unless-stopped
+    volumes:
+      - uploads:/usr/share/nginx/uploads:ro
     ports:
       - "80:80"
     networks:
@@ -26,6 +28,7 @@ services:
       - tour-db
     volumes:
       - ./backend/uploads:/app/uploads # Add this volume mount
+      - uploads:/app/uploads
     ports:
       - "4000:4000"
     networks:
@@ -47,6 +50,7 @@ services:
 
 volumes:
   postgres_data:
+  uploads:
 
 networks:
   webnet:

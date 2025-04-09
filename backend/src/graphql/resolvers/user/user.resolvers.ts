@@ -48,7 +48,11 @@ const resolvers: Resolvers = {
               token: refreshTokenCookie.value,
             },
             include: {
-              user: true,
+              user: {
+                include: {
+                  roles: true,
+                },
+              },
             },
           });
 

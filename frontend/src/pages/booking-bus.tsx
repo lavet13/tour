@@ -376,10 +376,10 @@ const BookingBusPage: FC = () => {
                     ) : (
                       (departureCities.find(city => city.id === departureCityId)
                         ?.name ?? (
-                        <span className='text-sm font-normal text-muted-foreground'>
-                          Город отправления
-                        </span>
-                      ))
+                          <span className='text-sm font-normal text-muted-foreground'>
+                            Город отправления
+                          </span>
+                        ))
                     )}
                   </span>
                   {isMobile ? (
@@ -393,10 +393,10 @@ const BookingBusPage: FC = () => {
                     ) : (
                       (arrivalCities.find(city => city.id === arrivalCityId)
                         ?.name ?? (
-                        <span className='text-sm font-normal text-muted-foreground text-center'>
-                          Город прибытия
-                        </span>
-                      ))
+                          <span className='text-sm font-normal text-muted-foreground text-center'>
+                            Город прибытия
+                          </span>
+                        ))
                     )}
                   </span>
                 </div>
@@ -694,7 +694,7 @@ const BookingBusPage: FC = () => {
                       Пожалуйста подождите
                     </>
                   ) : (
-                    'Забронировать'
+                    'Заказать билет'
                   )}
                 </Button>
               </div>
@@ -961,7 +961,7 @@ export const EnhancedRouteScheduleList: FC<EnhancedRouteScheduleListProps> = ({
                         className={cn(
                           'text-sm sm:text-base font-medium transition-colors',
                           !schedule.isActive &&
-                            'line-through text-muted-foreground',
+                          'line-through text-muted-foreground',
                         )}
                       >
                         {schedule.departureTime}
@@ -1078,7 +1078,7 @@ export const EnhancedRouteScheduleList: FC<EnhancedRouteScheduleListProps> = ({
                         className={cn(
                           'text-sm sm:text-base font-medium transition-colors',
                           !schedule.isActive &&
-                            'line-through text-muted-foreground',
+                          'line-through text-muted-foreground',
                         )}
                       >
                         {schedule.arrivalTime}

@@ -12,6 +12,7 @@ services:
       - ./frontend/nginx-certbot.env.prod
     volumes:
       - nginx_secrets:/etc/letsencrypt
+      - uploads:/usr/share/nginx/uploads:ro
     ports:
       - "80:80"
       - "443:443"
@@ -31,6 +32,7 @@ services:
       - tour-db
     volumes:
       - ./backend/uploads:/app/uploads # Add this volume mount
+      - uploads:/app/uploads
     ports:
       - "4000:4000"
     networks:
@@ -53,6 +55,7 @@ services:
 volumes:
   postgres_data:
   nginx_secrets: # Add this volume for storing certificates
+  uploads:
 
 networks:
   webnet:

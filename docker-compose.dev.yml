@@ -12,6 +12,7 @@ services:
       - ./frontend/dist:/usr/share/nginx/html:ro
       - ./frontend/.nginx/dev/user_conf.d:/etc/nginx/user_conf.d:ro
       - nginx_secrets:/etc/letsencrypt
+      - uploads:/usr/share/nginx/uploads:ro
     ports:
       - "80:80"
       - "443:443"
@@ -35,6 +36,12 @@ services:
 volumes:
   postgres_data:
   nginx_secrets:  # Add this volume for storing certificates
+  uploads:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/backend/uploads
+      o: bind
 
 networks:
   webnet:

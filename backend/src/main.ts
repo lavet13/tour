@@ -1,4 +1,4 @@
-import express, { Application } from 'express';
+import express from 'express';
 import 'json-bigint-patch';
 
 import { makeExecutableSchema } from '@graphql-tools/schema';
@@ -9,8 +9,9 @@ import { useDeferStream } from '@graphql-yoga/plugin-defer-stream';
 import resolvers from '@/graphql/resolvers';
 import typeDefs from '@/graphql/types';
 
-import { ContextValue, createContext } from '@/context';
-import { YogaServerInstance, createYoga } from 'graphql-yoga';
+import { createContext } from '@/context';
+import { createYoga } from 'graphql-yoga';
+import configure from '@/routers';
 
 const schema = makeExecutableSchema({
   typeDefs,
@@ -33,11 +34,7 @@ async function bootstrap() {
     cors: {
       credentials: true,
     },
-    plugins: [
-      useGraphQLSSE(),
-      useCookies(),
-      useDeferStream(),
-    ],
+    plugins: [useGraphQLSSE(), useCookies(), useDeferStream()],
   });
 
   console.log({ DATABASE_URL: process.env.DATABASE_URL });
@@ -49,19 +46,12 @@ async function bootstrap() {
       console.log(
         `🚀 Query endpoint ready at http://localhost:${
           import.meta.env.VITE_PORT
-        }${import.meta.env.VITE_GRAPHQL_ENDPOINT}`
+        }${import.meta.env.VITE_GRAPHQL_ENDPOINT}`,
       );
     });
   }
 
   return app;
-}
-
-function configure(
-  app: Application,
-  yoga: YogaServerInstance<{}, ContextValue>,
-) {
-  app.use('/graphql', yoga);
 }
 
 const app = bootstrap();
