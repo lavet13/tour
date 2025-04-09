@@ -38,9 +38,6 @@ import { Waypoint } from 'react-waypoint';
 import { Link, useSearchParams } from 'react-router-dom';
 import { LazyImageWrapper } from '@/components/lazy-image';
 import { SonnerSpinner } from '@/components/sonner-spinner';
-import { PonyfillFile } from '@/types/file-types';
-import { Image } from '@/features/routes/components/route-gallery';
-import { Buffer } from 'buffer';
 import { formatDate } from '@/lib/utils';
 
 interface RegionSectionProps {
@@ -223,31 +220,12 @@ function RouteCard({
     setIsAlertOpen(false);
   };
 
-  const photo: Image | null = useMemo(() => {
-    if (!route?.photo) return null;
-    const { name, lastModified, type, encoding, _size, blobParts } =
-      route.photo as PonyfillFile;
-    const buffer = Buffer.from(blobParts);
-    const image = new Blob([buffer], { type });
-    const imageUrl = URL.createObjectURL(image);
-
-    return {
-      name,
-      type,
-      encoding,
-      _size,
-      imageUrl,
-      buffer,
-      lastModified,
-    };
-  }, [route]);
-
   return (
     <Card className={cn('overflow-hidden transition-opacity')}>
       <CardContent className='p-0 h-full flex flex-col'>
         <LazyImageWrapper
-          className='basis-2'
-          src={photo ? photo.imageUrl : '/placeholder.svg'}
+          className='h-48'
+          src={`/uploads/images/${route.photoName}`}
           fallbackSrc='/placeholder.svg'
           alt='Изображение города'
         />

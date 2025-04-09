@@ -1,14 +1,8 @@
-'use client';
-
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { MapPin } from 'lucide-react';
 import { LazyImageWrapper } from '@/components/lazy-image';
 import type { Route } from '@/pages/bookings/types';
-import { useMemo } from 'react';
-import type { PonyfillFile } from '@/types/file-types';
-import type { Image } from '@/features/routes/components/route-gallery';
-import { Buffer } from 'buffer';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { ArrowLeftRight } from 'lucide-react';
@@ -24,26 +18,6 @@ export function RouteCard({ route }: RouteCardProps) {
   const formattedDate = route.departureDate
     ? new Date(route.departureDate).toLocaleDateString('ru-RU')
     : null;
-
-  // Generate a placeholder image URL if no photo is available
-  const photo: Image | null = useMemo(() => {
-    if (!route?.photo) return null;
-    const { name, lastModified, type, encoding, _size, blobParts } =
-      route.photo as PonyfillFile;
-    const buffer = Buffer.from(blobParts);
-    const image = new Blob([buffer], { type });
-    const imageUrl = URL.createObjectURL(image);
-
-    return {
-      name,
-      type,
-      encoding,
-      _size,
-      imageUrl,
-      buffer,
-      lastModified,
-    };
-  }, [route]);
 
   return (
     <Card
@@ -87,10 +61,10 @@ export function RouteCard({ route }: RouteCardProps) {
         {/* Image section */}
         <div className='relative mt-auto overflow-hidden'>
           <LazyImageWrapper
-            src={photo ? photo.imageUrl : '/placeholder.svg'}
+            src={`/uploads/images/${route.photoName}`}
             fallbackSrc={'/placeholder.svg'}
             alt={`Route from ${route.departureCity?.name} to ${route.arrivalCity?.name}`}
-            className='object-cover w-full h-full dark:grayscale-[0.5]'
+            className='object-cover h-48 w-full dark:grayscale-[0.5]'
           />
 
           {!isAvailable && (

@@ -137,11 +137,11 @@ const MobileNav = () => {
     >
       <DrawerTrigger asChild>
         <Button
-          className='w-8 h-8 shrink-0 md:hidden hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0'
+          className='w-8 h-8 shrink-0 md:hidden hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 [&_svg]:size-5 pr-1'
           variant='ghost'
           size='icon'
         >
-          <Icons.sandwitch className='h-5 w-5' />
+          <Icons.sandwitch />
           <span className='sr-only'>Toggle menu</span>
         </Button>
       </DrawerTrigger>

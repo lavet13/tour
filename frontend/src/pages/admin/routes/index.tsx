@@ -1,8 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
 import { cn } from '@/lib/utils';
-import { Filter, FilterX, MapPinPlus, Search } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Filter, MapPinPlus } from 'lucide-react';
+import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   Tooltip,
@@ -25,7 +25,6 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import RouteFilterForm from '@/components/route-filter-form';
-import { useQueryClient } from '@tanstack/react-query';
 
 function RoutesPage() {
   const [searchParams, setSearchParams] = useSearchParams();

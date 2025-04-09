@@ -30,7 +30,7 @@ function LazyImage({ src, fallbackSrc, alt, style, ...rest }: LazyImageProps) {
 
 export function LazyImageWrapper({ className, ...props }: LazyImageProps) {
   return (
-    <div className='relative h-48 overflow-hidden'>
+    <div className={cn('relative overflow-hidden', className)}>
       <Suspense
         fallback={
           <div

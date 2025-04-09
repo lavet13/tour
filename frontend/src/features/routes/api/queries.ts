@@ -51,7 +51,7 @@ export const useRouteByIds = ({
         isActive
         departureDate
         price
-        photo
+        photoName
       }
     }
   `);
@@ -103,7 +103,7 @@ export const useRouteById = ({
         isActive
         departureDate
         price
-        photo
+        photoName
       }
     }
   `);
@@ -166,7 +166,7 @@ export const useInfiniteRoutes = ({
             name
           }
           price
-          photo
+          photoName
           isActive
           departureDate
           arrivalCity {

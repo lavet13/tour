@@ -12,7 +12,7 @@ import { ChevronRightIcon } from 'lucide-react';
 const Header: FC = () => {
   return (
     <header className='sticky top-0 z-50 w-full border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
-      <div className='container h-14 flex items-center'>
+      <div className='container px-2 h-14 flex items-center'>
         <MainNav />
         <MobileNav />
         <div className='flex flex-1 items-center justify-between space-x-2 sm:justify-end'>

@@ -129,52 +129,6 @@ const resolvers: Resolvers = {
         },
       });
 
-      const readFile = async (filePath: string): Promise<Buffer> => {
-        const readStream = createReadStream(filePath);
-        const chunks: Buffer[] = [];
-        const collectChunks = new Writable({
-          write(chunk, enc, cb) {
-            chunks.push(chunk);
-            cb();
-          },
-        });
-        try {
-          await pipeline(readStream, collectChunks);
-          return Buffer.concat(chunks);
-        } catch (error: any) {
-          console.error(`Error reading file: ${error.message}`);
-          throw new GraphQLError(`Error reading file at path: ${filePath}`);
-        }
-      };
-
-      routes = await Promise.all(
-        routes.map(async route => {
-          const { photoName: fileName } = route;
-
-          if (!fileName) {
-            return route;
-          }
-
-          const uploadsDir = path.resolve(process.cwd(), 'uploads', 'images');
-          const filePath = path.join(uploadsDir, fileName);
-          const stats = await stat(filePath);
-          const fileType = mime.lookup(filePath) || 'application/octet-stream';
-          const buffer = await readFile(filePath);
-
-          return {
-            photo: {
-              name: fileName,
-              blobParts: buffer,
-              _size: stats.size,
-              type: fileType,
-              encoding: 'utf-8',
-              lastModified: stats.mtimeMs,
-            },
-            ...route,
-          };
-        }),
-      );
-
       if (routes.length === 0) {
         return {
           edges: [],
@@ -257,46 +211,6 @@ const resolvers: Resolvers = {
         );
       }
 
-      if (route.photoName) {
-        const { photoName: fileName } = route;
-
-        const readFile = async (filePath: string): Promise<Buffer> => {
-          const readStream = createReadStream(filePath);
-          const chunks: Buffer[] = [];
-          const collectChunks = new Writable({
-            write(chunk, enc, cb) {
-              chunks.push(chunk);
-              cb();
-            },
-          });
-          try {
-            await pipeline(readStream, collectChunks);
-            return Buffer.concat(chunks);
-          } catch (error: any) {
-            console.error(`Error reading file: ${error.message}`);
-            throw new GraphQLError(`Error reading file at path: ${filePath}`);
-          }
-        };
-
-        const uploadsDir = path.resolve(process.cwd(), 'uploads', 'images');
-        const filePath = path.join(uploadsDir, fileName);
-        const stats = await stat(filePath);
-        const fileType = mime.lookup(filePath) || 'application/octet-stream';
-        const buffer = await readFile(filePath);
-
-        return {
-          photo: {
-            name: fileName,
-            blobParts: buffer,
-            _size: stats.size,
-            type: fileType,
-            encoding: 'utf-8',
-            lastModified: stats.mtimeMs,
-          },
-          ...route,
-        };
-      }
-
       return route;
     },
     async routeById(_, args, ctx) {
@@ -324,48 +238,7 @@ const resolvers: Resolvers = {
           throw new GraphQLError('Unknown error!');
         });
 
-      // console.log({ photoName: route.photoName });
-      if (route.photoName) {
-        const { photoName: fileName } = route;
-
-        const readFile = async (filePath: string): Promise<Buffer> => {
-          const readStream = createReadStream(filePath);
-          const chunks: Buffer[] = [];
-          const collectChunks = new Writable({
-            write(chunk, enc, cb) {
-              chunks.push(chunk);
-              cb();
-            },
-          });
-          try {
-            await pipeline(readStream, collectChunks);
-            return Buffer.concat(chunks);
-          } catch (error: any) {
-            console.error(`Error reading file: ${error.message}`);
-            throw new GraphQLError(`Error reading file at path: ${filePath}`);
-          }
-        };
-
-        const uploadsDir = path.resolve(process.cwd(), 'uploads', 'images');
-        const filePath = path.join(uploadsDir, fileName);
-        const stats = await stat(filePath);
-        const fileType = mime.lookup(filePath) || 'application/octet-stream';
-        const buffer = await readFile(filePath);
-
-        return {
-          photo: {
-            name: fileName,
-            blobParts: buffer,
-            _size: stats.size,
-            type: fileType,
-            encoding: 'utf-8',
-            lastModified: stats.mtimeMs,
-          },
-          ...route,
-        };
-      }
-
-      return { ...route, photo: null };
+      return route;
     },
     async routesGallery(_, { limit = 20, offset = 0 }, _ctx) {
       const uploadsDir = path.resolve(process.cwd(), 'uploads', 'images');

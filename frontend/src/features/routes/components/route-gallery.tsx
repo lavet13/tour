@@ -222,7 +222,7 @@ function GalleryPhoto({ image, onSelect }: GalleryPhotoProps) {
       onClick={() => onSelect(image)}
     >
       <LazyImageWrapper
-        className='object-cover basis-2'
+        className='object-cover h-48'
         src={image.imageUrl}
         fallbackSrc='/placeholder.svg'
         alt={image.name}

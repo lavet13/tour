@@ -4,18 +4,14 @@ services:
   # Frontend (nginx with certbot)
   tour-frontend:
     container_name: tour-frontend
-    image: jonasal/nginx-certbot:latest
+    image: nginx:stable-alpine
     restart: unless-stopped
-    env_file:
-      - ./frontend/nginx-certbot.env.dev
     volumes:
       - ./frontend/dist:/usr/share/nginx/html:ro
-      - ./frontend/.nginx/dev/user_conf.d:/etc/nginx/user_conf.d:ro
-      - nginx_secrets:/etc/letsencrypt
+      - ./frontend/.nginx/dev/user_conf.d:/etc/nginx/conf.d:ro
       - uploads:/usr/share/nginx/uploads:ro
     ports:
       - "80:80"
-      - "443:443"
     networks:
       - webnet
 

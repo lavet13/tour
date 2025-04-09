@@ -86,7 +86,6 @@ export default gql`
     arrivalCity: City
     region: Region
     isActive: Boolean!
-    photo: File
     photoName: String
     price: Int!
     createdAt: Date!

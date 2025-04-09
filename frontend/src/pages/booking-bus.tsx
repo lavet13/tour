@@ -35,10 +35,8 @@ import {
 } from '@/components/ui/popover';
 import {
   ArrowDown,
-  ArrowRight,
   ArrowRightLeft,
   ArrowUp,
-  ArrowUpDown,
   CalendarIcon,
   ChevronDown,
   Clock,
@@ -50,7 +48,6 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 import { useControllableState } from '@/hooks/use-controllable-state';
 import { Separator } from '@/components/ui/separator';
-import { Skeleton } from '@/components/ui/skeleton';
 import { format } from 'date-fns';
 import { ru as fnsRU } from 'date-fns/locale';
 import { Calendar } from '@/components/ui/calendar';
@@ -63,13 +60,9 @@ import {
 import { ComboBox } from '@/components/combo-box';
 import { NumericFormat } from 'react-number-format';
 import { useSchedulesByIds } from '@/features/schedule';
-import { directionRu } from '@/pages/admin/routes/[route_id]/schedules/__columns';
 import { useRouteByIds } from '@/features/routes';
 import { LazyImageWrapper } from '@/components/lazy-image';
 import { Card, CardContent } from '@/components/ui/card';
-import { PonyfillFile } from '@/types/file-types';
-import { Image } from '@/features/routes/components/route-gallery';
-import { Buffer } from 'buffer';
 import { Badge } from '@/components/ui/badge';
 
 type ScheduleItem = Omit<
@@ -140,7 +133,6 @@ const defaultValues: DefaultValues = {
 };
 
 const BookingBusPage: FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
   const [phoneInputKey, setPhoneInputKey] = useState(0);
 
   // Search Params syncronization
@@ -176,27 +168,6 @@ const BookingBusPage: FC = () => {
 
   const route = useMemo(() => routeData?.routeByIds || null, [routeData]);
   console.log({ route });
-
-  // Generate a placeholder image URL if no photo is available
-  const photo: Image | null = useMemo(() => {
-    if (!route?.photo) return null;
-    const { name, lastModified, type, encoding, _size, blobParts } =
-      route.photo as PonyfillFile;
-    const buffer = Buffer.from(blobParts);
-    const image = new Blob([buffer], { type });
-    const imageUrl = URL.createObjectURL(image);
-
-    return {
-      name,
-      type,
-      encoding,
-      _size,
-      imageUrl,
-      buffer,
-      lastModified,
-    };
-  }, [route]);
-  console.log({ photo });
 
   const { data: schedulesData, isLoading: schedulesIsLoading } =
     useSchedulesByIds({
@@ -348,8 +319,6 @@ const BookingBusPage: FC = () => {
     }
   };
 
-  const isMobile = useMediaQuery('(max-width: 400px)');
-
   return (
     <div className='container mt-5 mb-10 flex flex-col gap-2'>
       <Form {...form}>
@@ -358,52 +327,15 @@ const BookingBusPage: FC = () => {
           className='w-full sm:max-w-screen-sm space-y-6 mx-auto'
         >
           <div className='relative overflow-hidden w-full h-full border rounded-xl'>
-            <div className='flex flex-col space-y-3 sm:space-y-3.5 mb-3 p-4 sm:mb-4 sm:p-6 pb-0'>
-              <div className='flex flex-col sm:flex-row items-center gap-y-3 sm:gap-y-1 gap-x-2 font-semibold tracking-tight text-xl'>
+            <div className='flex flex-col mb-3 p-5 pb-0'>
+              <div className='flex flex-col sm:flex-row items-center font-semibold tracking-tight text-xl'>
                 <span className='leading-6 text-center'>
                   Бронирование рейса
                 </span>
-                <div
-                  className={cn(
-                    'flex items-center gap-2 flex-1 h-5',
-                    isMobile && 'flex-col gap-0',
-                  )}
-                >
-                  <Separator orientation={'vertical'} />
-                  <span className='text-lg sm:text-xl leading-5 text-center'>
-                    {departureIsPending ? (
-                      <Skeleton className='h-6 w-24' />
-                    ) : (
-                      (departureCities.find(city => city.id === departureCityId)
-                        ?.name ?? (
-                          <span className='text-sm font-normal text-muted-foreground'>
-                            Город отправления
-                          </span>
-                        ))
-                    )}
-                  </span>
-                  {isMobile ? (
-                    <ArrowUpDown className='size-4 mt-1.5' />
-                  ) : (
-                    <ArrowRightLeft className='size-4 self-center' />
-                  )}
-                  <span className='text-lg sm:text-xl leading-5 text-center'>
-                    {arrivalIsLoading ? (
-                      <Skeleton className='h-6 w-24' />
-                    ) : (
-                      (arrivalCities.find(city => city.id === arrivalCityId)
-                        ?.name ?? (
-                          <span className='text-sm font-normal text-muted-foreground text-center'>
-                            Город прибытия
-                          </span>
-                        ))
-                    )}
-                  </span>
-                </div>
               </div>
             </div>
 
-            <div className='px-4 sm:px-6 p-4 space-y-4 border-y'>
+            <div className='px-4 sm:px-5 p-4 space-y-4 border-y'>
               <p className='text-center sm:text-start text-sm text-muted-foreground'>
                 Выберите пункт отправления и прибытия
               </p>
@@ -479,16 +411,16 @@ const BookingBusPage: FC = () => {
 
             {/* Route information card - now inside the form */}
             {route && (
-              <div className='sm:px-6 px-4 p-4 border-b'>
-                <Card className='h-fit overflow-hidden border rounded-xl'>
+              <div className='border-b'>
+                <Card className='h-fit overflow-hidden border-0 rounded-none shadow-none'>
                   <div className='grid grid-cols-1 gap-0'>
                     {/* Route Image */}
                     <div className='relative'>
                       <LazyImageWrapper
-                        src={photo?.imageUrl || '/placeholder.svg'}
+                        src={`/uploads/images/${route.photoName}`}
                         fallbackSrc={'/placeholder.svg'}
                         alt={`Route from ${route.departureCity?.name} to ${route.arrivalCity?.name}`}
-                        className='object-cover h-full w-full'
+                        className='object-cover h-80 w-full'
                       />
 
                       {/* Region badge */}
@@ -503,10 +435,10 @@ const BookingBusPage: FC = () => {
                     {/* Route Details */}
                     <div className='p-5 flex flex-col'>
                       <div className='flex flex-wrap gap-1 items-center justify-between mb-4'>
-                        <h2 className='text-xl font-bold'>
+                        <h2 className='text-sm sm:text-xl font-bold'>
                           Информация о маршруте
                         </h2>
-                        <div className='flex gap-1 text-lg sm:text-xl ml-auto font-bold text-primary'>
+                        <div className='flex gap-1 text-sm sm:text-xl ml-auto font-bold text-primary'>
                           <span>{route.price}</span>
                           <span>₽</span>
                         </div>
@@ -538,18 +470,17 @@ const BookingBusPage: FC = () => {
             )}
 
             {schedules.length !== 0 && (
-              <div className='sm:px-6 px-4 p-4 border-b'>
-                <div className='mt-2'>
-                  <EnhancedRouteScheduleSection
-                    departureCityName={route?.departureCity?.name || ''}
-                    arrivalCityName={route?.arrivalCity?.name || ''}
-                    schedules={schedules}
-                  />
-                </div>
+              <div className='border-b'>
+                <EnhancedRouteScheduleSection
+                  className='border-0 rounded-none'
+                  departureCityName={route?.departureCity?.name || ''}
+                  arrivalCityName={route?.arrivalCity?.name || ''}
+                  schedules={schedules}
+                />
               </div>
             )}
 
-            <div className='sm:px-6 px-4 p-4 space-y-4 border-b'>
+            <div className='sm:px-5 sm:p-4 pt-5 p-3 space-y-4 border-b'>
               <p className='text-center sm:text-start text-sm text-muted-foreground'>
                 Введите информацию для оформления бронирования.
               </p>
@@ -681,7 +612,7 @@ const BookingBusPage: FC = () => {
                 />
               </div>
             </div>
-            <div className='p-4 sm:px-6 px-4 space-y-4'>
+            <div className='p-4 sm:px-5 space-y-4'>
               <div className='sm:grid sm:grid-cols-[repeat(auto-fill,_minmax(17rem,_1fr))] gap-1 gap-y-2'>
                 <Button
                   disabled={isSubmitting}
@@ -899,12 +830,12 @@ export const EnhancedRouteScheduleList: FC<EnhancedRouteScheduleListProps> = ({
   className,
 }) => {
   // Group schedules by direction
-  const forwardSchedules = schedules.filter(
-    s => s.direction === RouteDirection.Forward,
-  );
-  const backwardSchedules = schedules.filter(
-    s => s.direction === RouteDirection.Backward,
-  );
+  const forwardSchedules = [
+    ...schedules.filter(s => s.direction === RouteDirection.Forward),
+  ].sort((a, b) => (a.departureTime > b.departureTime ? 1 : -1));
+  const backwardSchedules = [
+    ...schedules.filter(s => s.direction === RouteDirection.Backward),
+  ].sort((a, b) => (a.arrivalTime > b.arrivalTime ? 1 : -1));
 
   // For forward direction, we need to group by arrival time
   const forwardArrivalTimes = [
@@ -917,9 +848,9 @@ export const EnhancedRouteScheduleList: FC<EnhancedRouteScheduleListProps> = ({
   ];
 
   return (
-    <div className={cn('space-y-1', className)}>
+    <div className={cn('space-y-0', className)}>
       {forwardSchedules.length > 0 && (
-        <Card className='overflow-hidden rounded-t-none rounded-b-none border-b-0 border-muted/60'>
+        <Card className='overflow-hidden rounded-t-none shadow-none rounded-b-none border-0 border-muted/60'>
           <CardContent className='p-0'>
             <div className='bg-muted/30 p-2 sm:p-3 border-b'>
               <div className='flex flex-wrap items-center gap-1.5 sm:gap-2'>
@@ -953,23 +884,23 @@ export const EnhancedRouteScheduleList: FC<EnhancedRouteScheduleListProps> = ({
                     <div
                       key={`forward-dep-${index}`}
                       className={cn(
-                        'flex flex-wrap items-center gap-x-2 gap-y-1 group transition-colors',
+                        'flex items-center group transition-colors',
                         !schedule.isActive && 'opacity-60',
                       )}
                     >
                       <div
                         className={cn(
-                          'text-sm sm:text-base font-medium transition-colors',
+                          'self-start basis-[45px] sm:basis-[50px] shrink-0 text-sm sm:text-base font-medium transition-colors',
                           !schedule.isActive &&
-                          'line-through text-muted-foreground',
+                            'line-through text-muted-foreground',
                         )}
                       >
                         {schedule.departureTime}
                       </div>
 
                       {schedule.stopName && (
-                        <div className='flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-muted-foreground group-hover:text-foreground/80 transition-colors'>
-                          <MapPin className='h-2.5 w-2.5 sm:h-3 sm:w-3' />
+                        <div className='flex items-center mt-0.5 gap-1 sm:gap-1.5 text-xs sm:text-sm text-muted-foreground group-hover:text-foreground/80 transition-colors'>
+                          <MapPin className='self-start mt-0.5 min-h-2.5 min-w-2.5 h-2.5 w-2.5 sm:h-3 sm:w-3' />
                           {schedule.stopName}
                         </div>
                       )}
@@ -1014,7 +945,7 @@ export const EnhancedRouteScheduleList: FC<EnhancedRouteScheduleListProps> = ({
       )}
 
       {backwardSchedules.length > 0 && (
-        <Card className='overflow-hidden rounded-t-none rounded-b-none border-muted/60'>
+        <Card className='overflow-hidden rounded-t-none shadow-none border-0 rounded-b-none border-muted/60'>
           <CardContent className='p-0'>
             <div className='bg-muted/30 p-2 sm:p-3 border-b'>
               <div className='flex flex-wrap items-center gap-1.5 sm:gap-2'>
@@ -1070,23 +1001,23 @@ export const EnhancedRouteScheduleList: FC<EnhancedRouteScheduleListProps> = ({
                     <div
                       key={`backward-arr-${index}`}
                       className={cn(
-                        'flex flex-wrap items-center gap-x-2 gap-y-1 group transition-colors',
+                        'flex items-center group transition-colors',
                         !schedule.isActive && 'opacity-60',
                       )}
                     >
                       <div
                         className={cn(
-                          'text-sm sm:text-base font-medium transition-colors',
+                          'self-start basis-[40px] sm:basis-[50px] shrink-0 text-sm sm:text-base font-medium transition-colors',
                           !schedule.isActive &&
-                          'line-through text-muted-foreground',
+                            'line-through text-muted-foreground',
                         )}
                       >
                         {schedule.arrivalTime}
                       </div>
 
                       {schedule.stopName && (
-                        <div className='flex items-center gap-1 sm:gap-1.5 text-xs sm:text-sm text-muted-foreground group-hover:text-foreground/80 transition-colors'>
-                          <MapPin className='h-2.5 w-2.5 sm:h-3 sm:w-3' />
+                        <div className='flex items-center mt-0.5 gap-1 sm:gap-1.5 text-xs sm:text-sm text-muted-foreground group-hover:text-foreground/80 transition-colors'>
+                          <MapPin className='self-start mt-0.5 min-h-2.5 min-w-2.5 h-2.5 w-2.5 sm:h-3 sm:w-3' />
                           {schedule.stopName}
                         </div>
                       )}
@@ -1137,9 +1068,7 @@ export const EnhancedRouteScheduleSection: FC<
   const activeSchedules = schedules.filter(s => s.isActive).length;
 
   return (
-    <div
-      className={cn('border rounded-lg overflow-hidden shadow-sm', className)}
-    >
+    <div className={cn('border rounded-lg overflow-hidden', className)}>
       <div
         className='p-2.5 sm:p-3 flex justify-between items-center cursor-pointer hover:bg-muted/30 transition-colors'
         onClick={() => setIsOpen(!isOpen)}

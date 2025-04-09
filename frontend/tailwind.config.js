@@ -10,7 +10,7 @@ export default {
         '2xl': '1536px',
       },
       padding: {
-        DEFAULT: '1rem',
+        DEFAULT: '0.3rem',
         sm: '2rem',
       },
     },
