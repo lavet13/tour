@@ -14,6 +14,7 @@ const resolvers: Resolvers = {
   Query: {
     async schedulesByRoute(_, args, ctx) {
       const routeId = args.routeId;
+      const direction = args.direction;
 
       const route = await ctx.prisma.route
         .findUniqueOrThrow({
@@ -39,6 +40,13 @@ const resolvers: Resolvers = {
       const schedules = await ctx.prisma.schedule.findMany({
         where: {
           routeId: route.id,
+          direction,
+        },
+        include: {
+          city: true,
+        },
+        orderBy: {
+          time: 'asc',
         },
       });
 
@@ -113,14 +121,8 @@ const resolvers: Resolvers = {
   },
   Mutation: {
     async createSchedule(_, args, ctx) {
-      const {
-        routeId,
-        isActive,
-        stopName,
-        arrivalTime,
-        departureTime,
-        direction,
-      } = args.input;
+      const { routeId, cityId, isActive, stopName, time, direction } =
+        args.input;
 
       const route = await ctx.prisma.route.findUnique({
         where: {
@@ -137,8 +139,8 @@ const resolvers: Resolvers = {
           routeId,
           direction,
           stopName,
-          departureTime,
-          arrivalTime,
+          cityId,
+          time,
           isActive,
         },
       });
@@ -146,8 +148,7 @@ const resolvers: Resolvers = {
       return schedule;
     },
     async updateSchedule(_, args, ctx) {
-      const { stopName, arrivalTime, departureTime, id, isActive, direction } =
-        args.input;
+      const { stopName, time, cityId, id, isActive, direction } = args.input;
 
       const schedule = await ctx.prisma.schedule.update({
         where: {
@@ -156,8 +157,8 @@ const resolvers: Resolvers = {
         data: {
           isActive,
           stopName,
-          arrivalTime,
-          departureTime,
+          time,
+          cityId,
           direction,
         },
       });
@@ -192,6 +193,9 @@ const resolvers: Resolvers = {
   Schedule: {
     route(parent, _, { loaders }) {
       return parent.routeId ? loaders.routeLoader.load(parent.routeId) : null;
+    },
+    city(parent, _, { loaders }) {
+      return parent.cityId ? loaders.cityLoader.load(parent.cityId) : null;
     },
   },
 };

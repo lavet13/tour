@@ -2,26 +2,20 @@ import RouteFilterForm from '@/components/route-filter-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Drawer, DrawerContent } from '@/components/ui/drawer';
-import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRegions } from '@/features/region';
 import { useInfiniteRoutes } from '@/features/routes';
 import { useDrawerState } from '@/hooks/use-drawer-state';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { cn, formatDate } from '@/lib/utils';
-import { ArrowDown, Filter, FilterX, Loader2, Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { ArrowDown, Filter, FilterX, Search } from 'lucide-react';
 import { FC, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { RouteCard } from './route-card';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+import { RouteCard } from '@/pages/routes/route-card';
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { Waypoint } from 'react-waypoint';
 
-const BookingsPage: FC = () => {
+const RoutesPage: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const take = import.meta.env.DEV ? 15 : 30;
   const [showLoadMoreButton, setShowLoadMoreButton] = useState(true);
@@ -127,58 +121,35 @@ const BookingsPage: FC = () => {
   }
 
   return (
-    <div className='container mx-auto py-6 px-4 md:px-6'>
+    <div className='container mx-auto py-6 px-2 md:px-6'>
       <div className='flex flex-col space-y-4'>
-        <div className='flex flex-col md:flex-row md:items-center justify-between gap-4'>
-          <h1 className='text-xl text-center sm:text-2xl sm:text-start font-bold'>
-            Доступные маршруты
-          </h1>
-
+        <div className='flex flex-col md:flex-row md:items-center justify-start gap-4 border-b border-dashed pb-3'>
           <div className='flex items-center justify-end gap-2'>
-            {/* <div className='relative flex-1 md:w-64'> */}
-            {/*   <Search className='absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground' /> */}
-            {/*   <Input */}
-            {/*     type='text' */}
-            {/*     placeholder='Поиск маршрутов...' */}
-            {/*     className='pl-8' */}
-            {/*     value={searchTerm} */}
-            {/*     onChange={e => setSearchTerm(e.target.value)} */}
-            {/*   /> */}
-            {/* </div> */}
-
             <Drawer
-              direction={'right'}
+              direction={'left'}
               open={filterIsOpen}
               onOpenChange={setFilterIsOpen}
               onClose={handleFilterClose}
             >
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant='outline'
-                    size='icon'
-                    className='h-10 min-w-10 relative'
-                    onClick={handleOpenFilter}
-                  >
-                    <Filter />
-                    {activeSearchParamsCount > 0 && (
-                      <span className='absolute -top-1 -left-1 bg-primary text-primary-foreground rounded-full text-xs size-4 flex items-center justify-center'>
-                        {activeSearchParamsCount}
-                      </span>
-                    )}
-                    <span className='sr-only'>Фильтры</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent align='end' side='bottom'>
-                  Фильтры
-                </TooltipContent>
-              </Tooltip>
+              <Button
+                size='sm'
+                className='relative w-full min-[400px]:w-auto sm:px-8'
+                onClick={handleOpenFilter}
+              >
+                <Filter />
+                {activeSearchParamsCount > 0 && (
+                  <span className='absolute -top-1 -left-1 bg-primary text-primary-foreground rounded-full text-xs size-4 flex items-center justify-center border border-muted/15'>
+                    {activeSearchParamsCount}
+                  </span>
+                )}
+                Фильтры
+              </Button>
               <DrawerContent
                 isSidebar
                 showCloseButton
                 showCloseButtonOnMobile
                 showTheLine={false}
-                direction={'right'}
+                direction={'left'}
               >
                 <RouteFilterForm
                   includeInactiveRegion={false}
@@ -189,19 +160,18 @@ const BookingsPage: FC = () => {
           </div>
         </div>
 
-        {isPending ||
-          (isRegionsPending && (
-            <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(18.5rem,_1fr))] gap-2 pb-2'>
-              <div className='col-span-full mt-4 mb-2 first:mt-0'>
-                <Skeleton className='h-6 w-1/3 mb-2' />
-                <Skeleton className='h-4 w-1/4' />
-              </div>
-
-              {Array.from({ length: 5 }).map((_, idx) => (
-                <SkeletonRouteCard key={idx} />
-              ))}
+        {isPending && (
+          <div className='sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(18.5rem,_1fr))] gap-2 pb-2'>
+            <div className='col-span-full mt-4 mb-2 first:mt-0'>
+              <Skeleton className='h-6 w-1/3 mb-2' />
+              <Skeleton className='h-4 w-1/4' />
             </div>
-          ))}
+
+            {Array.from({ length: 5 }).map((_, idx) => (
+              <SkeletonRouteCard key={idx} />
+            ))}
+          </div>
+        )}
 
         {!isPending && routes.length === 0 ? (
           <div className='flex flex-col items-center justify-center py-12 text-center'>
@@ -220,7 +190,7 @@ const BookingsPage: FC = () => {
         ) : (
           <div
             className={cn(
-              'sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(17rem,_1fr))] gap-2 pb-2',
+              'sm:grid flex flex-col sm:grid-cols-[repeat(auto-fill,_minmax(16rem,_1fr))] gap-2 pb-2',
               isFetching && 'opacity-80',
             )}
           >
@@ -316,4 +286,4 @@ function SkeletonRouteCard() {
   );
 }
 
-export default BookingsPage;
+export default RoutesPage;

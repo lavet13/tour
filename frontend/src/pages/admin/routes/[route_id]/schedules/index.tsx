@@ -24,7 +24,10 @@ import {
 } from '@tanstack/react-table';
 import { GetSchedulesByRouteQuery } from '@/gql/graphql';
 import { rankItem } from '@tanstack/match-sorter-utils';
-import { columns, columnTranslations } from '@/pages/admin/routes/[route_id]/schedules/__columns';
+import {
+  columns,
+  columnTranslations,
+} from '@/pages/admin/routes/[route_id]/schedules/__columns';
 import {
   Table,
   TableBody,
@@ -69,6 +72,7 @@ import { ScheduleColumns } from '@/pages/admin/routes/[route_id]/schedules/__col
 import { useUpdateSchedule } from '@/features/schedule';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { AutosizeTextarea } from '@/components/autosize-textarea';
+import { DataTablePagination } from '@/components/data-table-pagination';
 
 export type DrawerMode = 'idle' | 'editSchedule' | 'addSchedule';
 
@@ -76,10 +80,6 @@ function Schedules() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [pagination, setPagination] = useState<PaginationState>({
-    pageIndex: 0,
-    pageSize: 10,
-  });
 
   const MOBILE_BREAKPOINT = 400;
   const isMobile = useMediaQuery(`(max-width: ${MOBILE_BREAKPOINT}px)`);
@@ -156,7 +156,10 @@ function Schedules() {
     isSuccess: scheduleIsSuccess,
     isError: scheduleIsError,
     refetch: refetchSchedules,
-  } = useSchedulesByRoute(routeId, { enabled: !!routeId });
+  } = useSchedulesByRoute({
+    routeId,
+    options: { enabled: !!routeId },
+  });
 
   const { data: routeData } = useRouteById({
     id: routeId,
@@ -316,8 +319,6 @@ function Schedules() {
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onPaginationChange: setPagination,
     getFilteredRowModel: getFilteredRowModel(),
     onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
@@ -325,7 +326,6 @@ function Schedules() {
       onEdit: handleEditSchedule,
     },
     state: {
-      pagination,
       sorting,
       columnVisibility,
       columnFilters,
@@ -428,7 +428,7 @@ function Schedules() {
               ref={tableContainerRef}
               className='max-w-fit overflow-auto w-full relative rounded-md border'
               style={{
-                maxHeight: `calc(${height}px - ${isMobile ? 8 : 7.9}rem)`,
+                maxHeight: `calc(${height}px - ${isMobile ? 11.9 : 10.9}rem)`,
               }}
             >
               {/* Even though we're still using sematic table tags, we must use CSS grid and flexbox for dynamic row heights */}
@@ -547,14 +547,6 @@ function Schedules() {
                   )}
                 </TableBody>
               </Table>
-            </div>
-            {/* <DataTablePagination table={table} /> */}
-
-            <div className='flex flex-col gap-4 items-start justify-between px-2 py-4'>
-              <div className='text-sm text-muted-foreground order-last sm:order-first w-full sm:w-auto text-center sm:text-left'>
-                {table.getFilteredSelectedRowModel().rows.length} из{' '}
-                {table.getFilteredRowModel().rows.length} строк(и) выбрано.
-              </div>
             </div>
           </>
         )}

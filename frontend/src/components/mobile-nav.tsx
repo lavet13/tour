@@ -1,4 +1,3 @@
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Link, NavLink, NavLinkProps } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -10,10 +9,11 @@ import {
   useState,
   useEffect,
   forwardRef,
+  FormEvent,
 } from 'react';
 import { Icons } from '@/components/icons';
 import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
-import { ChevronRight, ExternalLink, Search } from 'lucide-react';
+import { ChevronRight, ExternalLink, Search, X } from 'lucide-react';
 import { useGetMe } from '@/features/auth';
 import {
   processCityRoutes,
@@ -128,6 +128,20 @@ const MobileNav = () => {
     );
   };
 
+  // Handle search form submission
+  const handleSearchSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    // This will dismiss the keyboard on mobile devices
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+  };
+
+  // Clear search input
+  const handleClearSearch = () => {
+    setSearchRoute('');
+  };
+
   return (
     <Drawer
       direction={'left'}
@@ -165,10 +179,10 @@ const MobileNav = () => {
           </Link>
         </div>
 
-        <ScrollArea className='my-4 h-[calc(100vh-8rem)] pb-7'>
+        <div className='h-[calc(100vh-8rem)] pb-7'>
           <div className='flex flex-col h-full'>
-            <nav className='flex flex-col mb-2'>
-              <SheetLink onOpenChange={setOpen} to='/bookings'>
+            <nav className='flex flex-col'>
+              <SheetLink onOpenChange={setOpen} to='/routes'>
                 Показать все рейсы
               </SheetLink>
               <SheetLink onOpenChange={setOpen} to='/booking-bus'>
@@ -176,17 +190,29 @@ const MobileNav = () => {
               </SheetLink>
             </nav>
 
-            <div className='px-2 py-3 border-t'>
-              <div className='relative'>
-                <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
-                <Input
-                  type='text'
-                  placeholder='Найти город...'
-                  className='pl-9 h-10 bg-muted/30 border-0'
-                  value={searchRoute}
-                  onChange={e => setSearchRoute(e.target.value)}
-                />
-              </div>
+            <div className='border-t'>
+              <form onSubmit={handleSearchSubmit}>
+                <div className='relative flex items-center'>
+                  <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+                  <Input
+                    type='search'
+                    placeholder='Найти город...'
+                    className='pl-9 pr-9 h-10 bg-muted/30 rounded-none border-0'
+                    value={searchRoute}
+                    onChange={e => setSearchRoute(e.target.value)}
+                  />
+                  {searchRoute && (
+                    <button
+                      type='button'
+                      onClick={handleClearSearch}
+                      className='absolute right-3 top-1/2 transform -translate-y-1/2'
+                    >
+                      <X className='h-4 w-4 text-muted-foreground' />
+                      <span className='sr-only'>Очистить поиск</span>
+                    </button>
+                  )}
+                </div>
+              </form>
             </div>
 
             {/* Routes */}
@@ -306,7 +332,7 @@ const MobileNav = () => {
               </Button>
             </div>
           </div>
-        </ScrollArea>
+        </div>
       </DrawerContent>
     </Drawer>
   );

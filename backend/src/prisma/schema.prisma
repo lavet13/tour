@@ -57,32 +57,34 @@ enum BookingStatus {
 }
 
 model City {
-  id             String   @id @default(cuid())
+  id             String     @id @default(cuid())
   name           String
   description    String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  departureTrips Route[]  @relation("RouteDepartureCity")
-  arrivalTrips   Route[]  @relation("RouteArrivalCity")
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  departureTrips Route[]    @relation("RouteDepartureCity")
+  arrivalTrips   Route[]    @relation("RouteArrivalCity")
+  Schedule       Schedule[]
 
   @@index([name])
   @@map("cities")
 }
 
 model Schedule {
-  id            String         @id @default(cuid())
-  route         Route          @relation(fields: [routeId], references: [id], onDelete: Cascade)
-  routeId       String
-  direction     RouteDirection // FORWARD = A → B, BACKWARD = B → A
-  stopName      String?
-  departureTime String?
-  arrivalTime   String?
-  isActive      Boolean        @default(true)
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  id        String         @id @default(cuid())
+  route     Route          @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  routeId   String
+  direction RouteDirection // FORWARD = A → B, BACKWARD = B → A
+  cityId    String
+  city      City           @relation(fields: [cityId], references: [id])
+  stopName  String?
+  time      String?
+  isActive  Boolean        @default(true)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
 
   @@index([routeId, direction, isActive])
-  @@index([departureTime]) // Опционально: ускоряет сортировку по времени отправления
+  @@index([time]) // Опционально: ускоряет сортировку по времени отправления
   @@map("schedules")
 }
 

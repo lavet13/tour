@@ -64,6 +64,9 @@ import { useRouteByIds } from '@/features/routes';
 import { LazyImageWrapper } from '@/components/lazy-image';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { FormButton } from '@/components/form-button';
+import { useTheme } from '@/lib/atoms/theme';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type ScheduleItem = Omit<
   GetSchedulesByIdsQuery['schedulesByIds'][number],
@@ -327,7 +330,7 @@ const BookingBusPage: FC = () => {
           className='w-full sm:max-w-screen-sm space-y-6 mx-auto'
         >
           <div className='relative overflow-hidden w-full h-full border rounded-xl'>
-            <div className='flex flex-col mb-3 p-5 pb-0'>
+            <div className='flex flex-col mb-3 sm:mb-7 p-5 pb-0'>
               <div className='flex flex-col sm:flex-row items-center font-semibold tracking-tight text-xl'>
                 <span className='leading-6 text-center'>
                   Бронирование рейса
@@ -417,7 +420,11 @@ const BookingBusPage: FC = () => {
                     {/* Route Image */}
                     <div className='relative'>
                       <LazyImageWrapper
-                        src={`/uploads/images/${route.photoName}`}
+                        src={
+                          route.photoName
+                            ? `/uploads/images/${route.photoName}`
+                            : `/placeholder.svg`
+                        }
                         fallbackSrc={'/placeholder.svg'}
                         alt={`Route from ${route.departureCity?.name} to ${route.arrivalCity?.name}`}
                         className='object-cover h-80 w-full'
@@ -434,34 +441,40 @@ const BookingBusPage: FC = () => {
 
                     {/* Route Details */}
                     <div className='p-5 flex flex-col'>
-                      <div className='flex flex-wrap gap-1 items-center justify-between mb-4'>
-                        <h2 className='text-sm sm:text-xl font-bold'>
+                      <div className='flex flex-wrap gap-1 items-center justify-center sm:justify-between mb-4'>
+                        <h2 className='text-lg text-center sm:text-xl font-bold'>
                           Информация о маршруте
                         </h2>
-                        <div className='flex gap-1 text-sm sm:text-xl ml-auto font-bold text-primary'>
+                        <div className='hidden sm:flex gap-1 text-sm sm:text-xl ml-auto font-bold text-primary'>
                           <span>{route.price}</span>
                           <span>₽</span>
                         </div>
                       </div>
 
-                      <div className='text-base flex flex-wrap items-center gap-1 font-medium'>
-                        <span className='self-start'>
+                      <div className='text-md sm:text-base flex flex-wrap justify-center sm:justify-start items-center gap-1 font-medium'>
+                        <span className='self-center leading-4'>
                           {route.departureCity?.name}
                         </span>
                         {route.departureCity?.description && (
-                          <span className='text-muted-foreground text-xs'>
+                          <span className='leading-4 text-muted-foreground self-end text-xs'>
                             ({route.departureCity.description})
                           </span>
                         )}
 
-                        <ArrowRightLeft className='self-start relative top-1 min-w-4 min-h-4 size-4' />
+                        <ArrowRightLeft className='self-center min-w-4 min-h-4 size-4' />
 
-                        {route.arrivalCity?.name}
+                        <span className='self-center leading-4'>
+                          {route.arrivalCity?.name}
+                        </span>
                         {route.arrivalCity?.description && (
-                          <span className='text-muted-foreground text-xs'>
+                          <span className='leading-4 text-muted-foreground self-end text-xs'>
                             ({route.arrivalCity.description})
                           </span>
                         )}
+                      </div>
+                      <div className='sm:hidden mt-1 flex gap-1 text-2xl mx-auto font-bold text-primary'>
+                        <span>{route.price}</span>
+                        <span>₽</span>
                       </div>
                     </div>
                   </div>
@@ -471,11 +484,12 @@ const BookingBusPage: FC = () => {
 
             {schedules.length !== 0 && (
               <div className='border-b'>
-                <EnhancedRouteScheduleSection
+                <BusRouteSchedule
                   className='border-0 rounded-none'
                   departureCityName={route?.departureCity?.name || ''}
                   arrivalCityName={route?.arrivalCity?.name || ''}
                   schedules={schedules}
+                  routeId={route?.id}
                 />
               </div>
             )}
@@ -605,7 +619,7 @@ const BookingBusPage: FC = () => {
                       <FormItem className='sm:col-span-2'>
                         <FormLabel>Количество мест</FormLabel>
                         <Counter onValueChange={onChange} {...field} />
-                        <FormMessage />
+                        <FormMessage className='text-center' />
                       </FormItem>
                     );
                   }}
@@ -614,7 +628,7 @@ const BookingBusPage: FC = () => {
             </div>
             <div className='p-4 sm:px-5 space-y-4'>
               <div className='sm:grid sm:grid-cols-[repeat(auto-fill,_minmax(17rem,_1fr))] gap-1 gap-y-2'>
-                <Button
+                <FormButton
                   disabled={isSubmitting}
                   className={`w-full sm:w-auto col-start-1 col-end-2`}
                   type='submit'
@@ -622,12 +636,12 @@ const BookingBusPage: FC = () => {
                   {isSubmitting ? (
                     <>
                       <SonnerSpinner />
-                      Пожалуйста подождите
+                      Оформляем заявку
                     </>
                   ) : (
                     'Заказать билет'
                   )}
-                </Button>
+                </FormButton>
               </div>
             </div>
             <BorderBeam className='border rounded-xl' />
@@ -686,12 +700,9 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
           </Button>
           <div className='flex-1 text-center'>
             <NumericFormat
+              displayType="text"
               getInputRef={ref}
-              type='tel'
               value={value || 0}
-              allowNegative={false}
-              onValueChange={({ floatValue }) => setValue(floatValue || 0)}
-              isAllowed={isAllowed}
               className={cn(
                 'focus:outline-none focus:ring-1 focus:ring-ring',
                 'text-3xl sm:text-4xl font-bold tracking-tighter text-center bg-background w-full',
@@ -754,26 +765,30 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
             variant='outline'
             className={cn(
               'flex w-full',
-              'focus:outline-none focus:ring-1 focus:ring-ring',
+              'focus:outline-none focus:ring-1 focus:ring-ring aria-[invalid=true]:ring-destructive aria-[invalid=true]:border-destructive/15 hover:aria-[invalid=true]:bg-destructive/10 hover:aria-[invalid=true]:text-destructive',
               'justify-start text-left font-normal',
               !value && 'text-muted-foreground',
             )}
             disabled={disabled}
           >
-            <CalendarIcon className='mr-2 size-4' />
+            <CalendarIcon
+              className={cn('mr-2 size-4', error && 'text-destructive/70')}
+            />
             {value ? (
               <span
-                className={cn(
-                  'font-semibold',
-                  error && 'text-muted-foreground',
-                )}
+                className={cn('font-semibold', error && 'text-destructive/90')}
               >
                 {format(value, 'PPP', {
                   locale: fnsRU,
                 })}
               </span>
             ) : (
-              <span className='whitespace-pre leading-3 text-center'>
+              <span
+                className={cn(
+                  'whitespace-pre leading-3 text-center',
+                  error && 'text-destructive/80',
+                )}
+              >
                 Выберите дату поездки
               </span>
             )}
@@ -816,256 +831,34 @@ const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
   },
 );
 
-interface EnhancedRouteScheduleListProps {
+interface BusRouteScheduleProps {
   schedules: ScheduleItem[];
   departureCityName: string;
   arrivalCityName: string;
   className?: string;
+  routeId?: string;
 }
 
-export const EnhancedRouteScheduleList: FC<EnhancedRouteScheduleListProps> = ({
+export const BusRouteSchedule: FC<BusRouteScheduleProps> = ({
   schedules,
   departureCityName,
   arrivalCityName,
   className,
 }) => {
-  // Group schedules by direction
-  const forwardSchedules = [
-    ...schedules.filter(s => s.direction === RouteDirection.Forward),
-  ].sort((a, b) => (a.departureTime > b.departureTime ? 1 : -1));
-  const backwardSchedules = [
-    ...schedules.filter(s => s.direction === RouteDirection.Backward),
-  ].sort((a, b) => (a.arrivalTime > b.arrivalTime ? 1 : -1));
-
-  // For forward direction, we need to group by arrival time
-  const forwardArrivalTimes = [
-    ...new Set(forwardSchedules.map(s => s.arrivalTime)),
-  ];
-
-  // For backward direction, we need to group by departure time
-  const backwardDepartureTimes = [
-    ...new Set(backwardSchedules.map(s => s.departureTime)),
-  ];
-
-  return (
-    <div className={cn('space-y-0', className)}>
-      {forwardSchedules.length > 0 && (
-        <Card className='overflow-hidden rounded-t-none shadow-none rounded-b-none border-0 border-muted/60'>
-          <CardContent className='p-0'>
-            <div className='bg-muted/30 p-2 sm:p-3 border-b'>
-              <div className='flex flex-wrap items-center gap-1.5 sm:gap-2'>
-                <Badge
-                  variant='outline'
-                  className='bg-primary/10 border-primary/20 text-xs sm:text-sm'
-                >
-                  <ArrowDown className='h-3 w-3 mr-1 rotate-45 text-primary' />
-                  <span className='hidden xs:inline'>Прямое направление</span>
-                  <span className='xs:hidden'>Прямое</span>
-                </Badge>
-                <span className='text-xs sm:text-sm font-medium'>
-                  {departureCityName} → {arrivalCityName}
-                </span>
-              </div>
-            </div>
-
-            <div className='p-3 sm:p-4'>
-              <div className='mb-3 sm:mb-4'>
-                <div className='flex items-center gap-2 mb-2'>
-                  <div className='size-5 sm:size-6 rounded-full bg-primary/10 flex items-center justify-center'>
-                    <Clock className='h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary' />
-                  </div>
-                  <div className='text-xs sm:text-sm font-medium'>
-                    Отправление
-                  </div>
-                </div>
-
-                <div className='space-y-2 pl-7 sm:pl-8'>
-                  {forwardSchedules.map((schedule, index) => (
-                    <div
-                      key={`forward-dep-${index}`}
-                      className={cn(
-                        'flex items-center group transition-colors',
-                        !schedule.isActive && 'opacity-60',
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          'self-start basis-[45px] sm:basis-[50px] shrink-0 text-sm sm:text-base font-medium transition-colors',
-                          !schedule.isActive &&
-                            'line-through text-muted-foreground',
-                        )}
-                      >
-                        {schedule.departureTime}
-                      </div>
-
-                      {schedule.stopName && (
-                        <div className='flex items-center mt-0.5 gap-1 sm:gap-1.5 text-xs sm:text-sm text-muted-foreground group-hover:text-foreground/80 transition-colors'>
-                          <MapPin className='self-start mt-0.5 min-h-2.5 min-w-2.5 h-2.5 w-2.5 sm:h-3 sm:w-3' />
-                          {schedule.stopName}
-                        </div>
-                      )}
-
-                      {!schedule.isActive && (
-                        <Badge
-                          variant='outline'
-                          className='ml-auto text-[10px] sm:text-xs px-1 sm:px-1.5 py-0 h-4 sm:h-5 bg-destructive/5 text-destructive border-destructive/20'
-                        >
-                          Не активен
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Separator className='my-2 sm:my-3' />
-
-              <div>
-                <div className='flex items-center gap-2 mb-2'>
-                  <div className='size-5 sm:size-6 rounded-full bg-primary/10 flex items-center justify-center'>
-                    <Clock className='h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary' />
-                  </div>
-                  <div className='text-xs sm:text-sm font-medium'>Прибытие</div>
-                </div>
-
-                <div className='space-y-2 pl-7 sm:pl-8'>
-                  {forwardArrivalTimes.map((time, index) => (
-                    <div
-                      key={`forward-arr-${index}`}
-                      className='text-sm sm:text-base font-medium'
-                    >
-                      {time}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {backwardSchedules.length > 0 && (
-        <Card className='overflow-hidden rounded-t-none shadow-none border-0 rounded-b-none border-muted/60'>
-          <CardContent className='p-0'>
-            <div className='bg-muted/30 p-2 sm:p-3 border-b'>
-              <div className='flex flex-wrap items-center gap-1.5 sm:gap-2'>
-                <Badge
-                  variant='outline'
-                  className='bg-primary/10 border-primary/20 text-xs sm:text-sm'
-                >
-                  <ArrowUp className='h-3 w-3 mr-1 rotate-45 text-primary' />
-                  <span className='hidden xs:inline'>Обратное направление</span>
-                  <span className='xs:hidden'>Обратное</span>
-                </Badge>
-                <span className='text-xs sm:text-sm font-medium'>
-                  {arrivalCityName} → {departureCityName}
-                </span>
-              </div>
-            </div>
-
-            <div className='p-3 sm:p-4'>
-              <div className='mb-3 sm:mb-4'>
-                <div className='flex items-center gap-2 mb-2'>
-                  <div className='size-5 sm:size-6 rounded-full bg-primary/10 flex items-center justify-center'>
-                    <Clock className='h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary' />
-                  </div>
-                  <div className='text-xs sm:text-sm font-medium'>
-                    Отправление
-                  </div>
-                </div>
-
-                <div className='space-y-2 pl-7 sm:pl-8'>
-                  {backwardDepartureTimes.map((time, index) => (
-                    <div
-                      key={`backward-dep-${index}`}
-                      className='text-sm sm:text-base font-medium'
-                    >
-                      {time}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <Separator className='my-2 sm:my-3' />
-
-              <div>
-                <div className='flex items-center gap-2 mb-2'>
-                  <div className='size-5 sm:size-6 rounded-full bg-primary/10 flex items-center justify-center'>
-                    <Clock className='h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary' />
-                  </div>
-                  <div className='text-xs sm:text-sm font-medium'>Прибытие</div>
-                </div>
-
-                <div className='space-y-2 pl-7 sm:pl-8'>
-                  {backwardSchedules.map((schedule, index) => (
-                    <div
-                      key={`backward-arr-${index}`}
-                      className={cn(
-                        'flex items-center group transition-colors',
-                        !schedule.isActive && 'opacity-60',
-                      )}
-                    >
-                      <div
-                        className={cn(
-                          'self-start basis-[40px] sm:basis-[50px] shrink-0 text-sm sm:text-base font-medium transition-colors',
-                          !schedule.isActive &&
-                            'line-through text-muted-foreground',
-                        )}
-                      >
-                        {schedule.arrivalTime}
-                      </div>
-
-                      {schedule.stopName && (
-                        <div className='flex items-center mt-0.5 gap-1 sm:gap-1.5 text-xs sm:text-sm text-muted-foreground group-hover:text-foreground/80 transition-colors'>
-                          <MapPin className='self-start mt-0.5 min-h-2.5 min-w-2.5 h-2.5 w-2.5 sm:h-3 sm:w-3' />
-                          {schedule.stopName}
-                        </div>
-                      )}
-
-                      {!schedule.isActive && (
-                        <Badge
-                          variant='outline'
-                          className='ml-auto text-[10px] sm:text-xs px-1 sm:px-1.5 py-0 h-4 sm:h-5 bg-destructive/5 text-destructive border-destructive/20'
-                        >
-                          Не активен
-                        </Badge>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {schedules.length === 0 && (
-        <div className='text-center py-4 sm:py-6 text-muted-foreground text-sm'>
-          Расписание не найдено
-        </div>
-      )}
-    </div>
-  );
-};
-
-interface EnhancedRouteScheduleSectionProps {
-  schedules: ScheduleItem[];
-  departureCityName: string;
-  arrivalCityName: string;
-  className?: string;
-}
-
-export const EnhancedRouteScheduleSection: FC<
-  EnhancedRouteScheduleSectionProps
-> = ({ schedules, departureCityName, arrivalCityName, className }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   if (schedules.length === 0) {
     return null;
   }
 
-  // Count active schedules
-  const activeSchedules = schedules.filter(s => s.isActive).length;
+  // Group schedules by direction
+  const forwardSchedules = [
+    ...schedules.filter(s => s.direction === RouteDirection.Forward),
+  ].sort((a, b) => (a.time > b.time ? 1 : -1));
+
+  const backwardSchedules = [
+    ...schedules.filter(s => s.direction === RouteDirection.Backward),
+  ].sort((a, b) => (a.time > b.time ? 1 : -1));
 
   return (
     <div className={cn('border rounded-lg overflow-hidden', className)}>
@@ -1079,17 +872,7 @@ export const EnhancedRouteScheduleSection: FC<
           </div>
 
           <div>
-            <h4 className='text-xs sm:text-sm font-medium'>
-              Расписание рейсов
-            </h4>
-            <div className='text-[10px] sm:text-xs text-muted-foreground'>
-              {activeSchedules} из {schedules.length}{' '}
-              {schedules.length === 1
-                ? 'рейс активен'
-                : schedules.length < 5
-                  ? 'рейса активны'
-                  : 'рейсов активны'}
-            </div>
+            <h4 className='text-sm font-medium'>Расписание рейсов</h4>
           </div>
         </div>
 
@@ -1115,12 +898,139 @@ export const EnhancedRouteScheduleSection: FC<
         )}
       >
         <div className='p-0'>
-          <EnhancedRouteScheduleList
-            schedules={schedules}
-            departureCityName={departureCityName}
-            arrivalCityName={arrivalCityName}
-          />
+          <Tabs defaultValue={RouteDirection.Forward} className='w-full'>
+            <div className='border-b p-2'>
+              <TabsList className='grid w-full grid-cols-2'>
+                <TabsTrigger
+                  value={RouteDirection.Forward}
+                  className='flex items-center gap-1'
+                >
+                  <ArrowDown className='h-3 w-3 rotate-45' />
+                  <span className='hidden xs:inline'>Прямое направление</span>
+                  <span className='xs:hidden'>Прямое</span>
+                </TabsTrigger>
+                <TabsTrigger
+                  value={RouteDirection.Backward}
+                  className='flex items-center gap-1'
+                >
+                  <ArrowUp className='h-3 w-3 rotate-45' />
+                  <span className='hidden xs:inline'>Обратное направление</span>
+                  <span className='xs:hidden'>Обратное</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <TabsContent value={RouteDirection.Forward}>
+              <RouteStopsList
+                routeName={`${departureCityName} - ${arrivalCityName}`}
+                stops={forwardSchedules}
+              />
+            </TabsContent>
+
+            <TabsContent value={RouteDirection.Backward}>
+              <RouteStopsList
+                routeName={`${arrivalCityName} - ${departureCityName}`}
+                stops={backwardSchedules}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// Add the RouteStopsList component
+interface RouteStopsListProps {
+  routeName: string;
+  stops: ScheduleItem[];
+}
+
+const RouteStopsList: FC<RouteStopsListProps> = ({ stops }) => {
+  if (stops.length === 0) {
+    return (
+      <div className='p-6 text-center text-muted-foreground'>
+        Расписание не найдено
+      </div>
+    );
+  }
+
+  return (
+    <div className='p-3 py-1 sm:p-4 sm:py-1'>
+      <div className='relative'>
+        {/* Vertical line connecting stops */}
+        <div className='absolute z-[-10] left-2.5 top-3 bottom-3 w-[1px] bg-border' />
+
+        {/* Stops */}
+        <div className='space-y-1'>
+          {stops.map((stop, index, arr) => (
+            <RouteStop
+              key={`stop-${index}`}
+              time={stop.time}
+              location={stop.city?.name || ''}
+              details={stop.stopName}
+              isActive={stop.isActive}
+              isCurrentStop={index === 0 || index === arr.length - 1} // Optional: mark first stop as current
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Add the RouteStop component
+interface RouteStopProps {
+  time: string;
+  location: string;
+  details?: string | null;
+  isActive?: boolean;
+  isCurrentStop?: boolean;
+}
+
+const RouteStop: FC<RouteStopProps> = ({
+  time,
+  location,
+  details,
+  isActive = true,
+  isCurrentStop = false,
+}) => {
+  return (
+    <div className='flex items-start gap-3 py-2'>
+      <div className='pt-0.5'>
+        <div
+          className={cn(
+            'size-5 rounded-full border flex items-center justify-center',
+            isCurrentStop
+              ? 'bg-primary border-primary text-primary-foreground'
+              : isActive
+                ? 'border-muted-foreground/50 bg-background'
+                : 'border-muted-foreground/30 bg-muted/30',
+          )}
+        ></div>
+      </div>
+      <div className='flex-1'>
+        <div className='flex flex-wrap items-baseline gap-x-2'>
+          <span
+            className={cn(
+              'text-sm font-medium',
+              !isActive && 'text-muted-foreground',
+            )}
+          >
+            {time}
+          </span>
+          <span
+            className={cn(
+              'text-sm font-semibold',
+              !isActive && 'text-muted-foreground',
+            )}
+          >
+            {location}
+          </span>
+        </div>
+        {details && (
+          <p className='text-xs text-muted-foreground mt-0.5'>{details}</p>
+        )}
       </div>
     </div>
   );

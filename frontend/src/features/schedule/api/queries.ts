@@ -3,26 +3,37 @@ import {
   GetSchedulesByRouteQuery,
   GetScheduleByIdQuery,
   GetSchedulesByIdsQuery,
+  RouteDirection,
 } from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
 import { InitialDataOptions } from '@/react-query/types/initial-data-options';
 import { useQuery } from '@tanstack/react-query';
 
-export const useSchedulesByRoute = (
-  routeId: string | null,
-  options?: InitialDataOptions<GetSchedulesByRouteQuery>,
-) => {
+type UseSchedulesByRoute = {
+  options?: InitialDataOptions<GetSchedulesByRouteQuery>;
+  routeId?: string;
+  direction?: RouteDirection;
+};
+
+export const useSchedulesByRoute = ({
+  routeId,
+  direction,
+  options = {},
+}: UseSchedulesByRoute) => {
   const schedulesByRoute = graphql(`
-    query GetSchedulesByRoute($routeId: ID) {
-      schedulesByRoute(routeId: $routeId) {
+    query GetSchedulesByRoute($routeId: ID, $direction: RouteDirection) {
+      schedulesByRoute(routeId: $routeId, direction: $direction) {
         id
         direction
         stopName
-        departureTime
-        arrivalTime
+        time
         isActive
         createdAt
         updatedAt
+        city {
+          id
+          name
+        }
       }
     }
   `);
@@ -33,7 +44,7 @@ export const useSchedulesByRoute = (
       { routeId },
     ],
     queryFn: async () => {
-      return await client.request(schedulesByRoute, { routeId });
+      return await client.request(schedulesByRoute, { routeId, direction });
     },
     meta: {
       toastEnabled: false,
@@ -53,8 +64,7 @@ export const useScheduleById = (
         id
         direction
         stopName
-        departureTime
-        arrivalTime
+        time
         isActive
       }
     }
@@ -90,10 +100,12 @@ export const useSchedulesByIds = ({
         departureCityId: $departureCityId
         arrivalCityId: $arrivalCityId
       ) {
+        city {
+          name
+        }
         direction
         stopName
-        departureTime
-        arrivalTime
+        time
         isActive
       }
     }

@@ -145,7 +145,7 @@ const MainNav: FC = () => {
               className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
               asChild
             >
-              <NavLink to={'/bookings'}>
+              <NavLink to={'/routes'}>
                 <Route />
                 Все рейсы
               </NavLink>

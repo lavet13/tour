@@ -28,8 +28,7 @@ export const useUpdateSchedule = (
         isActive
         direction
         stopName
-        departureTime
-        arrivalTime
+        time
         createdAt
         updatedAt
       }
@@ -74,8 +73,7 @@ export const useCreateSchedule = (
         isActive
         direction
         stopName
-        departureTime
-        arrivalTime
+        time
         createdAt
         updatedAt
       }

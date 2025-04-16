@@ -1,14 +1,6 @@
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Settings,
-  Sparkles,
-} from 'lucide-react';
+import { ChevronsUpDown, LogOut, Settings } from 'lucide-react';
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,8 +19,11 @@ import {
 import { useLogout } from '@/features/auth/api/mutations';
 import { useGetMe } from '@/features/auth/api/queries';
 
-import { Skeleton } from './ui/skeleton';
-import { Link, useNavigate } from 'react-router-dom';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useNavigate } from 'react-router-dom';
+import { RouterLink } from '@/components/router-link';
+import { cn } from '@/lib/utils';
+import { buttonVariants } from './ui/button';
 
 export function NavUser() {
   const { isMobile } = useSidebar();
@@ -40,7 +35,7 @@ export function NavUser() {
 
   const renderNameAbbreviation = (name: string) => {
     const [firstName, lastName] = name.split(' ');
-    return `${firstName[0].toUpperCase()}${lastName[0].toUpperCase()}`;
+    return `${firstName?.[0]?.toUpperCase()}${lastName?.[0]?.toUpperCase()}`;
   };
 
   const renderUserData = () => {
@@ -100,17 +95,22 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link to={'/admin/settings'}>
+                <RouterLink
+                  className={cn(
+                    buttonVariants({ variant: 'ghost', size: 'sm' }),
+                    'h-fit w-full justify-start',
+                  )}
+                  to={'/admin/settings'}
+                >
                   <Settings />
                   Настройки
-                </Link>
+                </RouterLink>
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={async () => {
-                await logout();
-                await refetchUser();
+                await Promise.all([logout(), refetchUser()]);
                 navigate('/');
               }}
             >

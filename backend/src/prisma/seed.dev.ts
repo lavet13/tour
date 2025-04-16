@@ -4,6 +4,8 @@ import { RouteDirection, Role } from '@prisma/client';
 
 let countDown = 0;
 
+type Cities = Record<string, Awaited<ReturnType<typeof prisma.city.create>>>;
+
 export default async function seed() {
   if (countDown > 0) {
     return;
@@ -37,8 +39,8 @@ export default async function seed() {
     }),
   };
 
-  // Create all cities
-  const cities = {
+  // Create all cities with descriptions
+  const cities: Cities = {
     // LDNR cities
     Горловка: await prisma.city.create({ data: { name: 'Горловка' } }),
     Енакиево: await prisma.city.create({ data: { name: 'Енакиево' } }),
@@ -53,14 +55,22 @@ export default async function seed() {
     Макеевка: await prisma.city.create({ data: { name: 'Макеевка' } }),
     Донецк: await prisma.city.create({ data: { name: 'Донецк' } }),
 
-    // Coastal cities
-    Мариуполь: await prisma.city.create({ data: { name: 'Мариуполь' } }),
+    // Coastal cities with descriptions
+    Мариуполь: await prisma.city.create({
+      data: {
+        name: 'Мариуполь',
+        description: 'АС2, пр. Ленина',
+      },
+    }),
     'Мелекино 1 спуск': await prisma.city.create({
-      data: { name: 'Мелекино-1', description: 'Фельдшерский пункт' },
+      data: {
+        name: 'Мелекино 1 спуск',
+        description: 'Фельдшерский пункт',
+      },
     }),
     'Мелекино 2 спуск': await prisma.city.create({
       data: {
-        name: 'Мелекино-2',
+        name: 'Мелекино 2 спуск',
         description: 'продуктовый рынок в районе бывшей базы МВД',
       },
     }),
@@ -71,7 +81,10 @@ export default async function seed() {
       },
     }),
     Ялта: await prisma.city.create({
-      data: { name: 'Ялта', description: 'по согласованию' },
+      data: {
+        name: 'Ялта',
+        description: 'по согласованию',
+      },
     }),
     Урзуф: await prisma.city.create({
       data: {
@@ -81,8 +94,7 @@ export default async function seed() {
     }),
   };
 
-  // Create routes to coastal region
-  const routes = [];
+  // List of all LDNR cities
   const ldnrCities = [
     'Горловка',
     'Енакиево',
@@ -98,9 +110,8 @@ export default async function seed() {
     'Донецк',
   ];
 
-  // Create coastal destinations
+  // List of all coastal destinations
   const coastalDestinations = [
-    'Мариуполь',
     'Мелекино 1 спуск',
     'Мелекино 2 спуск',
     'Белосарайская коса',
@@ -108,49 +119,56 @@ export default async function seed() {
     'Урзуф',
   ];
 
-  // Create routes for each LDNR city to coastal destinations
+  // Create routes from ALL LDNR cities to ALL coastal destinations
+  const allRoutes: Record<string, Record<string, any>> = {};
+
   for (const departureCity of ldnrCities) {
-    // Create route to Mariupol
-    const mariupolRoute = await prisma.route.create({
+    allRoutes[departureCity] = {};
+
+    // Routes to coastal destinations
+    for (const destination of coastalDestinations) {
+      const price = getPriceForRoute(departureCity, 'COASTAL');
+
+      allRoutes[departureCity][destination] = await prisma.route.create({
+        data: {
+          departureCityId: cities[departureCity].id,
+          arrivalCityId: cities[destination].id,
+          regionId: regions.COASTAL.id,
+          isActive: true,
+          price: price,
+        },
+      });
+    }
+
+    // Route to Mariupol
+    const mariupolPrice = getPriceForRoute(departureCity, 'MARIUPOL');
+
+    allRoutes[departureCity]['Мариуполь'] = await prisma.route.create({
       data: {
         departureCityId: cities[departureCity].id,
         arrivalCityId: cities['Мариуполь'].id,
         regionId: regions.LDNR.id,
         isActive: true,
-        price: getPriceForRoute(departureCity, 'Мариуполь'),
+        price: mariupolPrice,
       },
     });
-    routes.push(mariupolRoute);
-
-    // Create routes to other coastal destinations
-    for (const destination of coastalDestinations) {
-      if (destination !== 'Мариуполь') {
-        const coastalRoute = await prisma.route.create({
-          data: {
-            departureCityId: cities[departureCity].id,
-            arrivalCityId: cities[destination].id,
-            regionId: regions.COASTAL.id,
-            isActive: true,
-            price: getPriceForRoute(departureCity, 'COASTAL'),
-          },
-        });
-        routes.push(coastalRoute);
-      }
-    }
   }
 
-  // Create schedules based on the provided tables
-  await createSchedules(cities, routes);
+  // Create schedules for ALL routes
+  await createAllRouteSchedules(cities, allRoutes, [
+    ...coastalDestinations,
+    'Мариуполь',
+  ]);
 
-  // Create test user with multiple roles
+  // Create test users
   const password = 'password';
   const hashedPassword = await generatePasswordHash(password);
-
   await createUsers(hashedPassword);
 
   console.log('Seed completed successfully');
 }
 
+// Create test users
 async function createUsers(hashedPassword: string) {
   const users = [
     { name: 'Regular User', email: 'user@mail.com', roles: [Role.USER] },
@@ -187,202 +205,297 @@ async function createUsers(hashedPassword: string) {
   }
 }
 
-// Helper function to get price for a specific route
+// Define route price based on departure city and destination type
 function getPriceForRoute(
   departureCity: string,
-  destinationType: string,
+  destinationType: 'COASTAL' | 'MARIUPOL',
 ): number {
-  // Price mapping based on the table
-  const priceMap: { [key: string]: { [key: string]: number } } = {
-    Горловка: { Мариуполь: 1500, COASTAL: 1500 },
-    Енакиево: { Мариуполь: 1500, COASTAL: 1500 },
-    Ждановка: { Мариуполь: 1500, COASTAL: 1500 },
-    Кировское: { Мариуполь: 1500, COASTAL: 1500 },
-    Харцызск: { Мариуполь: 1200, COASTAL: 1200 },
-    'Кр. Луч': { Мариуполь: 2500, COASTAL: 2500 },
-    Снежное: { Мариуполь: 1500, COASTAL: 1500 },
-    Торез: { Мариуполь: 1500, COASTAL: 1500 },
-    Шахтерск: { Мариуполь: 1500, COASTAL: 1500 },
-    Зугрес: { Мариуполь: 1200, COASTAL: 1200 },
-    Макеевка: { Мариуполь: 800, COASTAL: 1000 },
-    Донецк: { Мариуполь: 700, COASTAL: 1000 },
+  // Prices mapping according to CSV data
+  const priceMap: Record<string, { coastal: number; mariupol: number }> = {
+    Горловка: { coastal: 1500, mariupol: 1500 },
+    Енакиево: { coastal: 1500, mariupol: 1500 },
+    Ждановка: { coastal: 1500, mariupol: 1500 },
+    Кировское: { coastal: 1500, mariupol: 1500 },
+    Харцызск: { coastal: 1200, mariupol: 1200 },
+    'Кр. Луч': { coastal: 2500, mariupol: 2500 },
+    Снежное: { coastal: 1500, mariupol: 1500 },
+    Торез: { coastal: 1500, mariupol: 1500 },
+    Шахтерск: { coastal: 1500, mariupol: 1500 },
+    Зугрес: { coastal: 1200, mariupol: 1200 },
+    Макеевка: { coastal: 1000, mariupol: 800 },
+    Донецк: { coastal: 1000, mariupol: 700 },
   };
 
-  return priceMap[departureCity]?.[destinationType] || 1500; // Default price if not specified
+  // Return the price based on departure city and destination type
+  if (destinationType === 'MARIUPOL') {
+    return priceMap[departureCity]?.mariupol || 1500;
+  } else {
+    return priceMap[departureCity]?.coastal || 1500;
+  }
 }
 
-// Helper function to create schedules
-async function createSchedules(cities: Record<string, any>, routes: any[]) {
-  // FORWARD direction schedule data (TO the coast - first table)
-  const forwardScheduleData = [
-    { city: 'Горловка', stopName: '"Мебельный город"', departureTime: '07:00' },
-    {
-      city: 'Енакиево',
-      stopName: 'магазин "Фокс" напротив церкви',
-      departureTime: '07:30',
-    },
-    {
-      city: 'Ждановка',
-      stopName: 'Енакиевский поворот',
-      departureTime: '07:45',
-    },
-    { city: 'Кировское', stopName: 'ул.Асфальтная', departureTime: '08:00' },
-    {
-      city: 'Харцызск',
-      stopName: 'напротив Лицея (р-он Танк)',
-      departureTime: '08:00',
-    },
-    { city: 'Кр. Луч', stopName: 'ост. ул Чкалова', departureTime: '06:45' },
-    {
-      city: 'Снежное',
-      stopName: 'ул.Ленина/ ул.Гагарина',
-      departureTime: '07:15',
-    },
-    { city: 'Торез', stopName: 'пр-т Гагарина', departureTime: '07:30' },
-    { city: 'Шахтерск', stopName: 'ул. Ленина', departureTime: '07:45' },
-    { city: 'Зугрес', stopName: 'ул. Карла Маркса', departureTime: '08:00' },
-    { city: 'Макеевка', stopName: 'ост. Зеленый', departureTime: '08:15' },
-    { city: 'Макеевка', stopName: '"Сарепта"', departureTime: '08:30' },
-    { city: 'Донецк', stopName: 'Мотель', departureTime: '08:45' },
-    {
-      city: 'Донецк',
-      stopName: 'Парковка ТЦ "Юзовский пассаж" ул-др Коммунаров 1',
-      departureTime: '09:00',
-    },
-  ];
-
-  // Coastal arrival times for forward direction
-  const forwardCoastalArrivals = {
-    Мариуполь: '10:30',
-    'Мелекино 1 спуск': '11:30',
-    'Мелекино 2 спуск': '11:15',
-    'Белосарайская коса': '11:30',
-    Ялта: '11:45',
-    Урзуф: '12:00',
+// Generate time for a city stop based on city and stop
+function generateTimeForCityStop(
+  city: string,
+  stopName: string,
+  isForward: boolean,
+): string | null {
+  // Base city times
+  const cityTimesBase: Record<string, { forward: string; backward: string }> = {
+    Горловка: { forward: '07:00', backward: '18:00' },
+    Енакиево: { forward: '07:30', backward: '17:30' },
+    Ждановка: { forward: '07:45', backward: '17:15' },
+    Кировское: { forward: '07:30', backward: '17:30' },
+    Харцызск: { forward: '08:00', backward: '17:00' },
+    'Кр. Луч': { forward: '06:45', backward: '18:15' },
+    Снежное: { forward: '07:15', backward: '17:45' },
+    Торез: { forward: '07:30', backward: '17:30' },
+    Шахтерск: { forward: '07:45', backward: '17:15' },
+    Зугрес: { forward: '08:00', backward: '17:00' },
   };
 
-  // BACKWARD direction schedule data (FROM the coast - second table)
-  const backwardScheduleData = [
-    { city: 'Горловка', stopName: '"Мебельный город"', arrivalTime: '18:00' },
-    {
-      city: 'Енакиево',
-      stopName: 'магазин "Фокс" напротив церкви',
-      arrivalTime: '17:30',
+  // Specialized times for cities with multiple stops
+  const specialTimes: Record<
+    string,
+    Record<string, { forward: string; backward: string }>
+  > = {
+    Макеевка: {
+      'ост. Зеленый': { forward: '08:15', backward: '16:45' },
+      '"Сарепта"': { forward: '08:30', backward: '16:30' },
     },
-    { city: 'Ждановка', stopName: 'Енакиевский поворот', arrivalTime: '17:15' },
-    { city: 'Кировское', stopName: 'ул.Асфальтная', arrivalTime: '17:30' },
-    {
-      city: 'Харцызск',
-      stopName: 'напротив Лицея (р-он Танк)',
-      arrivalTime: '17:00',
+    Донецк: {
+      Мотель: { forward: '08:45', backward: '16:15' },
+      'Парковка ТЦ "Юзовский пассаж" пл-дь Коммунаров 1': {
+        forward: '09:00',
+        backward: '16:00',
+      },
     },
-    { city: 'Кр. Луч', stopName: 'ост. ул Чкалова', arrivalTime: '18:15' },
-    {
-      city: 'Снежное',
-      stopName: 'ул.Ленина/ ул.Гагарина',
-      arrivalTime: '17:45',
-    },
-    { city: 'Торез', stopName: 'пр-т Гагарина', arrivalTime: '17:30' },
-    { city: 'Шахтерск', stopName: 'ул. Ленина', arrivalTime: '17:15' },
-    { city: 'Зугрес', stopName: 'ул. Карла Маркса', arrivalTime: '17:00' },
-    { city: 'Макеевка', stopName: 'ост. Зеленый', arrivalTime: '16:45' },
-    { city: 'Макеевка', stopName: '"Сарепта"', arrivalTime: '16:30' },
-    { city: 'Донецк', stopName: 'Мотель', arrivalTime: '16:15' },
-    {
-      city: 'Донецк',
-      stopName: 'Парковка ТЦ "Юзовский пассаж" ул-др Коммунаров 1',
-      arrivalTime: '16:00',
-    },
-  ];
-
-  // Coastal departure times for backward direction
-  const backwardCoastalDepartures = {
-    Мариуполь: '14:30',
-    'Мелекино 1 спуск': '13:45',
-    'Мелекино 2 спуск': '13:30',
-    'Белосарайская коса': '13:15',
-    Ялта: '13:00',
-    Урзуф: '12:30',
   };
 
-  // 1. Create FORWARD schedules (to the coast)
-  for (const schedule of forwardScheduleData) {
-    // Find routes that start from this city
-    const cityRoutes = routes.filter(
-      route => cities[schedule.city].id === route.departureCityId,
-    );
-
-    for (const route of cityRoutes) {
-      // Get the arrival city name
-      const arrivalCityName = Object.keys(cities).find(
-        key => cities[key].id === route.arrivalCityId,
-      );
-
-      if (!arrivalCityName) continue;
-
-      // Set arrival time based on destination
-      let arrivalTime;
-      if (arrivalCityName === 'Мариуполь') {
-        arrivalTime = forwardCoastalArrivals['Мариуполь'];
-      } else if (forwardCoastalArrivals[arrivalCityName]) {
-        arrivalTime = forwardCoastalArrivals[arrivalCityName];
-      } else {
-        // For any other destination, use a default time
-        arrivalTime = '12:00';
-      }
-
-      // Create forward schedule for this route
-      await prisma.schedule.create({
-        data: {
-          routeId: route.id,
-          direction: RouteDirection.FORWARD,
-          stopName: schedule.stopName,
-          departureTime: schedule.departureTime,
-          arrivalTime: arrivalTime,
-          isActive: true,
-        },
-      });
-    }
+  // Determine time for specific stop
+  let timeInfo;
+  if (specialTimes[city] && specialTimes[city][stopName]) {
+    timeInfo = specialTimes[city][stopName];
+  } else {
+    timeInfo = cityTimesBase[city];
   }
 
-  // 2. Create BACKWARD schedules (from the coast)
-  for (const schedule of backwardScheduleData) {
-    // Find routes that end at this city
-    const cityRoutes = routes.filter(
-      route => cities[schedule.city].id === route.departureCityId,
-    );
+  if (!timeInfo) {
+    return null;
+  }
 
-    for (const route of cityRoutes) {
-      // Get the departure (coastal) city name
-      const departureCityName = Object.keys(cities).find(
-        key => cities[key].id === route.arrivalCityId,
-      );
+  // Return appropriate time based on direction
+  return isForward ? timeInfo.forward : timeInfo.backward;
+}
 
-      if (!departureCityName) continue;
+// Get info for all stops in a city
+function getCityStopsInfo(city: string): { city: string; stopName: string }[] {
+  const cityStops: Record<string, string[]> = {
+    Горловка: ['"Мебельный город"'],
+    Енакиево: ['магазин "Фокс" напротив церкви'],
+    Ждановка: ['Енакиевский поворот'],
+    Кировское: ['ул.Асфальтная'],
+    Харцызск: ['напротив Лицея (р-он Танка)'],
+    'Кр. Луч': ['ост. ул Чкалова'],
+    Снежное: ['ул.Ленина/ ул.Гагарина'],
+    Торез: ['пр-т Гагарина'],
+    Шахтерск: ['ул. Ленина'],
+    Зугрес: ['ул. Карла Маркса'],
+    Макеевка: ['ост. Зеленый', '"Сарепта"'],
+    Донецк: ['Мотель', 'Парковка ТЦ "Юзовский пассаж" пл-дь Коммунаров 1'],
+  };
 
-      // Set departure time based on coastal location
-      let departureTime;
-      if (departureCityName === 'Мариуполь') {
-        departureTime = backwardCoastalDepartures['Мариуполь'];
-      } else if (backwardCoastalDepartures[departureCityName]) {
-        departureTime = backwardCoastalDepartures[departureCityName];
+  return (cityStops[city] || ['']).map(stopName => ({
+    city: city,
+    stopName: stopName,
+  }));
+}
+
+// Main function to create schedules for ALL routes
+async function createAllRouteSchedules(
+  cities: Cities,
+  allRoutes: Record<string, Record<string, any>>,
+  allDestinations: string[],
+) {
+  // Information on coastal destinations
+  const coastalDestinationsInfo = [
+    {
+      city: 'Мариуполь',
+      arrivalTime: '10:30',
+      departureTime: '14:30',
+    },
+    {
+      city: 'Мелекино 1 спуск',
+      arrivalTime: '11:15',
+      departureTime: '13:45',
+    },
+    {
+      city: 'Мелекино 2 спуск',
+      arrivalTime: '11:30',
+      departureTime: '13:30',
+    },
+    {
+      city: 'Белосарайская коса',
+      arrivalTime: '11:45',
+      departureTime: '13:15',
+    },
+    {
+      city: 'Ялта',
+      arrivalTime: '12:00',
+      departureTime: '13:00',
+    },
+    {
+      city: 'Урзуф',
+      arrivalTime: '12:30',
+      departureTime: '12:30',
+    },
+  ];
+
+  // Define the order of cities in routes
+  const routeOrder = [
+    'Горловка',
+    'Енакиево',
+    'Ждановка',
+    'Кировское',
+    'Харцызск',
+    'Макеевка',
+    'Донецк',
+  ];
+
+  const alternateRouteOrder = [
+    'Кр. Луч',
+    'Снежное',
+    'Торез',
+    'Шахтерск',
+    'Зугрес',
+    'Макеевка',
+    'Донецк',
+  ];
+
+  // Create schedules for routes from ALL departure cities
+  for (const departureCity in allRoutes) {
+    for (const dest of coastalDestinationsInfo) {
+      const route = allRoutes[departureCity][dest.city];
+      if (!route) continue;
+
+      // Determine which cities to include in this route's schedule
+      let routeCities: string[];
+      let isAlternateRoute = false;
+
+      if (alternateRouteOrder.includes(departureCity)) {
+        // This is a route from the Krasny Luch direction
+        routeCities = alternateRouteOrder.slice(
+          alternateRouteOrder.indexOf(departureCity),
+        );
+        isAlternateRoute = true;
       } else {
-        // For any other destination, use Mariupol's departure time as default
-        departureTime = backwardCoastalDepartures['Мариуполь'];
+        // This is a route from the Gorlovka direction
+        routeCities = routeOrder.slice(routeOrder.indexOf(departureCity));
       }
 
-      // Create backward schedule for this route
-      await prisma.schedule.create({
-        data: {
-          routeId: route.id,
-          direction: RouteDirection.BACKWARD,
-          stopName: schedule.stopName,
-          departureTime: departureTime,
-          arrivalTime: schedule.arrivalTime,
-          isActive: true,
+      // Create expanded forward stops with multiple stops per city
+      let expandedForwardStops = [];
+      for (const city of routeCities) {
+        const stopsForCity = getCityStopsInfo(city);
+
+        for (const stop of stopsForCity) {
+          expandedForwardStops.push({
+            ...stop,
+            time: generateTimeForCityStop(city, stop.stopName, true),
+          });
+        }
+      }
+
+      // Create expanded backward stops with multiple stops per city
+      let expandedBackwardStops = [];
+      for (const city of [...routeCities].reverse()) {
+        const stopsForCity = getCityStopsInfo(city);
+
+        for (const stop of stopsForCity) {
+          expandedBackwardStops.push({
+            ...stop,
+            time: generateTimeForCityStop(city, stop.stopName, false),
+          });
+        }
+      }
+
+      // Create schedule for forward direction
+      await createIntermediateSchedule(
+        cities,
+        route.id,
+        RouteDirection.FORWARD,
+        expandedForwardStops,
+        {
+          city: dest.city,
+          stopName: cities[dest.city].description || '',
+          time: dest.arrivalTime,
         },
-      });
+      );
+
+      // Create schedule for backward direction
+      await createIntermediateSchedule(
+        cities,
+        route.id,
+        RouteDirection.BACKWARD,
+        expandedBackwardStops,
+        {
+          city: dest.city,
+          stopName: cities[dest.city].description || '',
+          time: dest.departureTime,
+        },
+      );
     }
+  }
+}
+
+// Function to create schedule with intermediate stops
+async function createIntermediateSchedule(
+  cities: Cities,
+  routeId: string,
+  direction: RouteDirection,
+  intermediateStops: any[],
+  endpointStop: any,
+) {
+  // If backward direction, add endpoint at the beginning
+  if (direction === RouteDirection.BACKWARD) {
+    await prisma.schedule.create({
+      data: {
+        routeId: routeId,
+        direction: direction,
+        cityId: cities[endpointStop.city].id,
+        stopName: endpointStop.stopName,
+        time: endpointStop.time || null,
+        isActive: true,
+      },
+    });
+  }
+
+  // Add all intermediate stops
+  for (const stop of intermediateStops) {
+    await prisma.schedule.create({
+      data: {
+        routeId: routeId,
+        direction: direction,
+        cityId: cities[stop.city].id,
+        stopName: stop.stopName,
+        time: stop.time || null,
+        isActive: true,
+      },
+    });
+  }
+
+  // If forward direction, add endpoint at the end
+  if (direction === RouteDirection.FORWARD) {
+    await prisma.schedule.create({
+      data: {
+        routeId: routeId,
+        direction: direction,
+        cityId: cities[endpointStop.city].id,
+        stopName: endpointStop.stopName,
+        time: endpointStop.time || null,
+        isActive: true,
+      },
+    });
   }
 }
 

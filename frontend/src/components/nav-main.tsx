@@ -14,9 +14,9 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
-import { Button } from './ui/button';
-import { SidebarNavItem } from '@/pages/admin/types/__nav';
-import { RouterLink } from './router-link';
+import { Button } from '@/components/ui/button';
+import { SidebarNavItem } from '@/pages/admin/layout/types/__nav';
+import { RouterLink } from '@/components/router-link';
 
 export function NavMain({ items }: { items: SidebarNavItem[] }) {
   return (

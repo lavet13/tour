@@ -225,7 +225,7 @@ function RouteCard({
       <CardContent className='p-0 h-full flex flex-col'>
         <LazyImageWrapper
           className='h-48'
-          src={`/uploads/images/${route.photoName}`}
+          src={route.photoName ? `/uploads/images/${route.photoName}`: `/placeholder.svg`}
           fallbackSrc='/placeholder.svg'
           alt='Изображение города'
         />

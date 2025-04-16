@@ -1,4 +1,4 @@
-import { Bus, Home, Tickets, CalendarClock, Route } from "lucide-react";
+import { Bus, Home, Tickets, Route } from "lucide-react";
 import { MainNavItem, SidebarNavItem } from "@/pages/admin/layout/types/__nav";
 
 export interface PagesConfig {

@@ -99,8 +99,9 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
             role='combobox'
             disabled={isLoading || disabled}
             className={cn(
+              'group',
               'flex w-full justify-between',
-              'focus:outline-none focus:ring-1 focus:ring-ring',
+              'focus:outline-none focus:ring-1 focus:ring-ring aria-[invalid=true]:ring-destructive aria-[invalid=true]:border-destructive/15 hover:aria-[invalid=true]:bg-destructive/10 hover:aria-[invalid=true]:text-destructive',
               !value && 'text-muted-foreground',
             )}
           >
@@ -110,12 +111,22 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
                 <SonnerSpinner className='bg-foreground' />
               </div>
             ) : value ? (
-              displayValue(value)
+              <span
+                className={cn('font-semibold group-aria-[invalid=true]:text-destructive/90')}
+              >
+                {displayValue(value)}
+              </span>
             ) : (
-              label
+              <span
+                className={cn(
+                  'whitespace-pre leading-3 text-center group-aria-[invalid=true]:text-destructive/80',
+                )}
+              >
+                {label}
+              </span>
             )}
             {!isLoading && (
-              <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50' />
+              <ChevronsUpDown className='ml-2 h-4 w-4 shrink-0 opacity-50 group-aria-[invalid=true]:text-destructive' />
             )}
           </Button>
         </FormControl>
@@ -156,9 +167,9 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
         <Command>
           {items.length >= 7 && <CommandInput placeholder={inputPlaceholder} />}
           {isDesktop ? (
-            <ScrollArea className={cn('max-h-fit overflow-y-auto h-[30vh]')}>
+            <div className={cn('max-h-fit overflow-y-auto h-[30vh]')}>
               {commandList}
-            </ScrollArea>
+            </div>
           ) : (
             commandList
           )}

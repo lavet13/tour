@@ -53,7 +53,7 @@ const Header: FC = () => {
               )}
               target='_blank'
               rel='noreferrer'
-              to='https://t.me/Donbass_Tur'
+              to='https://t.me/+79493180304'
             >
               <Icons.telegram />
               <span className='sr-only'>Telegram</span>
