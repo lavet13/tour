@@ -19,11 +19,6 @@ export default gql`
     ): UploadPhotoRouteResponse!
   }
 
-  type RouteByIdResponse {
-    route: Route!
-    photo: File
-  }
-
   type UploadPhotoRouteResponse {
     photo: File!
     routeId: ID!
@@ -90,6 +85,7 @@ export default gql`
     price: Int!
     createdAt: Date!
     updatedAt: Date!
+    direction: RouteDirection # optional
     departureDate: Date
     bookings: [Booking!]!
     schedules: [Schedule!]!

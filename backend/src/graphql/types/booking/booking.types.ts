@@ -19,6 +19,8 @@ export default gql`
     phoneNumber: String
     travelDate: Date
     seatsCount: Int
+    telegram: Boolean
+    whatsapp: Boolean
   }
 
   type Subscription {
@@ -72,6 +74,8 @@ export default gql`
     arrivalCityId: ID!
     travelDate: Date!
     seatsCount: Int!
+    telegram: Boolean!
+    whatsapp: Boolean!
   }
 
   type Booking {
@@ -82,6 +86,8 @@ export default gql`
     route: Route
     travelDate: Date!
     seatsCount: Int!
+    telegram: Boolean!
+    whatsapp: Boolean!
     status: BookingStatus!
     createdAt: Date!
     updatedAt: Date!

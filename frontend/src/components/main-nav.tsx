@@ -140,69 +140,54 @@ const MainNav: FC = () => {
         }}
       >
         <NavigationMenuList>
-          <NavigationMenuItem>
-            <NavigationMenuLink
-              className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))}
-              asChild
-            >
-              <NavLink to={'/routes'}>
-                <Route />
-                Все рейсы
-              </NavLink>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
+          {/* <NavigationMenuItem> */}
+          {/*   <NavigationMenuLink */}
+          {/*     className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))} */}
+          {/*     asChild */}
+          {/*   > */}
+          {/*     <NavLink to={'/routes'}> */}
+          {/*       <Route /> */}
+          {/*       Все рейсы */}
+          {/*     </NavLink> */}
+          {/*   </NavigationMenuLink> */}
+          {/* </NavigationMenuItem> */}
 
-          <NavigationMenuItem>
-            <NavigationMenuTrigger
-              className={cn(
-                'submenu-trigger bg-transparent',
-                buttonVariants({ variant: 'ghost', size: 'sm' }),
-                'gap-1',
-              )}
-            >
-              Рейсы
-            </NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <RadixNavigationMenuSub className='flex'>
-                <ScrollArea className='max-h-[400px]'>
-                  <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 pt-2 pl-2 pb-2'>
-                    {/* <Button */}
-                    {/*   className='px-3 underline decoration-dotted hover:decoration-solid h-fit' */}
-                    {/*   variant='link' */}
-                    {/*   asChild */}
-                    {/* > */}
-                    {/*   <Link */}
-                    {/*     onClick={() => { */}
-                    {/*       window.scrollTo({ top: 0 }); */}
-                    {/*       setOpen(''); */}
-                    {/*     }} */}
-                    {/*     to={'/bookings'} */}
-                    {/*   > */}
-                    {/*     Показать все */}
-                    {/*   </Link> */}
-                    {/* </Button> */}
-                    <NavigationMenuItem>
-                      <NavigationRoutes title='ЛДНР' routes={processedLDNR} />
-                    </NavigationMenuItem>
-                    <NavigationMenuItem>
-                      <NavigationRoutes
-                        title='Азовское побережье'
-                        routes={processedCoastal}
-                      />
-                    </NavigationMenuItem>
-                  </NavigationMenuList>
-                </ScrollArea>
-
-                <RadixNavigationMenuViewport
-                  className='overflow-hidden transform origin-right-center relative top-0 right-0'
-                  style={{
-                    width: 'var(--radix-navigation-menu-viewport-width)',
-                    height: 'var(--radix-navigation-menu-viewport-height)',
-                  }}
-                />
-              </RadixNavigationMenuSub>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
+          {/* <NavigationMenuItem> */}
+          {/*   <NavigationMenuTrigger */}
+          {/*     className={cn( */}
+          {/*       'submenu-trigger bg-transparent', */}
+          {/*       buttonVariants({ variant: 'ghost', size: 'sm' }), */}
+          {/*       'gap-1', */}
+          {/*     )} */}
+          {/*   > */}
+          {/*     Рейсы */}
+          {/*   </NavigationMenuTrigger> */}
+          {/*   <NavigationMenuContent> */}
+          {/*     <RadixNavigationMenuSub className='flex'> */}
+          {/*       <ScrollArea className='max-h-[400px]'> */}
+          {/*         <NavigationMenuList className='space-x-0 items-start flex-col w-fit mr-1 pt-2 pl-2 pb-2'> */}
+          {/*           <NavigationMenuItem> */}
+          {/*             <NavigationRoutes title='ЛДНР' routes={processedLDNR} /> */}
+          {/*           </NavigationMenuItem> */}
+          {/*           <NavigationMenuItem> */}
+          {/*             <NavigationRoutes */}
+          {/*               title='Азовское побережье' */}
+          {/*               routes={processedCoastal} */}
+          {/*             /> */}
+          {/*           </NavigationMenuItem> */}
+          {/*         </NavigationMenuList> */}
+          {/*       </ScrollArea> */}
+          {/**/}
+          {/*       <RadixNavigationMenuViewport */}
+          {/*         className='overflow-hidden transform origin-right-center relative top-0 right-0' */}
+          {/*         style={{ */}
+          {/*           width: 'var(--radix-navigation-menu-viewport-width)', */}
+          {/*           height: 'var(--radix-navigation-menu-viewport-height)', */}
+          {/*         }} */}
+          {/*       /> */}
+          {/*     </RadixNavigationMenuSub> */}
+          {/*   </NavigationMenuContent> */}
+          {/* </NavigationMenuItem> */}
 
           {user && !isPending && (
             <NavigationMenuItem>

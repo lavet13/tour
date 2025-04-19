@@ -34,6 +34,7 @@ import { ComboBox } from '@/components/combo-box-filter';
 import { DatePicker } from '@/components/date-picker-filter';
 import { NumberFormatValues, NumericFormat } from 'react-number-format';
 import { Link } from 'react-router-dom';
+import { Checkbox } from '@/components/ui/checkbox';
 
 type Booking = Omit<
   InfiniteBookingsQuery['bookings']['edges'][number],
@@ -52,6 +53,8 @@ export const columnTranslations = {
   travelDate: 'Желаемая дата',
   phoneNumber: 'Телефон',
   route: 'Маршрут',
+  telegram: 'Телеграм',
+  whatsapp: 'Ватсап',
 } as const satisfies Record<BookingColumns, string>;
 
 type StatusColumns = keyof typeof BookingStatus;
@@ -238,7 +241,9 @@ export const columns: ColumnDef<Booking, unknown>[] = [
               {isPending && (
                 <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
               )}
-              <span title={initialValue} className='truncate'>{initialValue}</span>
+              <span title={initialValue} className='truncate'>
+                {initialValue}
+              </span>
             </div>
           ) : (
             <Button
@@ -255,6 +260,56 @@ export const columns: ColumnDef<Booking, unknown>[] = [
         </>
       );
     },
+  },
+  {
+    size: 160,
+    minSize: 120,
+    id: 'telegram',
+    accessorKey: 'telegram',
+    header: ({ column }) => {
+      return <Header title='Телеграм' column={column} />;
+    },
+    cell: ({ getValue }) => {
+      const initialValue = getValue() as boolean;
+
+      return (
+        <div className='flex justify-center items-center space-x-2'>
+          <Checkbox checked={initialValue} disabled />
+          <label
+            htmlFor='terms2'
+            className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+          >
+            Телеграм
+          </label>
+        </div>
+      );
+    },
+    enableColumnFilter: false,
+  },
+  {
+    size: 160,
+    minSize: 120,
+    id: 'whatsapp',
+    accessorKey: 'whatsapp',
+    header: ({ column }) => {
+      return <Header title='Ватсап' column={column} />;
+    },
+    cell: ({ getValue }) => {
+      const initialValue = getValue() as boolean;
+
+      return (
+        <div className='flex justify-center items-center space-x-2'>
+          <Checkbox checked={initialValue} disabled />
+          <label
+            htmlFor='terms2'
+            className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+          >
+            Ватсап
+          </label>
+        </div>
+      );
+    },
+    enableColumnFilter: false,
   },
   {
     size: 160,
@@ -394,7 +449,9 @@ export const columns: ColumnDef<Booking, unknown>[] = [
           {isPending && (
             <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
           )}
-          <span title={`${initialValue}`} className='truncate'>{initialValue}</span>
+          <span title={`${initialValue}`} className='truncate'>
+            {initialValue}
+          </span>
         </div>
       );
     },

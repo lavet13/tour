@@ -36,6 +36,8 @@ export const useInfiniteBookings = ({
           phoneNumber
           travelDate
           seatsCount
+          telegram
+          whatsapp
           route {
             id
             arrivalCity {

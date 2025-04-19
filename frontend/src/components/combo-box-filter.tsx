@@ -1,10 +1,10 @@
 import { VariantProps } from 'class-variance-authority';
-import { Button, buttonVariants } from './ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { forwardRef, useState } from 'react';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useControllableState } from '@/hooks/use-controllable-state';
 import { cn } from '@/lib/utils';
-import { SonnerSpinner } from './sonner-spinner';
+import { SonnerSpinner } from '@/components/sonner-spinner';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import {
   Command,
@@ -12,10 +12,9 @@ import {
   CommandGroup,
   CommandItem,
   CommandList,
-} from './ui/command';
-import { ScrollArea } from './ui/scroll-area';
-import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
-import { Drawer, DrawerContent, DrawerTrigger } from './ui/drawer';
+} from '@/components/ui/command';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
 
 interface ComboBoxProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
@@ -93,9 +92,9 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
           <CommandList>
             <CommandEmpty>Не найдено</CommandEmpty>
             <CommandGroup>
-              <ScrollArea
+              <div
                 className={cn(
-                  items.length >= 7 && 'h-[calc(14rem)] -mr-px pr-3',
+                  items.length >= 7 && 'h-[calc(14rem)] overflow-y-auto overflow-x-hidden',
                 )}
               >
                 {items.map(item => {
@@ -129,7 +128,7 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
                     </CommandItem>
                   );
                 })}
-              </ScrollArea>
+              </div>
             </CommandGroup>
           </CommandList>
         </Command>
@@ -139,7 +138,10 @@ export const ComboBox = forwardRef<HTMLButtonElement, ComboBoxProps>(
     return isDesktop ? (
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>{renderTrigger()}</PopoverTrigger>
-        <PopoverContent style={{ width: width ? width - 20 : undefined }} className='p-0'>
+        <PopoverContent
+          style={{ width: width ? width - 20 : undefined }}
+          className='p-0'
+        >
           {renderContent()}
         </PopoverContent>
       </Popover>

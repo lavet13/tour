@@ -26,7 +26,7 @@ const Header: FC = () => {
             >
               <Link
                 onClick={() => window.scrollTo({ top: 0 })}
-                to='/booking-bus'
+                to='/'
               >
                 Заказать билет
               </Link>

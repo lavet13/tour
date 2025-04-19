@@ -52,6 +52,7 @@ export const useRouteByIds = ({
         departureDate
         price
         photoName
+        direction
       }
     }
   `);

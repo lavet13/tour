@@ -18,7 +18,7 @@ export const useUpdateRoute = (
     UpdateRouteMutationVariables
   > = {},
 ) => {
-  const createBooking = graphql(`
+  const updateRoute = graphql(`
     mutation UpdateRoute($id: ID!, $input: CreateRouteInput!) {
       updateRoute(id: $id, input: $input) {
         id
@@ -31,7 +31,7 @@ export const useUpdateRoute = (
 
   return useMutation({
     mutationFn: (variables: UpdateRouteMutationVariables) => {
-      return client.request(createBooking, {
+      return client.request(updateRoute, {
         ...variables,
       });
     },
@@ -58,7 +58,7 @@ export const useCreateRoute = (
     CreateRouteMutationVariables
   > = {},
 ) => {
-  const createBooking = graphql(`
+  const createRoute = graphql(`
     mutation CreateRoute($input: CreateRouteInput!) {
       createRoute(input: $input) {
         id
@@ -72,7 +72,7 @@ export const useCreateRoute = (
   return {
     ...useMutation({
       mutationFn: (variables: CreateRouteMutationVariables) => {
-        return client.request(createBooking, {
+        return client.request(createRoute, {
           ...variables,
         });
       },

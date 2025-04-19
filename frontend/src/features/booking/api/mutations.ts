@@ -60,6 +60,8 @@ export const useCreateBooking = (
         status
         createdAt
         updatedAt
+        telegram
+        whatsapp
       }
     }
   `);

@@ -182,12 +182,12 @@ const MobileNav = () => {
         <div className='h-[calc(100vh-8rem)] pb-7'>
           <div className='flex flex-col h-full'>
             <nav className='flex flex-col'>
-              <SheetLink onOpenChange={setOpen} to='/routes'>
-                Показать все рейсы
-              </SheetLink>
-              <SheetLink onOpenChange={setOpen} to='/booking-bus'>
-                Заказать билет
-              </SheetLink>
+              {/* <SheetLink onOpenChange={setOpen} to='/routes'> */}
+              {/*   Показать все рейсы */}
+              {/* </SheetLink> */}
+              {/* <SheetLink onOpenChange={setOpen} to='/booking-bus'> */}
+              {/*   Заказать билет */}
+              {/* </SheetLink> */}
             </nav>
 
             <div className='border-t'>
@@ -420,7 +420,7 @@ const CitySection = ({
               >
                 {isAvailable ? (
                   <Link
-                    to={`booking-bus?departureCityId=${city.id}&arrivalCityId=${connection.id}`}
+                    to={`/?departureCityId=${city.id}&arrivalCityId=${connection.id}`}
                     className='block px-4 pl-8 py-3 text-sm'
                     onClick={() => {
                       onSelectRoute();

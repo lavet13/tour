@@ -12,9 +12,11 @@ import {
   Loader2,
   Edit,
   CircleCheck,
+  FilterX,
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { ComboBox } from '@/components/combo-box-filter';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,7 +25,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { ComboBox } from '@/components/combo-box-filter';
 import { DatePicker } from '@/components/date-picker-filter';
 
 import { type Schedule } from '.';
@@ -35,7 +36,7 @@ import {
 } from '@/features/schedule/api/mutations';
 import { toast } from 'sonner';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
-import { RouteDirection } from '@/gql/graphql';
+import { GetCitiesQuery, RouteDirection } from '@/gql/graphql';
 import {
   Select,
   SelectContent,
@@ -53,6 +54,7 @@ import {
   AlertDialogDescription,
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { useCities } from '@/features/city';
 
 export type ScheduleColumns = Exclude<keyof Schedule, '__typename' | 'route'>;
 export const columnTranslations = {
@@ -94,6 +96,7 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
       column: { id: columnId },
     }) {
       const enumValue = getValue() as string;
+      console.log({ enumValue });
       const [isEditing, setIsEditing] = useState(false);
       const [value, setValue] = useState(enumValue);
       const [previousValue] = useState(enumValue);
@@ -328,160 +331,75 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
       );
     },
     meta: {
-      filterVariant: 'timeRange',
+      filterVariant: 'text',
     },
   },
   {
     minSize: 180,
-    size: 180,
-    id: 'city',
-    accessorKey: 'city.name',
+    size: 220,
+    id: 'cityId',
+    accessorKey: 'city',
     header: ({ column }) => {
       return <Header title={columnTranslations['city']} column={column} />;
     },
     cell: ({
-      getValue,
       row: {
-        original: { id: originalId, city },
+        original: { id: originalId },
       },
       column: { id: columnId },
+      getValue,
     }) => {
-      const initialValue = getValue() as string; // This accesses the city.name property
-      const cityId = city?.id;
-      const [isEditing, setIsEditing] = useState(false);
-      const [value, setValue] = useState(initialValue);
-      const [previousValue, setPreviousValue] = useState(initialValue);
+      const initialValue = getValue<GetCitiesQuery['cities'][number]>(); // This accesses the city.name property
+      console.log({ initialValue });
+      const { data, isPending } = useCities();
+      const cities = data?.cities ?? [];
+      const { mutate: updateSchedule, isPending: updateIsPending } =
+        useUpdateSchedule();
 
-      const { mutate: updateSchedule, isPending } = useUpdateSchedule();
-
-      useEffect(() => {
-        setValue(initialValue);
-      }, [initialValue]);
-
-      // City selection would ideally use a dropdown with city options
-      // For now, implementing a text input with direct update
-      const handleUpdate = (newValue: string) => {
-        if (newValue !== initialValue) {
-          setPreviousValue(initialValue);
-
-          const promise = new Promise((resolve, reject) => {
-            // Note: In a real implementation, you'd update the cityId reference
-            // This example assumes your API accepts a name change directly
+      return (
+        <Select
+          value={initialValue.id}
+          onValueChange={value => {
+            console.log({ originalId, columnId, value });
             updateSchedule(
+              { input: { id: originalId, [columnId]: value } },
               {
-                input: {
-                  id: originalId,
-                  cityId: cityId, // Keep the same city ID for now
-                  // In a real implementation, you'd need to map the city name to a city ID
+                async onSuccess() {
+                  toast.success(
+                    `\`Город остановки\` изменён ${initialValue.name} → ${cities.find(city => city.id === value)?.name}!`,
+                  );
                 },
-              },
-              {
-                onSuccess: async data => {
-                  resolve(data);
-                },
-                onError(error) {
-                  reject(error);
+                onError() {
+                  toast.error(`Произошла ошибка!`);
                 },
               },
             );
-          });
-
-          toast.promise(promise, {
-            loading: `Обновление поля \`${columnTranslations[columnId as ScheduleColumns]}\`...`,
-            duration: 10000,
-            action: {
-              label: 'Отменить',
-              onClick() {
-                updateSchedule(
-                  {
-                    input: {
-                      id: originalId,
-                      cityId: cityId, // Original city ID
-                    },
-                  },
-                  {
-                    async onSuccess() {
-                      toast.success(
-                        `Отмена изменения поля \`${columnTranslations[columnId as ScheduleColumns]}\` выполненo успешно!`,
-                      );
-                    },
-                    onError() {
-                      toast.error(
-                        `Не удалось отменить изменения поля \`${columnTranslations[columnId as ScheduleColumns]}\`!`,
-                      );
-                    },
-                  },
-                );
-              },
-            },
-            success() {
-              return `\`${columnTranslations[columnId as ScheduleColumns]}\` изменёно ${initialValue} → ${newValue}!`;
-            },
-            error(error) {
-              if (isGraphQLRequestError(error)) {
-                return error.response.errors[0].message;
-              } else if (error instanceof Error) {
-                return error.message;
-              }
-              return 'Произошла ошибка!';
-            },
-          });
-        }
-        setIsEditing(false);
-      };
-
-      const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-        handleUpdate(e.target.value);
-      };
-
-      const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
-          e.preventDefault();
-          handleUpdate(e.currentTarget.value);
-        }
-      };
-
-      if (isEditing) {
-        return (
-          <Input
-            className='p-1 px-2 h-8'
-            value={value}
-            onChange={e => setValue(e.target.value)}
-            onBlur={onBlur}
-            onKeyDown={onKeyDown}
-            autoFocus
-          />
-        );
-      }
-
-      return (
-        <>
-          {initialValue?.length ? (
-            <div
-              className='flex items-center overflow-hidden cursor-text gap-1'
-              onClick={() => setIsEditing(true)}
-            >
-              {isPending && (
-                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
-              )}
-              <span title={initialValue} className='truncate'>
-                {initialValue}
-              </span>
-            </div>
-          ) : (
-            <Button
-              className='size-8'
-              variant='outline'
-              onClick={() => setIsEditing(true)}
-            >
-              {!isPending && <Edit />}
-              {isPending && (
-                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
-              )}
-            </Button>
-          )}
-        </>
+          }}
+        >
+          <SelectTrigger className='h-8'>
+            <SelectValue placeholder='Выберите город' />
+            {(isPending || updateIsPending) && (
+              <Loader2 className='ml-auto size-4 animate-spin' />
+            )}
+          </SelectTrigger>
+          <SelectContent>
+            {cities.map(city => (
+              <SelectItem key={city.id} value={city.id}>
+                {city.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       );
+    },
+    sortingFn: (rowA, rowB) =>
+      (rowA.original.city?.name || '') > (rowB.original.city?.name || '')
+        ? 1
+        : -1,
+    filterFn: (row, id, filterValue) => {
+      const cityName = row.original.city?.name || '';
+      // Case-insensitive search for better user experience
+      return cityName.toLowerCase().includes(filterValue.toLowerCase());
     },
     meta: {
       filterVariant: 'text',

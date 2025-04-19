@@ -12,14 +12,12 @@ import {
   FilterMeta,
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   getFilteredRowModel,
   getSortedRowModel,
   Row,
   SortingState,
   useReactTable,
   Table as ReactTable,
-  PaginationState,
   ColumnDef,
 } from '@tanstack/react-table';
 import { GetSchedulesByRouteQuery } from '@/gql/graphql';
@@ -72,7 +70,6 @@ import { ScheduleColumns } from '@/pages/admin/routes/[route_id]/schedules/__col
 import { useUpdateSchedule } from '@/features/schedule';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { AutosizeTextarea } from '@/components/autosize-textarea';
-import { DataTablePagination } from '@/components/data-table-pagination';
 
 export type DrawerMode = 'idle' | 'editSchedule' | 'addSchedule';
 

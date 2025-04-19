@@ -26,7 +26,6 @@ import {
   columnTranslations,
 } from '@/pages/admin/bookings/__columns';
 import { InfiniteBookingsQuery } from '@/gql/graphql';
-import { useVirtualizer } from '@tanstack/react-virtual';
 import {
   Table,
   TableBody,
@@ -38,7 +37,6 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
 import {
-  ArrowLeft,
   Edit,
   ListFilter,
   Loader2,
@@ -52,11 +50,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { Link, useNavigate } from 'react-router-dom';
 import { Waypoint } from 'react-waypoint';
 import { useUpdateBooking } from '@/features/booking/api/mutations';
@@ -384,7 +377,7 @@ const BookingsPage: FC = () => {
                         key={header.id}
                         {...{
                           className:
-                            'select-none flex items-center self-center relative h-fit',
+                            'select-none flex items-center self-start relative h-fit',
                           colSpan: header.colSpan,
                           style: {
                             width: header.getSize(),

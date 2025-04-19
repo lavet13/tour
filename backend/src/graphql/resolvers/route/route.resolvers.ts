@@ -1,5 +1,5 @@
 import { Resolvers } from '@/graphql/__generated__/types';
-import { Prisma, Role } from '@prisma/client';
+import { Prisma, Role, RouteDirection } from '@prisma/client';
 import mime from 'mime-types';
 
 import {
@@ -16,6 +16,7 @@ import path from 'path';
 import { PonyfillFile } from '@/types/file';
 import { pipeline } from 'stream/promises';
 import { Writable } from 'stream';
+import { warn } from 'console';
 
 const resolvers: Resolvers = {
   Query: {
@@ -186,7 +187,7 @@ const resolvers: Resolvers = {
       const { departureCityId, arrivalCityId } = args;
 
       // Try both route directions
-      const [forwardRoute, reverseRoute] = await Promise.all([
+      const [forwardRoute, backwardRoute] = await Promise.all([
         ctx.prisma.route.findFirst({
           where: {
             departureCityId,
@@ -202,7 +203,7 @@ const resolvers: Resolvers = {
       ]);
 
       // Use the first non-null route found
-      const route = forwardRoute || reverseRoute;
+      let route = forwardRoute || backwardRoute;
 
       // If no route was found in either direction
       if (!route) {
@@ -211,7 +212,23 @@ const resolvers: Resolvers = {
         );
       }
 
-      return route;
+      if (forwardRoute) {
+        return {
+          ...route,
+          direction: RouteDirection.FORWARD,
+        };
+      }
+
+      if (backwardRoute) {
+        return {
+          ...route,
+          departureCityId: route.arrivalCityId,
+          arrivalCityId: route.departureCityId,
+          direction: RouteDirection.BACKWARD,
+        };
+      }
+
+      return null;
     },
     async routeById(_, args, ctx) {
       const id = args.id;
