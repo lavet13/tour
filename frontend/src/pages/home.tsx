@@ -993,12 +993,12 @@ function RouteInfo({
         </div>
       </div>
       <div className='relative mx-4 m-5 mt-4 mb-1 md:m-12 md:mx-7 md:mt-4 md:mb-0 overflow-hidden'>
-        <div className='absolute top-2 right-2 bg-background text-foreground p-1 px-2 flex items-baseline z-10'>
+        <div className='absolute top-2 right-2 bg-foreground rounded-xl text-background p-1 px-2 flex items-baseline z-10'>
           <span className='text-xl font-bold'>{route.price} ₽</span>
         </div>
         {route.region?.name && (
-          <div className='absolute top-3 left-3 flex items-center gap-1.5 bg-background/80 dark:bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full z-10'>
-            <MapPin className='h-3.5 w-3.5 text-primary' />
+          <div className='absolute top-3 left-3 flex items-center gap-1.5 text-background bg-foreground/80 dark:bg-foreground/90 backdrop-blur-sm px-2 py-1 rounded-full z-10'>
+            <MapPin className='h-3.5 w-3.5 text-background' />
             <span className='text-xs font-medium'>{route.region?.name}</span>
           </div>
         )}

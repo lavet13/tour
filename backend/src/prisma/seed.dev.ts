@@ -351,26 +351,26 @@ async function createAllRouteSchedules(
     },
   ];
 
-  // Define the order of cities in routes
-  const routeOrder = [
-    'Горловка',
-    'Енакиево',
-    'Ждановка',
-    'Кировское',
-    'Харцызск',
-    'Макеевка',
-    'Донецк',
-  ];
+  // Define the explicit fixed routes based on the CSV data
+  const fixedRoutesByDeparture: Record<string, string[]> = {
+    // Горловка direction
+    'Горловка': ['Горловка', 'Енакиево', 'Ждановка', 'Кировское', 'Харцызск', 'Макеевка', 'Донецк'],
+    'Енакиево': ['Енакиево', 'Ждановка', 'Харцызск', 'Макеевка', 'Донецк'],
+    'Ждановка': ['Ждановка', 'Харцызск', 'Макеевка', 'Донецк'],
+    'Кировское': ['Кировское', 'Харцызск', 'Макеевка', 'Донецк'],
+    'Харцызск': ['Харцызск', 'Макеевка', 'Донецк'],
 
-  const alternateRouteOrder = [
-    'Кр. Луч',
-    'Снежное',
-    'Торез',
-    'Шахтерск',
-    'Зугрес',
-    'Макеевка',
-    'Донецк',
-  ];
+    // Кр. Луч direction
+    'Кр. Луч': ['Кр. Луч', 'Снежное', 'Торез', 'Шахтерск', 'Зугрес', 'Макеевка', 'Донецк'],
+    'Снежное': ['Снежное', 'Торез', 'Шахтерск', 'Зугрес', 'Макеевка', 'Донецк'],
+    'Торез': ['Торез', 'Шахтерск', 'Зугрес', 'Макеевка', 'Донецк'],
+    'Шахтерск': ['Шахтерск', 'Зугрес', 'Макеевка', 'Донецк'],
+    'Зугрес': ['Зугрес', 'Макеевка', 'Донецк'],
+
+    // Common final segments
+    'Макеевка': ['Макеевка', 'Донецк'],
+    'Донецк': ['Донецк'],
+  };
 
   // Create schedules for routes from ALL departure cities
   for (const departureCity in allRoutes) {
@@ -378,20 +378,9 @@ async function createAllRouteSchedules(
       const route = allRoutes[departureCity][dest.city];
       if (!route) continue;
 
-      // Determine which cities to include in this route's schedule
-      let routeCities: string[];
-      let isAlternateRoute = false;
-
-      if (alternateRouteOrder.includes(departureCity)) {
-        // This is a route from the Krasny Luch direction
-        routeCities = alternateRouteOrder.slice(
-          alternateRouteOrder.indexOf(departureCity),
-        );
-        isAlternateRoute = true;
-      } else {
-        // This is a route from the Gorlovka direction
-        routeCities = routeOrder.slice(routeOrder.indexOf(departureCity));
-      }
+      // Get the correct route cities from our fixed mapping
+      const routeCities = fixedRoutesByDeparture[departureCity] || [departureCity];
+      const isAlternateRoute = ['Кр. Луч', 'Снежное', 'Торез', 'Шахтерск', 'Зугрес'].includes(departureCity);
 
       // Create expanded forward stops with multiple stops per city
       let expandedForwardStops = [];
