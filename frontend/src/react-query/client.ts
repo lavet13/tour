@@ -27,10 +27,4 @@ export const client = new QueryClient({
       }
     },
   }),
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 10, // it was 15 min
-      gcTime: 1000 * 60 * 60 * 24, // garbage collected in 24 hours
-    },
-  },
 });
