@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { FC, forwardRef, ReactNode, useMemo, useState } from 'react';
-import { Link, LinkProps } from 'react-router-dom';
+import { Link, LinkProps, useSearchParams } from 'react-router-dom';
 import {
   NavLink as RouterLink,
   NavLinkProps as RouterLinkProps,
@@ -15,10 +15,10 @@ import {
   NavigationMenuTrigger,
   NavigationMenuViewport,
 } from '@/components/ui/navigation-menu';
-import { Button, buttonVariants } from './ui/button';
-import { ChevronDown, Route, ExternalLink } from 'lucide-react';
-import { Separator } from './ui/separator';
-import { ScrollArea } from './ui/scroll-area';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { ChevronDown, ExternalLink, ContactRound } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   NavigationMenuSub as RadixNavigationMenuSub,
   NavigationMenuViewport as RadixNavigationMenuViewport,
@@ -35,6 +35,14 @@ import {
   type ProcessedCity,
   type CityConnection,
 } from '@/helpers/process-city-routes';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+} from '@/components/ui/drawer';
+import { useDrawerState } from '@/hooks/use-drawer-state';
 
 type NavLinkProps = Omit<RouterLinkProps, 'className'> & {
   children: ReactNode;
@@ -87,39 +95,40 @@ function onNavChange() {
 
 const MainNav: FC = () => {
   const [open, setOpen] = useAtom(navigationMenuStateAtom);
-  const { data: ldnrRegion } = useRegionByName('ЛДНР');
-  const { data: coastalRegion } = useRegionByName('Азовское побережье');
+  // const { data: ldnrRegion } = useRegionByName('ЛДНР');
+  // const { data: coastalRegion } = useRegionByName('Азовское побережье');
 
   const { data, isPending } = useGetMe();
   const { me: user } = data || {};
+  const [contactIsOpen, setContactIsOpen] = useState(false);
 
-  const {
-    data: ldnrData,
-    isPending: ldnrIsPending,
-    fetchStatus: ldnrFetchStatus,
-  } = useRoutes(ldnrRegion?.regionByName?.id as string, {
-    enabled: !!ldnrRegion,
-  });
+  // const {
+  //   data: ldnrData,
+  //   isPending: ldnrIsPending,
+  //   fetchStatus: ldnrFetchStatus,
+  // } = useRoutes(ldnrRegion?.regionByName?.id as string, {
+  //   enabled: !!ldnrRegion,
+  // });
+  //
+  // const {
+  //   data: coastalData,
+  //   isPending: coastalIsPending,
+  //   fetchStatus: coastalFetchStatus,
+  // } = useRoutes(coastalRegion?.regionByName?.id as string, {
+  //   enabled: !!coastalRegion,
+  // });
 
-  const {
-    data: coastalData,
-    isPending: coastalIsPending,
-    fetchStatus: coastalFetchStatus,
-  } = useRoutes(coastalRegion?.regionByName?.id as string, {
-    enabled: !!coastalRegion,
-  });
+  // const coastalIsLoading =
+  //   coastalFetchStatus === 'fetching' && coastalIsPending;
+  // const ldnrIsLoading = ldnrFetchStatus === 'fetching' && ldnrIsPending;
 
-  const coastalIsLoading =
-    coastalFetchStatus === 'fetching' && coastalIsPending;
-  const ldnrIsLoading = ldnrFetchStatus === 'fetching' && ldnrIsPending;
+  // const processedLDNR = processCityRoutes(ldnrData);
+  // const processedCoastal = processCityRoutes(coastalData);
 
-  const processedLDNR = processCityRoutes(ldnrData);
-  const processedCoastal = processCityRoutes(coastalData);
-
-  const routesIsLoading = ldnrIsLoading || coastalIsLoading;
-  if (routesIsLoading) {
-    return <NavSkeleton />;
-  }
+  // const routesIsLoading = ldnrIsLoading || coastalIsLoading;
+  // if (routesIsLoading) {
+  //   return <NavSkeleton />;
+  // }
 
   return (
     <div className='hidden md:flex'>
@@ -140,17 +149,85 @@ const MainNav: FC = () => {
         }}
       >
         <NavigationMenuList>
-          {/* <NavigationMenuItem> */}
-          {/*   <NavigationMenuLink */}
-          {/*     className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }))} */}
-          {/*     asChild */}
-          {/*   > */}
-          {/*     <NavLink to={'/routes'}> */}
-          {/*       <Route /> */}
-          {/*       Все рейсы */}
-          {/*     </NavLink> */}
-          {/*   </NavigationMenuLink> */}
-          {/* </NavigationMenuItem> */}
+          <NavigationMenuItem>
+            <Drawer
+              open={contactIsOpen}
+              onOpenChange={setContactIsOpen}
+              onClose={() => setContactIsOpen(false)}
+            >
+              <NavigationMenuLink
+                onClick={() => setContactIsOpen(true)}
+                className={cn(
+                  buttonVariants({ variant: 'ghost', size: 'sm' }),
+                  'cursor-pointer',
+                )}
+              >
+                <ContactRound />
+                Контакты
+              </NavigationMenuLink>
+              <DrawerContent showCloseButton showTheLine={false}>
+                <DrawerHeader className='pt-7 pb-2 md:pt-8 md:pb-2 md:px-5 flex flex-col flex-wrap items-center gap-2'>
+                  <DrawerTitle className='flex-1'>
+                    <span className='flex items-center justify-center sm:justify-start flex-wrap gap-2'>
+                      Контакты
+                    </span>
+                  </DrawerTitle>
+                  <DrawerDescription>
+                    Актуальные контакты для связи
+                  </DrawerDescription>
+                </DrawerHeader>
+                <Separator className='mt-2 mb-4' />
+                <div className='w-full sm:max-w-screen-sm space-y-6 mx-auto pb-3'>
+                  <div className='flex flex-col max-w-[250px] mx-auto'>
+                    <Link
+                      className={cn(
+                        buttonVariants({ variant: 'link', size: 'sm' }),
+                        'self-start [&_svg]:size-5',
+                      )}
+                      to='tel:+79493180304'
+                    >
+                      <Icons.phoenix />
+                      <span>Феникс +7(949)318-03-04</span>
+                    </Link>
+                    <Link
+                      className={cn(
+                        buttonVariants({ variant: 'link', size: 'sm' }),
+                        'self-start [&_svg]:size-5',
+                      )}
+                      to='tel:+7(949)439-56-16'
+                    >
+                      <Icons.phoenix />
+                      <span>Феникс +7(949)439-56-16</span>
+                    </Link>
+                    <Link
+                      className={cn(
+                        buttonVariants({ variant: 'link', size: 'sm' }),
+                        'self-start [&_svg]:size-5',
+                      )}
+                      target='_blank'
+                      rel='noreferrer'
+                      to='https://wa.me/+380713180304'
+                    >
+                      <Icons.whatsapp className='fill-foreground transition-colors' />
+                      <span>Whatsapp +3(8071)318-03-04</span>
+                    </Link>
+                    <Link
+                      className={cn(
+                        buttonVariants({ variant: 'link', size: 'sm' }),
+                        'self-start [&_svg]:size-5',
+                      )}
+                      target='_blank'
+                      rel='noreferrer'
+                      to='https://t.me/+79493180304'
+                    >
+                      <Icons.telegram className='fill-foreground transition-colors' />
+                      <span>Telegram +7(949)318-03-04</span>
+                    </Link>
+                  </div>
+                </div>
+              </DrawerContent>
+            </Drawer>
+          </NavigationMenuItem>
 
           {/* <NavigationMenuItem> */}
           {/*   <NavigationMenuTrigger */}

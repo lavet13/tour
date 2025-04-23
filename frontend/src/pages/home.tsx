@@ -34,7 +34,6 @@ import {
 import { Meteors } from '@/components/magicui/meteors';
 import { LazyImageWrapper } from '@/components/lazy-image';
 import { useTheme } from '@/lib/atoms/theme';
-import { Particles } from '@/components/magicui/particles';
 import { useArrivalCities, useDepartureCities } from '@/features/city';
 import { useRouteByIds } from '@/features/routes';
 import { useSchedulesByIds } from '@/features/schedule';
@@ -67,6 +66,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { format } from 'date-fns';
 import { NumericFormat } from 'react-number-format';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useDrawerState } from '@/hooks/use-drawer-state';
 
 type Route = GetRouteByIdsQuery['routeByIds'];
 type ScheduleItem = Omit<
@@ -89,8 +89,8 @@ const FormSchema = z.object({
   seatsCount: z
     .number({ invalid_type_error: 'Должно быть числом!' })
     .refine(value => value > 0, { message: 'Укажите количество мест!' }),
-  telegram: z.boolean().optional(),
-  whatsapp: z.boolean().optional(),
+  telegram: z.boolean(),
+  whatsapp: z.boolean(),
   travelDate: z
     .date({
       required_error: 'Дата поездки обязательна!',
@@ -142,9 +142,9 @@ const defaultValues: DefaultValues = {
 
 export default function HomePage() {
   const [phoneInputKey, setPhoneInputKey] = useState(0);
-  const theme = useTheme();
-  const shadowColor = theme.theme === 'dark' ? '#fff' : '#000';
-  const navigate = useNavigate();
+  // const theme = useTheme();
+  // const shadowColor = theme.theme === 'dark' ? '#fff' : '#000';
+  // const navigate = useNavigate();
 
   // Search Params syncronization
   const [searchParams, setSearchParams] = useSearchParams();
@@ -361,14 +361,6 @@ export default function HomePage() {
   return (
     <div className='flex-1 flex flex-col bg-gradient-to-b from-background to-background/95 font-inter'>
       <section className='relative -top-[3.5rem] py-16 md:py-24 overflow-hidden'>
-        <div className='absolute inset-0 z-[1]'>
-          <Particles
-            className='h-full'
-            color={shadowColor}
-            quantity={100}
-            ease={80}
-          />
-        </div>
         <div className='absolute inset-0 z-0'>
           <div className='absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background z-10' />
           <LazyImageWrapper
@@ -381,13 +373,10 @@ export default function HomePage() {
 
         <div className='container relative z-10 mt-[3.5rem]'>
           <div className='max-w-5xl mx-auto text-center mb-9 sm:mb-12 space-y-4'>
-            <h1 className='text-5xl font-thin leading-none tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl font-nunito italic'>
+            <h1 className='text-5xl font-thin leading-none tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl font-inter italic'>
               Пассажирские перевозки
-              <span className='hidden sm:flex justify-center font-semibold text-4xl font-nunito sm:text-5xl md:text-6xl lg:text-7xl'>
-                в Азовское побережье и ЛДНР
-              </span>
-              <span className='sm:hidden flex flex-col justify-center font-semibold text-4xl font-nunito sm:text-5xl md:text-6xl lg:text-7xl'>
-                в Азовское побережье <span>и ЛДНР</span>
+              <span className='flex justify-center font-semibold text-4xl font-nunito sm:text-5xl md:text-6xl lg:text-7xl'>
+                в Мариуполь и<br /> на Азовское побережье
               </span>
             </h1>
           </div>
@@ -690,7 +679,6 @@ export default function HomePage() {
                         }}
                       />
 
-
                       <FormField
                         control={form.control}
                         name='travelDate'
@@ -719,10 +707,8 @@ export default function HomePage() {
                                 />
                               </FormControl>
                               <div className='space-y-1 leading-none'>
-                                <FormLabel>
-                                  Telegram
-                                </FormLabel>
-                                <FormDescription className="text-xs">
+                                <FormLabel>Telegram</FormLabel>
+                                <FormDescription className='text-xs'>
                                   Выберите если телефон привязан к телеграму
                                 </FormDescription>
                               </div>
@@ -745,10 +731,8 @@ export default function HomePage() {
                                 />
                               </FormControl>
                               <div className='space-y-1 leading-none'>
-                                <FormLabel>
-                                  Whatsapp
-                                </FormLabel>
-                                <FormDescription className="text-xs">
+                                <FormLabel>Whatsapp</FormLabel>
+                                <FormDescription className='text-xs'>
                                   Выберите если телефон привязан к ватсапу
                                 </FormDescription>
                               </div>
@@ -945,6 +929,19 @@ function RouteInfo({
               <SonnerSpinner className='bg-foreground' />
             </div>
           )}
+          <div className='col-span-full flex flex-col items-center xs:items-baseline justify-center xs:justify-between xs:flex-row flex-wrap gap-1 z-10'>
+            {route.region?.name && (
+              <div className='flex items-center gap-1.5 justify-center text-background bg-foreground px-2 py-1 rounded-full'>
+                <MapPin className='h-3.5 w-3.5 text-background' />
+                <span className='text-xs font-medium'>
+                  {route.region?.name}
+                </span>
+              </div>
+            )}
+            <div className='bg-foreground rounded-full text-background px-2 leading-3 flex justify-center items-baseline'>
+              <span className='text-lg font-bold'>{route.price} ₽</span>
+            </div>
+          </div>
           <div className='flex flex-col sm:mt-3'>
             <div className='text-center lg:text-start'>
               <span>Откуда: </span>
@@ -972,9 +969,6 @@ function RouteInfo({
               </div>
             </div>
           </div>
-
-          {/* Add price display here - spanning both columns */}
-          <div className='col-span-full mt-4 flex lg:justify-end justify-center'></div>
         </div>
         <div className='flex justify-center items-center py-2'>
           <Button
@@ -992,41 +986,32 @@ function RouteInfo({
           </Button>
         </div>
       </div>
-      <div className='relative mx-4 m-5 mt-4 mb-1 md:m-12 md:mx-7 md:mt-4 md:mb-0 overflow-hidden'>
-        <div className='absolute top-2 right-2 bg-foreground rounded-xl text-background p-1 px-2 flex items-baseline z-10'>
-          <span className='text-xl font-bold'>{route.price} ₽</span>
-        </div>
-        {route.region?.name && (
-          <div className='absolute top-3 left-3 flex items-center gap-1.5 text-background bg-foreground/80 dark:bg-foreground/90 backdrop-blur-sm px-2 py-1 rounded-full z-10'>
-            <MapPin className='h-3.5 w-3.5 text-background' />
-            <span className='text-xs font-medium'>{route.region?.name}</span>
-          </div>
-        )}
-        <div className='w-full bg-gradient-to-b from-transparent to-primary-foreground/80 absolute z-10 flex justify-center left-1/2 -translate-x-1/2 bottom-0 right-0 py-16 pb-2 rounded-b-none'>
-          <Button
-            onClick={() => setIsOpen(!isOpen)}
-            className='w-fit gap-0 h-7'
-            size='sm'
-          >
-            {isOpen ? 'Свернуть' : 'Показать'}
-            <ChevronDown
-              className={cn(
-                'h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform duration-200 ml-1',
-                isOpen && 'transform rotate-180',
-              )}
-            />
-          </Button>
-        </div>
-        <LazyImageWrapper
-          src='/hero.png'
-          fallbackSrc='/placeholder.svg'
-          alt='Bus travel'
-          className={cn(
-            'object-cover aspect-[4/2] sm:aspect-[4/1] rounded-2xl w-full h-full',
-            isOpen && 'aspect-auto sm:aspect-auto',
-          )}
-        />
-      </div>
+      {/* <div className='relative mx-4 m-5 mt-4 mb-1 md:m-12 md:mx-7 md:mt-4 md:mb-0 overflow-hidden'> */}
+      {/*   <div className='w-full bg-gradient-to-b from-transparent to-primary-foreground/80 absolute z-10 flex justify-center left-1/2 -translate-x-1/2 bottom-0 right-0 py-16 pb-2 rounded-b-none'> */}
+      {/*     <Button */}
+      {/*       onClick={() => setIsOpen(!isOpen)} */}
+      {/*       className='w-fit gap-0 h-7' */}
+      {/*       size='sm' */}
+      {/*     > */}
+      {/*       {isOpen ? 'Свернуть' : 'Показать'} */}
+      {/*       <ChevronDown */}
+      {/*         className={cn( */}
+      {/*           'h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform duration-200 ml-1', */}
+      {/*           isOpen && 'transform rotate-180', */}
+      {/*         )} */}
+      {/*       /> */}
+      {/*     </Button> */}
+      {/*   </div> */}
+      {/*   <LazyImageWrapper */}
+      {/*     src='/hero.png' */}
+      {/*     fallbackSrc='/placeholder.svg' */}
+      {/*     alt='Bus travel' */}
+      {/*     className={cn( */}
+      {/*       'object-cover aspect-[4/2] sm:aspect-[4/1] rounded-2xl w-full h-full', */}
+      {/*       isOpen && 'aspect-auto sm:aspect-auto', */}
+      {/*     )} */}
+      {/*   /> */}
+      {/* </div> */}
       {schedules.length !== 0 && (
         <Schedules
           schedules={filteredSchedules}
@@ -1075,7 +1060,7 @@ function Schedules({
           )}
         >
           <Button
-            className='w-fit gap-1 mx-4 sm:mx-0'
+            className='w-fit gap-1 mx-4 sm:mx-0 rounded-full'
             onClick={() => setIsOpen(!isOpen)}
             variant='ghost'
             size='sm'

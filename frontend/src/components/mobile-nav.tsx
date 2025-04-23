@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button';
-import { Link, NavLink, NavLinkProps } from 'react-router-dom';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { Link, NavLink, NavLinkProps, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   FC,
@@ -12,8 +12,21 @@ import {
   FormEvent,
 } from 'react';
 import { Icons } from '@/components/icons';
-import { Drawer, DrawerContent, DrawerTrigger } from '@/components/ui/drawer';
-import { ChevronRight, ExternalLink, Search, X } from 'lucide-react';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerDescription,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from '@/components/ui/drawer';
+import {
+  ChevronRight,
+  ContactRound,
+  ExternalLink,
+  Search,
+  X,
+} from 'lucide-react';
 import { useGetMe } from '@/features/auth';
 import {
   processCityRoutes,
@@ -22,6 +35,8 @@ import {
 import { useRegionByName } from '@/features/region';
 import { useRoutes } from '@/features/routes';
 import { Input } from '@/components/ui/input';
+import { useDrawerState } from '@/hooks/use-drawer-state';
+import { Separator } from '@/components/ui/separator';
 
 type SheetLinkProps = Omit<NavLinkProps, 'className'> & {
   children: ReactNode;
@@ -61,6 +76,7 @@ const SheetLink: FC<SheetLinkProps> = forwardRef<
 
 const MobileNav = () => {
   const [open, setOpen] = useState(false);
+  const [contactIsOpen, setContactIsOpen] = useState(false);
 
   const [searchRoute, setSearchRoute] = useState('');
   const [expandedCity, setExpandedCity] = useState<string | null>(null);
@@ -143,198 +159,277 @@ const MobileNav = () => {
   };
 
   return (
-    <Drawer
-      direction={'left'}
-      open={open}
-      onOpenChange={setOpen}
-      onClose={() => setOpen}
-    >
-      <DrawerTrigger asChild>
-        <Button
-          className='w-8 h-8 shrink-0 md:hidden hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 [&_svg]:size-5 pr-1'
-          variant='ghost'
-          size='icon'
-        >
-          <Icons.sandwitch />
-          <span className='sr-only'>Toggle menu</span>
-        </Button>
-      </DrawerTrigger>
-      <DrawerContent
-        isSidebar
-        direction='left'
-        showCloseButton={false}
-        showTheLine={false}
+    <>
+      <Drawer
+        direction={'left'}
+        open={open}
+        onOpenChange={setOpen}
+        onClose={() => setOpen}
       >
-        <div className='flex items-center p-4'>
-          <Link
-            to='/'
-            onClick={() => {
-              setOpen(false);
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            className={cn('flex items-center space-x-3')}
+        <DrawerTrigger asChild>
+          <Button
+            className='w-8 h-8 shrink-0 md:hidden hover:bg-transparent focus-visible:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 [&_svg]:size-5 pr-1'
+            variant='ghost'
+            size='icon'
           >
-            <Icons.logo className='size-6' />
-            <span className='font-bold text-base'>Донбасс-Тур</span>
-          </Link>
-        </div>
+            <Icons.sandwitch />
+            <span className='sr-only'>Toggle menu</span>
+          </Button>
+        </DrawerTrigger>
+        <DrawerContent
+          isSidebar
+          direction='left'
+          showCloseButton={false}
+          showTheLine={false}
+        >
+          <div className='flex items-center p-4'>
+            <Link
+              to='/'
+              onClick={() => {
+                setOpen(false);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={cn('flex items-center space-x-3')}
+            >
+              <Icons.logo className='size-6' />
+              <span className='font-bold text-base'>Донбасс-Тур</span>
+            </Link>
+          </div>
 
-        <div className='h-[calc(100vh-8rem)] pb-7'>
-          <div className='flex flex-col h-full'>
-            <nav className='flex flex-col'>
-              {/* <SheetLink onOpenChange={setOpen} to='/routes'> */}
-              {/*   Показать все рейсы */}
-              {/* </SheetLink> */}
-              {/* <SheetLink onOpenChange={setOpen} to='/booking-bus'> */}
-              {/*   Заказать билет */}
-              {/* </SheetLink> */}
-            </nav>
+          <div className='h-[calc(100vh-8rem)] pb-7'>
+            <div className='flex flex-col h-full'>
+              <nav className='flex flex-col'>
+                {/* <SheetLink onOpenChange={setOpen} to='/routes'> */}
+                {/*   Показать все рейсы */}
+                {/* </SheetLink> */}
+                {/* <SheetLink onOpenChange={setOpen} to='/booking-bus'> */}
+                {/*   Заказать билет */}
+                {/* </SheetLink> */}
+              </nav>
 
-            <div className='border-t'>
-              <form onSubmit={handleSearchSubmit}>
-                <div className='relative flex items-center'>
-                  <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
-                  <Input
-                    type='search'
-                    placeholder='Найти город...'
-                    className='pl-9 pr-9 h-10 bg-muted/30 rounded-none border-0'
-                    value={searchRoute}
-                    onChange={e => setSearchRoute(e.target.value)}
-                  />
-                  {searchRoute && (
-                    <button
-                      type='button'
-                      onClick={handleClearSearch}
-                      className='absolute right-3 top-1/2 transform -translate-y-1/2'
-                    >
-                      <X className='h-4 w-4 text-muted-foreground' />
-                      <span className='sr-only'>Очистить поиск</span>
-                    </button>
-                  )}
+              <div className='border-t'>
+                <form onSubmit={handleSearchSubmit}>
+                  <div className='relative flex items-center'>
+                    <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground' />
+                    <Input
+                      type='search'
+                      placeholder='Найти город...'
+                      className='pl-9 pr-9 h-10 bg-muted/30 rounded-none border-0'
+                      value={searchRoute}
+                      onChange={e => setSearchRoute(e.target.value)}
+                    />
+                    {searchRoute && (
+                      <button
+                        type='button'
+                        onClick={handleClearSearch}
+                        className='absolute right-3 top-1/2 transform -translate-y-1/2'
+                      >
+                        <X className='h-4 w-4 text-muted-foreground' />
+                        <span className='sr-only'>Очистить поиск</span>
+                      </button>
+                    )}
+                  </div>
+                </form>
+              </div>
+
+              {/* Routes */}
+              {routesIsLoading ? (
+                <div className='p-4 space-y-3'>
+                  {[1, 2, 3].map(i => (
+                    <div
+                      key={i}
+                      className='h-10 bg-muted/50 animate-pulse rounded-md'
+                    />
+                  ))}
                 </div>
-              </form>
-            </div>
+              ) : (
+                <div>
+                  {/* LDNR Region */}
+                  <RegionSection
+                    title='Рейсы ЛДНР'
+                    isExpanded={expandedRegions.includes('ldnr')}
+                    onToggle={() => toggleRegion('ldnr')}
+                  >
+                    {filteredLDNR.length === 0 ? (
+                      <div className='py-2 px-4 text-sm text-muted-foreground'>
+                        Не найдено городов
+                      </div>
+                    ) : (
+                      <div>
+                        {filteredLDNR.map(city => (
+                          <CitySection
+                            key={city.id}
+                            city={city}
+                            isExpanded={expandedCity === city.id}
+                            onToggle={() =>
+                              setExpandedCity(
+                                expandedCity === city.id ? null : city.id,
+                              )
+                            }
+                            onSelectRoute={() => setOpen(false)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </RegionSection>
 
-            {/* Routes */}
-            {routesIsLoading ? (
-              <div className='p-4 space-y-3'>
-                {[1, 2, 3].map(i => (
-                  <div
-                    key={i}
-                    className='h-10 bg-muted/50 animate-pulse rounded-md'
-                  />
-                ))}
-              </div>
-            ) : (
-              <div>
-                {/* LDNR Region */}
-                <RegionSection
-                  title='Рейсы ЛДНР'
-                  isExpanded={expandedRegions.includes('ldnr')}
-                  onToggle={() => toggleRegion('ldnr')}
+                  {/* Coastal Region */}
+                  <RegionSection
+                    title='Рейсы Азовское побережье'
+                    isExpanded={expandedRegions.includes('coastal')}
+                    onToggle={() => toggleRegion('coastal')}
+                  >
+                    {filteredCoastal.length === 0 ? (
+                      <div className='py-2 px-4 text-sm text-muted-foreground'>
+                        Не найдено городов
+                      </div>
+                    ) : (
+                      <div>
+                        {filteredCoastal.map(city => (
+                          <CitySection
+                            key={city.id}
+                            city={city}
+                            isExpanded={expandedCity === city.id}
+                            onToggle={() =>
+                              setExpandedCity(
+                                expandedCity === city.id ? null : city.id,
+                              )
+                            }
+                            onSelectRoute={() => setOpen(false)}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </RegionSection>
+                </div>
+              )}
+
+              <div className='flex flex-col items-start grow justify-end space-y-1 pt-6 pl-2'>
+                {user && !isPending && (
+                  <Button
+                    variant='ghost'
+                    className='w-fit px-2 py-0 space-x-1 h-9'
+                    asChild
+                  >
+                    <Link target='_blank' to='/admin' rel='noreferrer'>
+                      <ExternalLink />
+                      <span>Админ панель</span>
+                    </Link>
+                  </Button>
+                )}
+
+                <Drawer
+                  open={contactIsOpen}
+                  onOpenChange={setContactIsOpen}
+                  onClose={() => setContactIsOpen(false)}
                 >
-                  {filteredLDNR.length === 0 ? (
-                    <div className='py-2 px-4 text-sm text-muted-foreground'>
-                      Не найдено городов
+                  <Button
+                    className="px-2"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setContactIsOpen(true)}
+                  >
+                    <ContactRound />
+                    Контакты
+                  </Button>
+                  <DrawerContent showCloseButton showTheLine={false}>
+                    <DrawerHeader className='pt-7 pb-2 md:pt-8 md:pb-2 md:px-5 flex flex-col flex-wrap items-center gap-2'>
+                      <DrawerTitle className='flex-1'>
+                        <span className='flex items-center justify-center sm:justify-start flex-wrap gap-2'>
+                          Контакты
+                        </span>
+                      </DrawerTitle>
+                      <DrawerDescription>
+                        Актуальные контакты для связи
+                      </DrawerDescription>
+                    </DrawerHeader>
+                    <Separator className='mt-2 mb-4' />
+                    <div className='w-full sm:max-w-screen-sm space-y-6 mx-auto pb-3'>
+                      <div className='flex flex-col max-w-[250px] mx-auto'>
+                        <Link
+                          className={cn(
+                            buttonVariants({ variant: 'link', size: 'sm' }),
+                            'self-start [&_svg]:size-5',
+                          )}
+                          to='tel:+79493180304'
+                        >
+                          <Icons.phoenix />
+                          <span>Феникс +7(949)318-03-04</span>
+                        </Link>
+                        <Link
+                          className={cn(
+                            buttonVariants({ variant: 'link', size: 'sm' }),
+                            'self-start [&_svg]:size-5',
+                          )}
+                          to='tel:+7(949)439-56-16'
+                        >
+                          <Icons.phoenix />
+                          <span>Феникс +7(949)439-56-16</span>
+                        </Link>
+                        <Link
+                          className={cn(
+                            buttonVariants({ variant: 'link', size: 'sm' }),
+                            'self-start [&_svg]:size-5',
+                          )}
+                          target='_blank'
+                          rel='noreferrer'
+                          to='https://wa.me/+380713180304'
+                        >
+                          <Icons.whatsapp className='fill-foreground transition-colors' />
+                          <span>Whatsapp +3(8071)318-03-04</span>
+                        </Link>
+                        <Link
+                          className={cn(
+                            buttonVariants({ variant: 'link', size: 'sm' }),
+                            'self-start [&_svg]:size-5',
+                          )}
+                          target='_blank'
+                          rel='noreferrer'
+                          to='https://t.me/+79493180304'
+                        >
+                          <Icons.telegram className='fill-foreground transition-colors' />
+                          <span>Telegram +7(949)318-03-04</span>
+                        </Link>
+                      </div>
                     </div>
-                  ) : (
-                    <div>
-                      {filteredLDNR.map(city => (
-                        <CitySection
-                          key={city.id}
-                          city={city}
-                          isExpanded={expandedCity === city.id}
-                          onToggle={() =>
-                            setExpandedCity(
-                              expandedCity === city.id ? null : city.id,
-                            )
-                          }
-                          onSelectRoute={() => setOpen(false)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </RegionSection>
+                  </DrawerContent>
+                </Drawer>
 
-                {/* Coastal Region */}
-                <RegionSection
-                  title='Рейсы Азовское побережье'
-                  isExpanded={expandedRegions.includes('coastal')}
-                  onToggle={() => toggleRegion('coastal')}
-                >
-                  {filteredCoastal.length === 0 ? (
-                    <div className='py-2 px-4 text-sm text-muted-foreground'>
-                      Не найдено городов
-                    </div>
-                  ) : (
-                    <div>
-                      {filteredCoastal.map(city => (
-                        <CitySection
-                          key={city.id}
-                          city={city}
-                          isExpanded={expandedCity === city.id}
-                          onToggle={() =>
-                            setExpandedCity(
-                              expandedCity === city.id ? null : city.id,
-                            )
-                          }
-                          onSelectRoute={() => setOpen(false)}
-                        />
-                      ))}
-                    </div>
-                  )}
-                </RegionSection>
-              </div>
-            )}
-
-            <div className='flex flex-col items-start grow justify-end space-y-1 pt-6 pl-2'>
-              {user && !isPending && (
                 <Button
                   variant='ghost'
                   className='w-fit px-2 py-0 space-x-1 h-9'
                   asChild
                 >
-                  <Link target='_blank' to='/admin' rel='noreferrer'>
-                    <ExternalLink />
-                    <span>Админ панель</span>
+                  <Link
+                    to='https://vk.com/go_to_krym'
+                    target='_blank'
+                    rel='noreferrer'
+                  >
+                    <Icons.vkontakte className='basis-5 fill-foreground transition-colors' />
+                    <span>Мы Вконтакте</span>
                   </Link>
                 </Button>
-              )}
 
-              <Button
-                variant='ghost'
-                className='w-fit px-2 py-0 space-x-1 h-9'
-                asChild
-              >
-                <Link
-                  to='https://vk.com/go_to_krym'
-                  target='_blank'
-                  rel='noreferrer'
+                <Button
+                  variant='ghost'
+                  className='w-fit px-2 py-0 space-x-1 h-9'
+                  asChild
                 >
-                  <Icons.vkontakte className='basis-5 fill-foreground transition-colors' />
-                  <span>Мы Вконтакте</span>
-                </Link>
-              </Button>
-
-              <Button
-                variant='ghost'
-                className='w-fit px-2 py-0 space-x-1 h-9'
-                asChild
-              >
-                <Link
-                  to='https://t.me/Donbass_Tur'
-                  target='_blank'
-                  rel='noreferrer'
-                >
-                  <Icons.telegram className='basis-5 fill-foreground transition-colors' />
-                  <span>Мы в Телеграме</span>
-                </Link>
-              </Button>
+                  <Link
+                    to='https://t.me/Donbass_Tur'
+                    target='_blank'
+                    rel='noreferrer'
+                  >
+                    <Icons.telegram className='basis-5 fill-foreground transition-colors' />
+                    <span>Мы в Телеграме</span>
+                  </Link>
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </DrawerContent>
-    </Drawer>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 };
 
