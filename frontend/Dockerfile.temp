@@ -17,5 +17,3 @@ FROM nginx:stable-alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
 # Копируем кастомные конфиги для Nginx
 COPY .nginx/temp/user_conf.d /etc/nginx/conf.d
-# Открываем порты
-EXPOSE 80
