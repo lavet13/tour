@@ -7,7 +7,7 @@ import {
 } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import ru from 'react-phone-number-input/locale/ru.json';
 import { ru as fnsRU } from 'date-fns/locale';
 
@@ -33,7 +33,6 @@ import {
 } from 'lucide-react';
 import { Meteors } from '@/components/magicui/meteors';
 import { LazyImageWrapper } from '@/components/lazy-image';
-import { useTheme } from '@/lib/atoms/theme';
 import { useArrivalCities, useDepartureCities } from '@/features/city';
 import { useRouteByIds } from '@/features/routes';
 import { useSchedulesByIds } from '@/features/schedule';
@@ -42,7 +41,6 @@ import {
   BookingInput,
   GetRouteByIdsQuery,
   GetSchedulesByIdsQuery,
-  RouteDirection,
 } from '@/gql/graphql';
 import { cn } from '@/lib/utils';
 import { FormButton } from '@/components/form-button';
@@ -66,7 +64,6 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 import { format } from 'date-fns';
 import { NumericFormat } from 'react-number-format';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useDrawerState } from '@/hooks/use-drawer-state';
 
 type Route = GetRouteByIdsQuery['routeByIds'];
 type ScheduleItem = Omit<
@@ -142,9 +139,6 @@ const defaultValues: DefaultValues = {
 
 export default function HomePage() {
   const [phoneInputKey, setPhoneInputKey] = useState(0);
-  // const theme = useTheme();
-  // const shadowColor = theme.theme === 'dark' ? '#fff' : '#000';
-  // const navigate = useNavigate();
 
   // Search Params syncronization
   const [searchParams, setSearchParams] = useSearchParams();
