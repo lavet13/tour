@@ -94,13 +94,11 @@ export default function HomePage() {
   }, [location.search]);
 
   useEffect(() => {
-    setTimeout(() => {
-      if (activeStep === 1) {
-        form.reset({
-          phones: [{ value: '', telegram: false, whatsapp: false }],
-        });
-      }
-    }, 100);
+    if (activeStep === 1) {
+      form.reset({
+        phones: [{ value: '', telegram: false, whatsapp: false }],
+      });
+    }
   }, [activeStep]);
 
   const { mutateAsync: createBooking } = useCreateBooking();
