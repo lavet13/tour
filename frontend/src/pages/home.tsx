@@ -64,9 +64,7 @@ export default function HomePage() {
     defaultValues,
   });
 
-  const {
-    data: routeData,
-  } = useRouteByIds({
+  const { data: routeData } = useRouteByIds({
     arrivalCityId,
     departureCityId,
     options: {
@@ -86,7 +84,11 @@ export default function HomePage() {
   const location = useLocation();
 
   useEffect(() => {
-    if (!departureCityId && !arrivalCityId) {
+    if (
+      (!departureCityId && !arrivalCityId) ||
+      !departureCityId ||
+      !arrivalCityId
+    ) {
       setActiveStep(1);
     }
   }, [location.search]);
