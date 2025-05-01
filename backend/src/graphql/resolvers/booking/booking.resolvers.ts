@@ -9,7 +9,6 @@ import { GraphQLError } from 'graphql';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { applyConstraints } from '@/helpers/apply-constraints';
 import { hasRoles, isAuthenticated } from '@/graphql/composition/authorization';
-import { inspect } from 'util';
 import { parseIntSafe } from '@/helpers/parse-int-safe';
 
 const resolvers: Resolvers = {
@@ -286,6 +285,7 @@ const resolvers: Resolvers = {
         seatsCount,
         travelDate,
         phoneNumber,
+        extraPhoneNumber,
       } = args.input;
 
       const isBookingExist = await ctx.prisma.booking.findUnique({
@@ -302,6 +302,7 @@ const resolvers: Resolvers = {
         data: {
           status,
           phoneNumber,
+          extraPhoneNumber,
           travelDate,
           seatsCount,
           firstName,

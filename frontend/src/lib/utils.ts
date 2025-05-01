@@ -27,7 +27,9 @@ export function formatBytes(
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
 
   return `${(bytes / Math.pow(1024, i)).toFixed(decimals)} ${
-    sizeType === 'accurate' ? accurateSizes[i] ?? 'Bytest' : sizes[i] ?? 'Bytes'
+    sizeType === 'accurate'
+      ? (accurateSizes[i] ?? 'Bytest')
+      : (sizes[i] ?? 'Bytes')
   }
 `;
 }
@@ -39,22 +41,24 @@ export function formatBytes(
 export function composeEventHandlers<E>(
   originalEventHandler?: (event: E) => void,
   ourEventHandler?: (event: E) => void,
-  { checkForDefaultPrevented = true } = {}
+  { checkForDefaultPrevented = true } = {},
 ) {
   return function handleEvent(event: E) {
-    originalEventHandler?.(event)
+    originalEventHandler?.(event);
 
     if (
       checkForDefaultPrevented === false ||
       !(event as unknown as Event).defaultPrevented
     ) {
-      return ourEventHandler?.(event)
+      return ourEventHandler?.(event);
     }
-  }
+  };
 }
 
-export const parseIntSafe = (value: string): number | null => {
-  if(/^(\d+)$/.test(value)) {
+export const parseIntSafe = (value: string | null): number | null => {
+  if (value === null || value === undefined) return null;
+
+  if (/^(\d+)$/.test(value)) {
     return parseInt(value, 10);
   }
 

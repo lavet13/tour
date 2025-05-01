@@ -46,26 +46,31 @@ export const DatePicker = forwardRef<HTMLButtonElement, DatePickerProps>(
             variant='outline'
             className={cn(
               'flex w-full',
+              'focus:outline-none focus:ring-1 focus:ring-ring aria-[invalid=true]:ring-destructive aria-[invalid=true]:border-destructive/15 hover:aria-[invalid=true]:bg-destructive/10 hover:aria-[invalid=true]:text-destructive',
               'justify-start text-left font-normal',
               !value && 'text-muted-foreground',
             )}
             disabled={disabled}
           >
-            <CalendarIcon className='mr-2 size-4' />
+            <CalendarIcon
+              className={cn('mr-2 size-4', error && 'text-destructive/70')}
+            />
             {value ? (
               <span
-                className={cn(
-                  'font-semibold',
-                  error && 'text-muted-foreground',
-                )}
+                className={cn('font-semibold', error && 'text-destructive/90')}
               >
                 {format(value, 'PPP', {
                   locale: fnsRU,
                 })}
               </span>
             ) : (
-              <span className='whitespace-pre leading-3 text-center'>
-                {label}
+              <span
+                className={cn(
+                  'whitespace-pre leading-3 text-center',
+                  error && 'text-destructive/80',
+                )}
+              >
+                Выберите дату поездки
               </span>
             )}
           </Button>

@@ -126,19 +126,23 @@ model Route {
 }
 
 model Booking {
-  id          String        @id @default(cuid())
-  firstName   String
-  lastName    String
-  phoneNumber String
-  route       Route?        @relation(fields: [routeId], references: [id])
-  routeId     String?
-  travelDate  DateTime
-  seatsCount  Int
-  status      BookingStatus @default(PENDING)
-  telegram    Boolean
-  whatsapp    Boolean
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+  id               String         @id @default(cuid())
+  firstName        String
+  lastName         String
+  phoneNumber      String
+  telegram         Boolean
+  whatsapp         Boolean
+  extraPhoneNumber String?
+  extraTelegram    Boolean        @default(false)
+  extraWhatsapp    Boolean        @default(false)
+  direction        RouteDirection @default(FORWARD) // FORWARD = A → B, BACKWARD = B → A
+  route            Route?         @relation(fields: [routeId], references: [id])
+  routeId          String?
+  travelDate       DateTime
+  seatsCount       Int
+  status           BookingStatus  @default(PENDING)
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   @@index([status, routeId, travelDate, phoneNumber])
   @@map("bookings")

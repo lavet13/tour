@@ -18,6 +18,7 @@ import {
   Row,
   FilterMeta,
   ColumnDef,
+  VisibilityState,
 } from '@tanstack/react-table';
 import { rankItem } from '@tanstack/match-sorter-utils';
 import {
@@ -36,12 +37,7 @@ import {
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import {
-  Edit,
-  ListFilter,
-  Loader2,
-  MoreHorizontal,
-} from 'lucide-react';
+import { Edit, ListFilter, Loader2, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   DropdownMenu,
@@ -50,7 +46,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Waypoint } from 'react-waypoint';
 import { useUpdateBooking } from '@/features/booking/api/mutations';
 import { useInfiniteBookings } from '@/features/booking/api/queries';
@@ -70,14 +66,17 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { useVirtualizer } from '@tanstack/react-virtual';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
 
 const BookingsPage: FC = () => {
-  const navigate = useNavigate();
-
   const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnVisibility, setColumnVisibility] = useState({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({
+    direction: false,
+    createdAt: false,
+    updatedAt: false,
+  });
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 
   const {
@@ -116,8 +115,7 @@ const BookingsPage: FC = () => {
       const [isEditing, setIsEditing] = useState(false);
       const [previousValue, setPreviousValue] = useState(initialValue);
 
-      const { mutate: updateBooking, isPending } =
-        useUpdateBooking();
+      const { mutate: updateBooking, isPending } = useUpdateBooking();
 
       const handleUpdate = (newValue: string) => {
         if (newValue !== initialValue) {
@@ -263,6 +261,17 @@ const BookingsPage: FC = () => {
   const { rows } = table.getRowModel();
 
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
+  const rowVirtualizer = useVirtualizer({
+    count: hasNextPage ? rows.length + 1 : rows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 50, //measure dynamic row height, except in firefox because it measures table border height incorrectly
+    overscan: 5,
+    measureElement:
+      typeof window !== 'undefined' &&
+      navigator.userAgent.indexOf('Firefox') === -1
+        ? element => element?.getBoundingClientRect().height
+        : undefined,
+  });
 
   // Scroll to top when sorting changes
   useEffect(() => {
@@ -270,6 +279,28 @@ const BookingsPage: FC = () => {
       tableContainerRef.current.scrollTo({ top: 0 });
     }
   }, [sorting, columnFilters]); // Dependency: re-run when sorting changes
+
+  useEffect(() => {
+    const [lastItem] = [...rowVirtualizer.getVirtualItems()].reverse();
+
+    if (!lastItem) {
+      return;
+    }
+
+    if (
+      lastItem.index >= rows.length - 1 &&
+      hasNextPage &&
+      !isFetchingNextPage
+    ) {
+      fetchNextPage();
+    }
+  }, [
+    hasNextPage,
+    fetchNextPage,
+    rows.length,
+    isFetchingNextPage,
+    rowVirtualizer.getVirtualItems(),
+  ]);
 
   const MOBILE_BREAKPOINT = 400;
   const [{ xl }] = useAtom(breakpointsAtom);
@@ -429,16 +460,59 @@ const BookingsPage: FC = () => {
                 </TableRow>
               ))}
             </TableHeader>
-            <TableBody>
-              {rows.length !== 0 ? (
-                rows.map((row, rowIndex) => {
+            <TableBody
+              style={{
+                display: 'grid',
+                height:
+                  rowVirtualizer.getTotalSize() > 0
+                    ? `${rowVirtualizer.getTotalSize()}px`
+                    : 'auto', //tells scrollbar how big the table is
+                position: 'relative',
+              }}
+            >
+              {rowVirtualizer.getVirtualItems().length !== 0 ? (
+                rowVirtualizer.getVirtualItems().map(virtualRow => {
+                  const row = rows[virtualRow.index];
+                  const isLoaderRow = virtualRow.index > rows.length - 1;
+
+                  if (isLoaderRow) {
+                    return (
+                      <TableRow
+                        key='loader-row'
+                        data-index={virtualRow.index}
+                        ref={node => rowVirtualizer.measureElement(node)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          position: 'absolute',
+                          transform: `translateY(${virtualRow.start}px)`,
+                          width: '100%',
+                        }}
+                      >
+                        <TableCellSkeleton table={table} />
+                      </TableRow>
+                    );
+                  }
+
                   return (
-                    <TableRow key={row.id}>
+                    <TableRow
+                      data-index={virtualRow.index} //needed for dynamic row height measurement
+                      key={row.id}
+                      ref={node => rowVirtualizer.measureElement(node)} //measure dynamic row height
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        position: 'absolute',
+                        transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                        width: '100%',
+                      }}
+                    >
                       {row.getVisibleCells().map(cell => {
                         return (
                           <TableCell
                             key={cell.id}
                             style={{
+                              display: 'flex',
                               width: cell.column.getSize(),
                             }}
                           >
@@ -449,20 +523,17 @@ const BookingsPage: FC = () => {
                           </TableCell>
                         );
                       })}
-                      {rowIndex === rows.length - 1 && hasNextPage && (
-                        <Waypoint
-                          onEnter={() => {
-                            if (!isFetchingNextPage) {
-                              fetchNextPage();
-                            }
-                          }}
-                        />
-                      )}
                     </TableRow>
                   );
                 })
               ) : isPending ? (
-                <TableRow>
+                <TableRow
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    width: '100%',
+                  }}
+                >
                   <TableCellSkeleton table={table} />
                 </TableRow>
               ) : (
@@ -473,11 +544,6 @@ const BookingsPage: FC = () => {
                   >
                     Нет данных.
                   </TableCell>
-                </TableRow>
-              )}
-              {isFetchingNextPage && (
-                <TableRow>
-                  <TableCellSkeleton table={table} />
                 </TableRow>
               )}
             </TableBody>

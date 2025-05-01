@@ -1,7 +1,11 @@
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useUpdateBooking } from '@/features/booking/api/mutations';
-import { InfiniteBookingsQuery, BookingStatus } from '@/gql/graphql';
+import {
+  InfiniteBookingsQuery,
+  BookingStatus,
+  RouteDirection,
+} from '@/gql/graphql';
 import { parseIntSafe, cn } from '@/lib/utils';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { client } from '@/react-query';
@@ -14,6 +18,8 @@ import RPNInput, {
 import ru from 'react-phone-number-input/locale/ru.json';
 import {
   ArrowDown,
+  ArrowLeft,
+  ArrowRight,
   ArrowUp,
   CheckCircle2,
   CircleFadingArrowUp,
@@ -51,10 +57,14 @@ export const columnTranslations = {
   createdAt: 'Создано',
   updatedAt: 'Изменено',
   travelDate: 'Желаемая дата',
-  phoneNumber: 'Телефон',
+  phoneNumber: 'Телефон 1',
+  telegram: 'Телеграм 1',
+  whatsapp: 'Ватсап 1',
+  extraPhoneNumber: 'Телефон 2',
+  extraTelegram: 'Телеграм 2',
+  extraWhatsapp: 'Ватсап 2',
+  direction: 'Направление',
   route: 'Маршрут',
-  telegram: 'Телеграм',
-  whatsapp: 'Ватсап',
 } as const satisfies Record<BookingColumns, string>;
 
 type StatusColumns = keyof typeof BookingStatus;
@@ -109,7 +119,7 @@ export const columns: ColumnDef<Booking, unknown>[] = [
     id: 'phoneNumber',
     accessorKey: 'phoneNumber',
     header: ({ column }) => {
-      return <Header title='Телефон' column={column} />;
+      return <Header title='Телефон 1' column={column} />;
     },
     cell: ({
       getValue,
@@ -220,8 +230,6 @@ export const columns: ColumnDef<Booking, unknown>[] = [
             inputComponent={Input}
             labels={ru}
             placeholder='Номер телефона'
-            countryCallingCodeEditable={false}
-            international
             value={value}
             onChange={value => setValue(value || '')}
             onKeyDown={onKeyDown}
@@ -267,21 +275,42 @@ export const columns: ColumnDef<Booking, unknown>[] = [
     id: 'telegram',
     accessorKey: 'telegram',
     header: ({ column }) => {
-      return <Header title='Телеграм' column={column} />;
+      return <Header title='Телеграм 1' column={column} />;
     },
-    cell: ({ getValue }) => {
+    cell: ({ getValue, row }) => {
       const initialValue = getValue() as boolean;
+      const phone = row.original.phoneNumber;
 
       return (
-        <div className='flex justify-center items-center space-x-2'>
-          <Checkbox checked={initialValue} disabled />
-          <label
-            htmlFor='terms2'
-            className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-          >
-            Телеграм
-          </label>
-        </div>
+        <>
+          {initialValue === true && (
+            <Button
+              className='w-full justify-start p-0 h-auto'
+              variant='link'
+              asChild
+            >
+              <Link
+                className='w-full'
+                target='_blank'
+                to={`https://t.me/${phone}`}
+              >
+                <span
+                  title={`https://t.me/${phone}`}
+                  className='truncate block w-full'
+                >
+                  t.me/{phone}
+                </span>
+              </Link>
+            </Button>
+          )}
+          {initialValue === false && (
+            <div className='flex items-center text-muted-foreground overflow-hidden cursor-default gap-1'>
+              <span title={'Не указан'} className='truncate'>
+                Не указан
+              </span>
+            </div>
+          )}
+        </>
       );
     },
     enableColumnFilter: false,
@@ -292,21 +321,291 @@ export const columns: ColumnDef<Booking, unknown>[] = [
     id: 'whatsapp',
     accessorKey: 'whatsapp',
     header: ({ column }) => {
-      return <Header title='Ватсап' column={column} />;
+      return <Header title='Ватсап 1' column={column} />;
     },
-    cell: ({ getValue }) => {
+    cell: ({ getValue, row }) => {
       const initialValue = getValue() as boolean;
+      const phone = row.original.phoneNumber;
 
       return (
-        <div className='flex justify-center items-center space-x-2'>
-          <Checkbox checked={initialValue} disabled />
-          <label
-            htmlFor='terms2'
-            className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-          >
-            Ватсап
-          </label>
-        </div>
+        <>
+          {initialValue === true && (
+            <Button
+              className='w-full justify-start p-0 h-auto'
+              variant='link'
+              asChild
+            >
+              <Link
+                className='w-full'
+                target='_blank'
+                to={`https://wa.me/${phone}`}
+              >
+                <span
+                  title={`https://wa.me/${phone}`}
+                  className='truncate block w-full'
+                >
+                  wa.me/{phone}
+                </span>
+              </Link>
+            </Button>
+          )}
+          {initialValue === false && (
+            <div className='flex items-center text-muted-foreground overflow-hidden cursor-default gap-1'>
+              <span title={'Не указан'} className='truncate'>
+                Не указан
+              </span>
+            </div>
+          )}
+        </>
+      );
+    },
+    enableColumnFilter: false,
+  },
+  {
+    size: 160,
+    minSize: 120,
+    id: 'extraPhoneNumber',
+    accessorFn: (row) => row.extraPhoneNumber ?? '',
+    header: ({ column }) => {
+      return <Header title='Телефон 2' column={column} />;
+    },
+    cell: ({
+      getValue,
+      row: {
+        original: { id: originalId },
+      },
+      column: { id: columnId },
+    }) => {
+      // TODO: having null issue
+      const initialValue = getValue() as string;
+      const [isEditing, setIsEditing] = useState(false);
+      const [value, setValue] = useState(initialValue);
+      const [previousValue, setPreviousValue] = useState(initialValue);
+
+      useEffect(() => {
+        setValue(initialValue);
+      }, [initialValue]);
+
+      const { mutate: updateBooking, isPending } = useUpdateBooking();
+
+      const handleUpdate = async (newValue: string) => {
+        if (newValue === initialValue) {
+          return setIsEditing(false);
+        }
+
+        if (newValue.length && !isPossiblePhoneNumber(newValue)) {
+          return toast.error('Проверьте правильность ввода телефона!');
+        }
+
+        setPreviousValue(initialValue);
+
+        const promise = new Promise((resolve, reject) => {
+          updateBooking(
+            { input: { id: originalId, [columnId]: newValue } },
+            {
+              onSuccess: async data => {
+                await client.invalidateQueries({
+                  queryKey: ['InfiniteBookings'],
+                });
+                resolve(data);
+              },
+              onError(error) {
+                reject(error);
+              },
+            },
+          );
+        });
+
+        toast.promise(promise, {
+          loading: `Обновление поля \`${columnTranslations[columnId as BookingColumns]}\`...`,
+          duration: 10000,
+          action: {
+            label: 'Отменить',
+            onClick() {
+              updateBooking(
+                { input: { id: originalId, [columnId]: previousValue } },
+                {
+                  async onSuccess() {
+                    await client.invalidateQueries({
+                      queryKey: ['InfiniteBookings'],
+                    });
+                    toast.success(
+                      `Отмена изменения поля \`${columnTranslations[columnId as BookingColumns]}\` выполненo успешно!`,
+                    );
+                  },
+                  onError() {
+                    toast.error(
+                      `Не удалось отменить изменения поля \`${columnTranslations[columnId as BookingColumns]}\`!`,
+                    );
+                  },
+                },
+              );
+            },
+          },
+          success() {
+            return `\`${columnTranslations[columnId as BookingColumns]}\` изменёно ${initialValue} → ${newValue}!`;
+          },
+          error(error) {
+            if (isGraphQLRequestError(error)) {
+              return error.response.errors[0].message;
+            } else if (error instanceof Error) {
+              return error.message;
+            }
+            return 'Произошла ошибка!';
+          },
+        });
+        setIsEditing(false);
+      };
+
+      const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === 'Enter' && !e.ctrlKey && !e.shiftKey) {
+          e.preventDefault();
+          if (value !== undefined) {
+            handleUpdate(value);
+          }
+        }
+      };
+
+      const onBlur = () => {
+        if (value !== undefined) {
+          handleUpdate(value);
+        }
+      };
+
+      if (isEditing) {
+        return (
+          <RPNInput
+            className='p-1 px-2 h-8'
+            inputComponent={Input}
+            labels={ru}
+            placeholder='Номер телефона'
+            value={value}
+            onChange={value => setValue(value || '')}
+            onKeyDown={onKeyDown}
+            onBlur={onBlur}
+            autoFocus
+          />
+        );
+      }
+
+      return (
+        <>
+          {initialValue.length ? (
+            <div
+              className='flex items-center overflow-hidden cursor-text gap-1'
+              onClick={() => setIsEditing(true)}
+            >
+              {isPending && (
+                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+              )}
+              <span title={initialValue} className='truncate'>
+                {initialValue}
+              </span>
+            </div>
+          ) : (
+            <Button
+              className='size-8'
+              variant='outline'
+              onClick={() => setIsEditing(true)}
+            >
+              {!isPending && <Edit />}
+              {isPending && (
+                <Loader2 className='min-w-4 min-h-4 size-4 animate-spin' />
+              )}
+            </Button>
+          )}
+        </>
+      );
+    },
+  },
+  {
+    size: 160,
+    minSize: 120,
+    id: 'extraTelegram',
+    accessorKey: 'extraTelegram',
+    header: ({ column }) => {
+      return <Header title='Телеграм 2' column={column} />;
+    },
+    cell: ({ getValue, row }) => {
+      const initialValue = getValue() as boolean;
+      const phone = row.original.phoneNumber;
+
+      return (
+        <>
+          {initialValue === true && (
+            <Button
+              className='w-full justify-start p-0 h-auto'
+              variant='link'
+              asChild
+            >
+              <Link
+                className='w-full'
+                target='_blank'
+                to={`https://t.me/${phone}`}
+              >
+                <span
+                  title={`https://t.me/${phone}`}
+                  className='truncate block w-full'
+                >
+                  t.me/{phone}
+                </span>
+              </Link>
+            </Button>
+          )}
+          {initialValue === false && (
+            <div className='flex items-center text-muted-foreground overflow-hidden cursor-default gap-1'>
+              <span title={'Не указан'} className='truncate'>
+                Не указан
+              </span>
+            </div>
+          )}
+        </>
+      );
+    },
+    enableColumnFilter: false,
+  },
+  {
+    size: 160,
+    minSize: 120,
+    id: 'extraWhatsapp',
+    accessorKey: 'extraWhatsapp',
+    header: ({ column }) => {
+      return <Header title='Ватсап 2' column={column} />;
+    },
+    cell: ({ getValue, row }) => {
+      const initialValue = getValue() as boolean;
+      const phone = row.original.phoneNumber;
+
+      return (
+        <>
+          {initialValue === true && (
+            <Button
+              className='w-full justify-start p-0 h-auto'
+              variant='link'
+              asChild
+            >
+              <Link
+                className='w-full'
+                target='_blank'
+                to={`https://wa.me/${phone}`}
+              >
+                <span
+                  title={`https://wa.me/${phone}`}
+                  className='truncate block w-full'
+                >
+                  wa.me/{phone}
+                </span>
+              </Link>
+            </Button>
+          )}
+          {initialValue === false && (
+            <div className='flex items-center text-muted-foreground overflow-hidden cursor-default gap-1'>
+              <span title={'Не указан'} className='truncate'>
+                Не указан
+              </span>
+            </div>
+          )}
+        </>
       );
     },
     enableColumnFilter: false,
@@ -687,6 +986,35 @@ export const columns: ColumnDef<Booking, unknown>[] = [
     },
   },
   {
+    id: 'direction',
+    accessorKey: 'direction',
+    cell: props => {
+      const initialValue = props.getValue() as
+        | RouteDirection.Forward
+        | RouteDirection.Backward;
+
+      let content = null;
+
+      if (initialValue === 'FORWARD') {
+        content = <ArrowRight className='size-4' />;
+      }
+
+      if (initialValue === 'BACKWARD') {
+        content = <ArrowLeft className='size-4' />;
+      }
+
+      return (
+        <div className='flex justify-center items-center overflow-hidden gap-1'>
+          {content}
+        </div>
+      );
+    },
+    header: ({ column }) => {
+      return <Header title='Направление' column={column} />;
+    },
+    enableColumnFilter: false,
+  },
+  {
     id: 'route',
     accessorKey: 'route',
     minSize: 200,
@@ -696,6 +1024,8 @@ export const columns: ColumnDef<Booking, unknown>[] = [
       const routeId = props.row.original.route?.id;
       const arrivalCity = props.row.original.route?.arrivalCity?.name;
       const departureCity = props.row.original.route?.departureCity?.name;
+      const direction = props.row.original.direction;
+      console.log({ direction });
 
       return (
         <Button
@@ -708,7 +1038,16 @@ export const columns: ColumnDef<Booking, unknown>[] = [
               title={`${departureCity} ⇆ ${arrivalCity}`}
               className='truncate block w-full'
             >
-              <span>{departureCity}</span> &#x21c6; <span>{arrivalCity}</span>
+              {direction === 'FORWARD' && (
+                <>
+                  <span>{departureCity}</span> → <span>{arrivalCity}</span>
+                </>
+              )}
+              {direction === 'BACKWARD' && (
+                <>
+                  <span>{arrivalCity}</span> → <span>{departureCity}</span>
+                </>
+              )}
             </span>
           </Link>
         </Button>
@@ -727,7 +1066,7 @@ export const columns: ColumnDef<Booking, unknown>[] = [
     header: ({ column }) => <Header title='Дата поездки' column={column} />,
     cell: props => (
       <span className='overflow-hidden text-ellipsis'>
-        {format(new Date(props.getValue() as number), 'dd.MM.yyyy, HH:mm:ss', {
+        {format(new Date(props.getValue() as number), 'dd.MM.yyyy', {
           locale: fnsRU,
         })}
       </span>

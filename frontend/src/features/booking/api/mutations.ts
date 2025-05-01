@@ -49,7 +49,7 @@ export const useCreateBooking = (
   > = {},
 ) => {
   const createBooking = graphql(`
-    mutation CreateBooking($input: BookingInput!) {
+    mutation CreateBooking($input: CreateBookingInput!) {
       createBooking(input: $input) {
         id
         firstName

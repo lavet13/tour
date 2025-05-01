@@ -7,7 +7,7 @@ export default gql`
   }
 
   type Mutation {
-    createBooking(input: BookingInput!): Booking!
+    createBooking(input: CreateBookingInput!): Booking!
     updateBooking(input: UpdateBookingInput!): Booking!
   }
 
@@ -17,6 +17,7 @@ export default gql`
     firstName: String
     lastName: String
     phoneNumber: String
+    extraPhoneNumber: String
     travelDate: Date
     seatsCount: Int
     telegram: Boolean
@@ -66,12 +67,16 @@ export default gql`
     pageInfo: PageInfo!
   }
 
-  input BookingInput {
+  input CreateBookingInput {
     firstName: String!
     lastName: String!
     phoneNumber: String!
     departureCityId: ID!
     arrivalCityId: ID!
+    extraPhoneNumber: String
+    extraTelegram: Boolean
+    extraWhatsapp: Boolean
+    direction: RouteDirection!
     travelDate: Date!
     seatsCount: Int!
     telegram: Boolean!
@@ -82,12 +87,16 @@ export default gql`
     id: ID!
     firstName: String!
     lastName: String!
+    direction: RouteDirection!
     phoneNumber: String!
+    telegram: Boolean!
+    whatsapp: Boolean!
+    extraPhoneNumber: String
+    extraTelegram: Boolean!
+    extraWhatsapp: Boolean!
     route: Route
     travelDate: Date!
     seatsCount: Int!
-    telegram: Boolean!
-    whatsapp: Boolean!
     status: BookingStatus!
     createdAt: Date!
     updatedAt: Date!

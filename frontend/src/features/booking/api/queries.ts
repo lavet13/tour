@@ -34,10 +34,14 @@ export const useInfiniteBookings = ({
           firstName
           lastName
           phoneNumber
-          travelDate
-          seatsCount
           telegram
           whatsapp
+          extraPhoneNumber
+          extraTelegram
+          extraWhatsapp
+          direction
+          travelDate
+          seatsCount
           route {
             id
             arrivalCity {
