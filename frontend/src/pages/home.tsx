@@ -92,10 +92,15 @@ export default function HomePage() {
       setActiveStep(1);
     }
   }, [location.search]);
+
   useEffect(() => {
-    if (activeStep === 1) {
-      form.reset(defaultValues);
-    }
+    setTimeout(() => {
+      if (activeStep === 1) {
+        form.reset({
+          phones: [{ value: '', telegram: false, whatsapp: false }],
+        });
+      }
+    }, 100);
   }, [activeStep]);
 
   const { mutateAsync: createBooking } = useCreateBooking();
