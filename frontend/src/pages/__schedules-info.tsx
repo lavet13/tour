@@ -695,7 +695,7 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
             className={cn('h-8 w-8 sm:h-10 sm:w-10 shrink-0 rounded-full')}
             type='button'
             onClick={() => setValue(value - 1)}
-            disabled={value <= 0}
+            disabled={value <= 1}
             tabIndex={-1}
           >
             <Minus className='h-4 w-4 sm:h-5 sm:w-5' />

@@ -34,7 +34,7 @@ const defaultValues: DefaultValues = {
   firstName: '',
   lastName: '',
   phones: [{ value: '', telegram: false, whatsapp: false }],
-  seatsCount: 0,
+  seatsCount: 1,
   travelDate: null,
   arrivalCityId: '',
   departureCityId: '',
@@ -73,7 +73,7 @@ export default function HomePage() {
     },
   });
 
-  const { isSubmitting, dirtyFields, errors } = form.formState;
+  const { isSubmitting, isSubmitSuccessful, dirtyFields, errors } = form.formState;
   const values = form.getValues();
   console.log({
     errors,
@@ -95,11 +95,9 @@ export default function HomePage() {
 
   useEffect(() => {
     if (activeStep === 1) {
-      form.reset({
-        phones: [{ value: '', telegram: false, whatsapp: false }],
-      });
+      form.reset();
     }
-  }, [activeStep]);
+  }, [isSubmitSuccessful, form.reset]);
 
   const { mutateAsync: createBooking } = useCreateBooking();
   const onSubmit: SubmitHandler<DefaultValues> = async ({
