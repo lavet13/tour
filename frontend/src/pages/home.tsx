@@ -113,7 +113,7 @@ export default function HomePage() {
   }, [location.search]);
 
   useEffect(() => {
-    if (activeStep === 1) {
+    if (activeStep === 1 && isSubmitSuccessful) {
       form.reset();
     }
   }, [isSubmitSuccessful, activeStep]);
