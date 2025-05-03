@@ -14,7 +14,7 @@ import { SparklesText } from '@/components/ui/sparkles-text';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useAtom } from 'jotai';
 import { breakpointsAtom } from '@/lib/atoms/tailwind';
-import { useEffect, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useRouteByIds } from '@/features/routes';
 import { keepPreviousData } from '@tanstack/react-query';
 import { activeStepAtom, containerRefAtom } from '@/lib/atoms/ui';
@@ -22,6 +22,8 @@ import { Loader2 } from 'lucide-react';
 import BookingResult from '@/pages/home/__booking-result';
 import DepartureArrivalCitiesInfo from '@/pages/home/__departure-arrival-cities-info';
 import SchedulesInfo from '@/pages/home/__schedules-info';
+import { is } from 'date-fns/locale';
+import { useIsFirstRender } from '@/hooks/use-is-first-render';
 
 export type DefaultValues = {
   firstName: string;
@@ -56,11 +58,10 @@ function getStepContent(step: number) {
   }
 }
 
-
 export default function HomePage() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [, setContainerRef] = useAtom(containerRefAtom);
-  console.log({ containerRef });
+  const isInitialRender = useIsFirstRender();
 
   const [breakpoints] = useAtom(breakpointsAtom);
   const isDesktop = useMediaQuery(`(min-width: ${breakpoints.lg}px)`);
@@ -165,23 +166,23 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    if (activeStep !== 1) {
+    if (!isInitialRender) {
+      // Now we only scroll when activeStep changes (after button clicks)
       const bounding = containerRef.current?.getBoundingClientRect();
       const top = bounding?.top ?? 0;
 
-      window.scrollBy({
-        top: top - 60,
-        behavior: 'smooth',
-      });
-    }
-    if (activeStep === 1) {
-      const bounding = containerRef.current?.getBoundingClientRect();
-      const top = bounding?.top ?? 0;
-
-      window.scrollBy({
-        top: top - 60,
-        behavior: 'smooth',
-      });
+      // You can still keep specific behavior for different steps if needed
+      if (activeStep !== 1) {
+        window.scrollBy({
+          top: top - 60,
+          behavior: 'smooth',
+        });
+      } else {
+        window.scrollBy({
+          top: top - 60,
+          behavior: 'smooth',
+        });
+      }
     }
   }, [activeStep]);
 
@@ -193,7 +194,7 @@ export default function HomePage() {
       keys.forEach(key => query.delete(key));
       return query;
     });
-    setActiveStep(1)
+    setActiveStep(1);
   };
 
   const handleNext = async () => {
