@@ -141,7 +141,7 @@ const DepartureArrivalCitiesInfo: FC = () => {
   };
 
   return (
-    <div className="space-y-4 px-4 p-5 md:p-12">
+    <div className='space-y-4 px-4 p-5 md:pt-6 md:p-12'>
       <h2 className='text-2xl md:text-3xl font-bold mb-4 text-center'>
         Выберите нужный вам маршрут
       </h2>

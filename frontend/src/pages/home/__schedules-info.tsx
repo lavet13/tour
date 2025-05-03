@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { GetRouteByIdsQuery, GetSchedulesByIdsQuery } from '@/gql/graphql';
 import { cn } from '@/lib/utils';
 import {
+  ArrowLeft,
   ArrowRightLeft,
   ChevronDown,
   MapPin,
@@ -10,21 +11,15 @@ import {
   Plus,
   X,
 } from 'lucide-react';
-import { FC, forwardRef, useEffect, useMemo, useState } from 'react';
+import { FC, forwardRef, Fragment, useMemo, useState } from 'react';
 import { DefaultValues } from '@/pages/home';
-import {
-  useController,
-  useFieldArray,
-  useFormContext,
-  UseFormReturn,
-} from 'react-hook-form';
+import { useController, useFieldArray, useFormContext } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { useRouteByIds } from '@/features/routes';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useSchedulesByIds } from '@/features/schedule';
 import {
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -39,6 +34,8 @@ import { DatePicker } from '@/components/date-picker';
 import { useControllableState } from '@/hooks/use-controllable-state';
 import { NumericFormat } from 'react-number-format';
 import ru from 'react-phone-number-input/locale/ru.json';
+import { useAtom } from 'jotai';
+import { activeStepAtom, containerRefAtom } from '@/lib/atoms/ui';
 
 type Route = GetRouteByIdsQuery['routeByIds'];
 type ScheduleItem = Omit<
@@ -124,7 +121,6 @@ const SchedulesInfo: FC = () => {
             route={route}
             schedules={schedules}
             handleSwapCities={handleSwapCities}
-            form={form}
           />
           <div className='px-4 p-5 md:p-12 border-t border-dashed h-full relative overflow-hidden space-y-4 z-10'>
             <div className='relative z-10'>
@@ -224,7 +220,7 @@ const SchedulesInfo: FC = () => {
 
               {fields.map((_field, index) => {
                 return (
-                  <>
+                  <Fragment key={_field.id}>
                     <FormField
                       control={form.control}
                       name={`phones.${index}.value`}
@@ -341,7 +337,7 @@ const SchedulesInfo: FC = () => {
                         );
                       }}
                     />
-                  </>
+                  </Fragment>
                 );
               })}
 
@@ -414,7 +410,6 @@ type RouteInfoProps = {
   route: NonNullable<Route>;
   schedules: ScheduleItem[];
   handleSwapCities: () => void;
-  form: UseFormReturn<DefaultValues>;
   isFetching: boolean;
 };
 
@@ -423,23 +418,28 @@ function RouteInfo({
   route,
   schedules,
   handleSwapCities,
-  form,
 }: RouteInfoProps) {
+  const [, setActiveStep] = useAtom(activeStepAtom);
+  const [containerRef] = useAtom(containerRefAtom);
   // Group schedules by direction
   const filteredSchedules = [
     ...schedules.filter(s => s.direction === route.direction),
   ].sort((a, b) => (a.time > b.time ? 1 : -1));
+
+  const handleBack = () => {
+    setActiveStep(1);
+  };
 
   return (
     <div className='px-4 p-5 md:p-12 md:pb-2 flex flex-col h-full items-stretch justify-between'>
       <div>
         <div className='grid gap-1 sm:gap-y-4 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 relative mb-4'>
           {isFetching && (
-            <div className='absolute left-1/2 -translate-x-1/2 top-3 lg:top-5 flex justify-center col-span-full'>
+            <div className='absolute left-1/2 -translate-x-1/2 -top-6 lg:top-10 flex justify-center col-span-full'>
               <SonnerSpinner className='bg-foreground' />
             </div>
           )}
-          <div className='col-span-full flex flex-col items-center xs:items-baseline justify-center xs:justify-between xs:flex-row flex-wrap gap-1 z-10 mb-2'>
+          <div className='col-span-full sm:grid sm:grid-cols-2 justify-items-center flex flex-wrap items-center xs:flex-nowrap xs:items-baseline justify-center xs:justify-evenly xs:gap-6 xs:flex-row gap-1 z-10 mb-2'>
             {route.region?.name && (
               <div className='flex items-center gap-1.5 justify-center text-background bg-foreground px-2 py-1 rounded-full'>
                 <MapPin className='h-3.5 w-3.5 text-background' />
@@ -480,12 +480,21 @@ function RouteInfo({
             </div>
           </div>
         </div>
-        <div className='flex justify-center items-center py-2'>
+        <div className='flex flex-wrap justify-center items-center gap-2 py-2'>
+          <Button
+            onClick={handleBack}
+            className='flex rounded-full px-6'
+            size='sm'
+            variant='outline'
+          >
+            <ArrowLeft />
+            Назад
+          </Button>
           <Button
             type='button'
             variant='outline'
             size='sm'
-            className='rounded-full w-fit px-6 justify-self-center col-span-full'
+            className='rounded-full w-fit px-6'
             onClick={handleSwapCities}
           >
             <ArrowRightLeft className='h-4 w-4 mr-2' />
@@ -516,6 +525,7 @@ function Schedules({
   arrivalCityName,
 }: SchedulesProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [containerRef] = useAtom(containerRefAtom);
 
   return (
     <>
@@ -542,7 +552,18 @@ function Schedules({
           <Button
             type='button'
             className='w-fit gap-1 mx-4 px-4 sm:mx-0 rounded-full'
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => {
+              setIsOpen(!isOpen);
+              if (isOpen) {
+                const bounding = containerRef?.current?.getBoundingClientRect();
+                const top = bounding?.top ?? 0;
+
+                window.scrollBy({
+                  top: top - 60,
+                  behavior: 'smooth',
+                });
+              }
+            }}
             variant='outline'
             size='sm'
           >

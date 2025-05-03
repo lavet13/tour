@@ -47,7 +47,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Link } from 'react-router-dom';
-import { Waypoint } from 'react-waypoint';
 import { useUpdateBooking } from '@/features/booking/api/mutations';
 import { useInfiniteBookings } from '@/features/booking/api/queries';
 import { AutosizeTextarea } from '@/components/autosize-textarea';
@@ -101,7 +100,7 @@ const BookingsPage: FC = () => {
 
   import.meta.env.DEV && console.log({ data, flatData });
 
-  const columnResizeModeRef = useRef<ColumnResizeMode>('onEnd');
+  const columnResizeModeRef = useRef<ColumnResizeMode>('onChange');
 
   const defaultColumn: Partial<ColumnDef<Booking>> = {
     cell: ({
@@ -314,7 +313,7 @@ const BookingsPage: FC = () => {
   }
 
   return (
-    <div className='container px-0'>
+    <div className={cn('container px-0 max-w-max')}>
       <div
         className={cn(
           'relative px-1 space-y-2 flex-1 pt-2',

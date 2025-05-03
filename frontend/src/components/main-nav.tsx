@@ -26,7 +26,7 @@ import {
 } from '@radix-ui/react-navigation-menu';
 import { useRoutes } from '@/features/routes/api/queries';
 import { useRegionByName } from '@/features/region/api/queries';
-import { navigationMenuStateAtom } from '@/lib/atoms/navigation-menu';
+import { navigationMenuStateAtom } from '@/lib/atoms/ui';
 import { useAtom } from 'jotai';
 import { useGetMe } from '@/features/auth/api/queries';
 import { Input } from '@/components/ui/input';
@@ -507,7 +507,7 @@ const NavigationRoutes = ({ routes, title }: NavigationRoutesProps) => {
           </NavigationMenuList>
 
           <RadixNavigationMenuViewport
-            className='overflow-hidden transform origin-top-center relative top-0 left-0 w-full overflow-hidden rounded-md bg-popover text-popover-foreground data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-105'
+            className='transform origin-top-center relative top-0 left-0 w-full overflow-hidden rounded-md bg-popover text-popover-foreground data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-105'
             style={{
               width: 'var(--radix-navigation-menu-viewport-width)',
               height: 'var(--radix-navigation-menu-viewport-height)',

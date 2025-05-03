@@ -1,4 +1,4 @@
-import { SubmitHandler, useFieldArray, useForm } from 'react-hook-form';
+import { SubmitHandler, useForm } from 'react-hook-form';
 import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { Form } from '@/components/ui/form';
@@ -9,16 +9,19 @@ import { CreateBookingInput, RouteDirection } from '@/gql/graphql';
 import { useCreateBooking } from '@/features/booking';
 import { toast } from 'sonner';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
-import DepartureArrivalCitiesInfo from '@/pages/__departure-arrival-cities-info';
-import SchedulesInfo from './__schedules-info';
 import { cn } from '@/lib/utils';
 import { SparklesText } from '@/components/ui/sparkles-text';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useAtom } from 'jotai';
 import { breakpointsAtom } from '@/lib/atoms/tailwind';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouteByIds } from '@/features/routes';
 import { keepPreviousData } from '@tanstack/react-query';
+import { activeStepAtom, containerRefAtom } from '@/lib/atoms/ui';
+import { Loader2 } from 'lucide-react';
+import BookingResult from '@/pages/home/__booking-result';
+import DepartureArrivalCitiesInfo from '@/pages/home/__departure-arrival-cities-info';
+import SchedulesInfo from '@/pages/home/__schedules-info';
 
 export type DefaultValues = {
   firstName: string;
@@ -46,16 +49,29 @@ function getStepContent(step: number) {
       return <DepartureArrivalCitiesInfo />;
     case 2:
       return <SchedulesInfo />;
+    case 3:
+      return <BookingResult />;
     default:
       return 'Unknown step';
   }
 }
 
-export default function HomePage() {
-  const [breakpoints] = useAtom(breakpointsAtom);
-  const isTablet = useMediaQuery(`(min-width: ${breakpoints.md}px)`);
 
-  const [activeStep, setActiveStep] = useState(1);
+export default function HomePage() {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [, setContainerRef] = useAtom(containerRefAtom);
+  console.log({ containerRef });
+
+  const [breakpoints] = useAtom(breakpointsAtom);
+  const isDesktop = useMediaQuery(`(min-width: ${breakpoints.lg}px)`);
+  const isTablet = useMediaQuery(`(min-width: ${breakpoints.md}px)`);
+  const isMobile = useMediaQuery(`(min-width: ${breakpoints.sm}px)`);
+
+  const [activeStep, setActiveStep] = useAtom(activeStepAtom);
+  useEffect(() => {
+    setContainerRef(containerRef);
+    return () => setContainerRef(null);
+  }, []);
 
   const [searchParams, setSearchParams] = useSearchParams();
   const departureCityId = searchParams.get('departureCityId')!;
@@ -73,8 +89,10 @@ export default function HomePage() {
     },
   });
 
-  const { isSubmitting, isSubmitSuccessful, dirtyFields, errors } = form.formState;
+  const { isSubmitting, isSubmitSuccessful, dirtyFields, errors } =
+    form.formState;
   const values = form.getValues();
+  console.log({ isSubmitSuccessful });
   console.log({
     errors,
     dirtyFields,
@@ -97,7 +115,7 @@ export default function HomePage() {
     if (activeStep === 1) {
       form.reset();
     }
-  }, [isSubmitSuccessful, form.reset]);
+  }, [isSubmitSuccessful, activeStep]);
 
   const { mutateAsync: createBooking } = useCreateBooking();
   const onSubmit: SubmitHandler<DefaultValues> = async ({
@@ -129,18 +147,7 @@ export default function HomePage() {
       };
       await createBooking({ input: payload });
 
-      setSearchParams(p => {
-        const keys = [...p.entries()].map(([key]) => key);
-        const query = new URLSearchParams(p.toString());
-        keys.forEach(key => query.delete(key));
-        return query;
-      });
-
-      toast.success('Заявка оформлена!', {
-        richColors: true,
-        position: 'top-center',
-      });
-      setActiveStep(1);
+      setActiveStep(3);
     } catch (error) {
       console.error(error);
       if (isGraphQLRequestError(error)) {
@@ -157,6 +164,38 @@ export default function HomePage() {
     }
   };
 
+  useEffect(() => {
+    if (activeStep !== 1) {
+      const bounding = containerRef.current?.getBoundingClientRect();
+      const top = bounding?.top ?? 0;
+
+      window.scrollBy({
+        top: top - 60,
+        behavior: 'smooth',
+      });
+    }
+    if (activeStep === 1) {
+      const bounding = containerRef.current?.getBoundingClientRect();
+      const top = bounding?.top ?? 0;
+
+      window.scrollBy({
+        top: top - 60,
+        behavior: 'smooth',
+      });
+    }
+  }, [activeStep]);
+
+  const handleComplete = () => {
+    setSearchParams(p => {
+      console.log({ entries: [...p.entries()] });
+      const keys = [...p.entries()].map(([key]) => key);
+      const query = new URLSearchParams(p.toString());
+      keys.forEach(key => query.delete(key));
+      return query;
+    });
+    setActiveStep(1)
+  };
+
   const handleNext = async () => {
     const isStepValid = await form.trigger(undefined, { shouldFocus: true });
     if (isStepValid) {
@@ -168,12 +207,25 @@ export default function HomePage() {
     setActiveStep(prevActiveStep => prevActiveStep - 1);
   };
 
+  let size = 'sm' as 'sm' | 'md' | 'lg';
+  if (isMobile) {
+    size = 'sm' as const;
+  }
+  if (isTablet) {
+    size = 'md' as const;
+  }
+  if (isDesktop) {
+    size = 'lg' as const;
+  }
+  console.log({ size });
+
   return (
     <div className='flex-1 flex flex-col bg-gradient-to-b from-background to-background/95 font-inter'>
       <section
         className={cn(
           'relative -top-[3.5rem] py-8 md:py-16 overflow-hidden',
           !isTablet && 'top-0',
+          activeStep !== 1 && 'pt-0',
         )}
       >
         {isTablet && (
@@ -189,37 +241,44 @@ export default function HomePage() {
         )}
 
         <div className='container relative z-10'>
-          <div className='max-w-7xl mx-auto text-center mb-9 sm:mb-12 space-y-4'>
-            <SparklesText className='flex font-normal sm:font-medium leading-none tracking-tighter font-nunito italic text-5xl md:text-6xl lg:text-7xl'>
-              Пассажирские перевозки
-              <span className='hidden sm:inline-block font-semibold text-4xl font-nunito sm:text-5xl md:text-6xl lg:text-7xl'>
-                в Мариуполь и на Азовское побережье
-              </span>
-              <span className='sm:hidden inline-block shrink justify-center flex-wrap font-semibold text-2xl font-nunito md:text-6xl lg:text-7xl'>
-                в Мариуполь и на Азовское побережье
-              </span>
-            </SparklesText>
-          </div>
+          {activeStep === 1 && (
+            <div className='max-w-7xl mx-auto text-center mb-9 sm:mb-12 space-y-4'>
+              <SparklesText className='flex font-normal sm:font-medium leading-none tracking-tighter font-nunito italic text-3xl md:text-6xl lg:text-7xl'>
+                Пассажирские перевозки
+                <span className='hidden sm:inline-block font-semibold text-4xl font-nunito sm:text-5xl md:text-6xl lg:text-7xl'>
+                  в Мариуполь и на Азовское побережье
+                </span>
+                <span className='sm:hidden inline-block shrink justify-center flex-wrap font-bold text-4xl font-nunito md:text-6xl lg:text-7xl'>
+                  в Мариуполь и на Азовское побережье
+                </span>
+              </SparklesText>
+            </div>
+          )}
 
-          <div className='max-w-3xl mx-auto relative overflow-hidden'>
+          <div
+            ref={containerRef}
+            className='max-w-3xl mx-auto relative overflow-hidden'
+          >
             <Form {...form}>
               <form noValidate className='space-y-6'>
                 <div className='max-w-4xl mx-auto border bg-background rounded-2xl relative overflow-hidden z-10'>
                   <div className='absolute inset-0 z-0'>
                     <Meteors number={5} />
                   </div>
-                  <div className='relative z-10 pt-3'>
+                  <div className='relative z-10 pt-5'>
                     {getStepContent(activeStep)}
                     <div className='flex flex-col-reverse xs:flex-row gap-2 px-4 p-5 md:p-12 md:pb-6 md:pt-3 justify-center'>
-                      <Button
-                        type='button'
-                        className='w-full xs:w-[100px]'
-                        variant='secondary'
-                        onClick={handleBack}
-                        disabled={activeStep === 1}
-                      >
-                        Назад
-                      </Button>
+                      {activeStep !== 3 && (
+                        <Button
+                          type='button'
+                          className='w-full xs:w-[100px]'
+                          variant='secondary'
+                          onClick={handleBack}
+                          disabled={activeStep === 1}
+                        >
+                          Назад
+                        </Button>
+                      )}
                       {activeStep === 2 ? (
                         <Button
                           className='px-8'
@@ -227,7 +286,22 @@ export default function HomePage() {
                           onClick={form.handleSubmit(onSubmit)}
                           disabled={isSubmitting}
                         >
-                          Заказать билет
+                          {isSubmitting ? (
+                            <>
+                              <Loader2 className='animate-spin' />
+                              Принимаем заявку
+                            </>
+                          ) : (
+                            'Заказать билет'
+                          )}
+                        </Button>
+                      ) : activeStep === 3 ? (
+                        <Button
+                          type='button'
+                          className='w-auto xs:w-fit'
+                          onClick={handleComplete}
+                        >
+                          Ладно, идем дальше
                         </Button>
                       ) : (
                         <Button
