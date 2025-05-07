@@ -19,8 +19,27 @@ RUN yarn build
 # Stage 2: nginx-certbot
 FROM jonasal/nginx-certbot:latest
 
+# Install git and pip
+RUN apt-get update && \
+    apt-get install -y git python3-pip && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install certbot-regru plugin
+RUN pip3 install git+https://github.com/free2er/certbot-regru.git
+
 # Копируем собранный фронтенд из предыдущего контейнера
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Копируем кастомные конфиги для Nginx
 COPY .nginx/prod/user_conf.d /etc/nginx/user_conf.d
+
+# Create directory for credential files
+RUN mkdir -p /etc/letsencrypt
+
+# Create a script to set up credentials from environment variables
+COPY setup-credentials.sh /
+RUN chmod +x /setup-credentials.sh
+
+# Run both the credential setup and the original entrypoint
+ENTRYPOINT ["/bin/bash", "-c", "/setup-credentials.sh && /scripts/entrypoint.sh"]
