@@ -19,6 +19,9 @@ RUN yarn build
 # Stage 2: nginx-certbot
 FROM jonasal/nginx-certbot:latest
 
+# Install certbot-regru plugin
+RUN pip install certbot-regru
+
 # Копируем собранный фронтенд из предыдущего контейнера
 COPY --from=builder /app/dist /usr/share/nginx/html
 
