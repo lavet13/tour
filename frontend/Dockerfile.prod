@@ -17,10 +17,10 @@ COPY . .
 RUN yarn build
 
 # Stage 2: nginx-certbot
-FROM jonasal/nginx-certbot:latest
+FROM nginx:alpine
 
 # Копируем собранный фронтенд из предыдущего контейнера
 COPY --from=builder /app/dist /usr/share/nginx/html
 
 # Копируем кастомные конфиги для Nginx
-COPY .nginx/prod/user_conf.d /etc/nginx/user_conf.d
+COPY .nginx/prod/user_conf.d /etc/nginx/conf.d/

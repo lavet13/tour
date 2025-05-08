@@ -8,16 +8,37 @@ services:
       context: ./frontend
       dockerfile: Dockerfile.prod
     restart: unless-stopped
-    env_file:
-      - ./frontend/nginx-certbot.env.prod
     volumes:
-      - nginx_secrets:/etc/letsencrypt
+      - letsencrypt:/etc/letsencrypt
       - uploads:/usr/share/nginx/uploads:ro
     ports:
       - "80:80"
       - "443:443"
     networks:
       - webnet
+    depends_on:
+      - certbot
+
+  certbot:
+    image: lionur/certbot-dns-regru
+    container_name: certbot
+    volumes:
+      # Монтируем volume для Let's Encrypt
+      - letsencrypt:/etc/letsencrypt
+      # Монтируем файл конфигурации для DNS-плагина
+      - ./frontend/certbot/regru.ini:/etc/letsencrypt/regru.ini:ro
+    entrypoint: >
+      sh -c "
+        certbot certonly
+        -a certbot-regru:dns
+        --certbot-regru:dns-credentials /etc/letsencrypt/regru.ini
+        --certbot-regru:dns-propagation-seconds 60
+        -d donbass-tour.online -d www.donbass-tour.online
+        --non-interactive --agree-tos --email your-email@example.com
+      "
+    networks:
+      - webnet
+    restart: unless-stopped
 
   # GraphQL Server
   tour-graphql:
@@ -54,7 +75,7 @@ services:
 
 volumes:
   postgres_data:
-  nginx_secrets: # Add this volume for storing certificates
+  letsencrypt: # Add this volume for storing certificates
   uploads:
 
 networks:
