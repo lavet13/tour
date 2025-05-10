@@ -66,7 +66,8 @@ services:
 
 volumes:
   postgres_data:
-  nginx_secrets: # Add this volume for storing certificates
+  nginx_secrets: # for storing certificates
+  telegram_mini_app_dist: # for sharing Telegram mini-app files
   uploads:
 
 networks:
