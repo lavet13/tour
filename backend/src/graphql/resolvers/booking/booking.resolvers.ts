@@ -239,6 +239,7 @@ const resolvers: Resolvers = {
   },
   Mutation: {
     async createBooking(_, args, ctx) {
+      const { notifyNewBooking } = ctx.telegramBot;
       const { departureCityId, arrivalCityId, ...rest } = args.input;
 
       // Try both route directions
@@ -273,6 +274,17 @@ const resolvers: Resolvers = {
           ...rest,
         },
       });
+
+      try {
+        // Notify managers using the functional service
+        await notifyNewBooking(booking);
+
+        // Optionally publish to subscription
+        ctx.pubSub.publish('createdBook', { createdBook: booking });
+      } catch (error) {
+        // Log error but don't fail the booking creation
+        console.error('Failed to send Telegram notification:', error);
+      }
 
       return booking;
     },
