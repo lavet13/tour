@@ -19,6 +19,18 @@ services:
     networks:
       - webnet
 
+  # Telegram Mini-app builder
+  tour-telegram-mini-app:
+    container_name: tour-telegram-mini-app
+    build:
+      context: ./telegram-mini-app
+      dockerfile: Dockerfile.prod
+    volumes:
+      - telegram_mini_app_dist:/app/dist          # In telegram mini-app service
+      - telegram_mini_app_dist:/usr/share/nginx/telegram-mini-app:ro  # In frontend service
+    networks:
+      - webnet
+
   # GraphQL Server
   tour-graphql:
     container_name: tour-graphql
