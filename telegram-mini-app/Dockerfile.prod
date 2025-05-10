@@ -10,6 +10,14 @@ COPY . .
 
 RUN yarn build
 
-# The built files are in /app/dist and will be mounted as a volume
-# Keep the container running so the volume persists
+# Use a minimal alpine image to store the built files
+FROM alpine:latest
+
+# Create directory for the app
+WORKDIR /app
+
+# Copy the built files from the builder stage
+COPY --from=builder /app/dist /app/dist
+
+# Command to keep the container running
 CMD ["tail", "-f", "/dev/null"]

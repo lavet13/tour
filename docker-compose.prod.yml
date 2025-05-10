@@ -13,11 +13,14 @@ services:
     volumes:
       - nginx_secrets:/etc/letsencrypt
       - uploads:/usr/share/nginx/uploads:ro
+      - telegram_mini_app_dist:/usr/share/nginx/telegram-mini-app:ro # Mount mini-app from volume
     ports:
       - "80:80"
       - "443:443"
     networks:
       - webnet
+    depends_on:
+      - tour-telegram-mini-app
 
   # Telegram Mini-app builder
   tour-telegram-mini-app:
@@ -27,7 +30,6 @@ services:
       dockerfile: Dockerfile.prod
     volumes:
       - telegram_mini_app_dist:/app/dist          # In telegram mini-app service
-      - telegram_mini_app_dist:/usr/share/nginx/telegram-mini-app:ro  # In frontend service
     networks:
       - webnet
 
