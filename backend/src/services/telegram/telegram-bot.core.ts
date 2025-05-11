@@ -10,6 +10,7 @@ import {
   TelegramBotState,
 } from '@/services/telegram/telegram-bot.types';
 import { config } from '@/services/telegram/telegram-bot.config';
+import { sendTelegramMessage } from '@/services/telegram/telegram-bot.helpers';
 
 // Private singleton instance
 let botStateInstance: TelegramBotState | null = null;
@@ -62,17 +63,46 @@ const setupCommandHandlers = (bot: TelegramBot | null): TelegramBot | void => {
 
   bot.onText(/\/start/, async msg => {
     const chatId = msg.chat.id;
-    try {
-      await bot.sendMessage(
-        chatId,
-        `Приветствую, скопируй и перекинь ID: \`\`\`${chatId}\`\`\`\[Ванечке](https://t.me/opezdal1488228)`,
-        {
-          parse_mode: 'MarkdownV2',
-        },
-      );
-    } catch (error) {
-      console.error(`Failed to send message to ${chatId}`);
+    await showMainMenu(chatId);
+  });
 
+  bot.onText(/\/app/, async msg => {
+    const chatId = msg.chat.id;
+    await showMiniApp(chatId);
+  });
+
+  bot.on('callback_query', async query => {
+    if (!query.message) return;
+
+    const chatId = query.message.chat.id;
+    const data = query.data;
+
+    try {
+      // Answer the callback query to remove the loading state
+      await bot.answerCallbackQuery(query.id);
+
+      // Process different callback data
+      switch (data) {
+        case 'show_contacts':
+          await bot.sendMessage(
+            chatId,
+            `
+Наши контакты:\n
+📞 Феникс: +79493180304
+📞 Феникс: +79494395616
+📩 Whatsapp: <a href="https://wa.me/+380713180304">+380713180304</a>
+📩 Telegram: <a href="https://t.me/+79493180304">+79493180304</a>
+`,
+            {
+              parse_mode: 'HTML',
+            },
+          );
+          break;
+        default:
+          await bot.sendMessage(chatId, 'Unknown command');
+      }
+    } catch (error) {
+      console.error('Error handling callback query:', error);
       handleTelegramError(error);
     }
   });
@@ -92,6 +122,7 @@ const setupBotCommands = async (
   try {
     await bot.setMyCommands([
       { command: 'start', description: 'Начать разговор с ботом' },
+      { command: 'app', description: 'Открыть мини-приложение' },
     ]);
     console.log('Bot commands set successfully');
   } catch (error) {
@@ -101,6 +132,60 @@ const setupBotCommands = async (
 
   return bot;
 };
+
+/**
+ * Shows the main menu with inline buttons
+ * @param chatId Chat ID to send the menu to
+ */
+async function showMainMenu(chatId: number | string): Promise<void> {
+  try {
+    await sendTelegramMessage(chatId, 'Давайте приступим!\n', {
+      reply_markup: {
+        resize_keyboard: true,
+        inline_keyboard: [
+          [{ text: '📞 Контакты', callback_data: 'show_contacts' }],
+          [
+            {
+              text: 'Открыть приложение',
+              web_app: {
+                url: import.meta.env.VITE_TELEGRAM_MINI_APP_URL,
+              },
+            },
+          ],
+        ],
+      },
+    });
+  } catch (error) {
+    console.error(`Failed to show main menu to ${chatId}`, error);
+    handleTelegramError(error);
+  }
+}
+
+async function showMiniApp(chatId: number): Promise<void> {
+  try {
+    await sendTelegramMessage(
+      chatId,
+      '📱 Откройте наше приложение для более удобного бронирования:',
+      {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: 'Открыть приложение',
+                web_app: {
+                  url: import.meta.env.VITE_TELEGRAM_MINI_APP_URL,
+                },
+              },
+            ],
+          ],
+        },
+      },
+    );
+  } catch (error) {
+    console.error(`Failed to show mini app button to ${chatId}:`, error);
+    handleTelegramError(error);
+  }
+}
 
 /**
  * Initializes the bot state
