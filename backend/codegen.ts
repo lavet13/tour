@@ -16,6 +16,8 @@ const config: CodegenConfig = {
   config: {
     mappers: {
       User: '../../../node_modules/.prisma/client#User as UserModel',
+      TelegramChat:
+        '../../../node_modules/.prisma/client#TelegramChat as TelegramChatModel',
       Booking: '../../../node_modules/.prisma/client#Booking as BookingModel',
       City: '../../../node_modules/.prisma/client#City as CityModel',
       Route: '../../../node_modules/.prisma/client#Route as RouteModel',

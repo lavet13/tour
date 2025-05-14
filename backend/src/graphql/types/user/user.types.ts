@@ -1,8 +1,9 @@
 import gql from 'graphql-tag';
 
 export default gql`
-    type Query {
+  type Query {
     me: User
+    telegramChats: [TelegramChat!]!
   }
 
   input LoginInput {
@@ -16,11 +17,16 @@ export default gql`
     password: String!
   }
 
+  input UpdateTelegramChatIdsInput {
+    telegramChatIds: [String!]!
+  }
+
   type Mutation {
     login(loginInput: LoginInput!): AuthPayload!
     signup(signupInput: SignupInput!): AuthPayload!
     logout: Boolean!
     refreshToken: AuthPayload!
+    updateTelegramChatIds(input: UpdateTelegramChatIdsInput!): Boolean!
   }
 
   type AuthPayload {
@@ -33,6 +39,15 @@ export default gql`
     email: String!
     name: String!
     roles: [Role!]!
+    telegramChats: [TelegramChat]!
+  }
+
+  type TelegramChat {
+    id: ID!
+    chatId: String!
+    user: User!
+    createdAt: Date!
+    updatedAt: Date!
   }
 
   enum Role {

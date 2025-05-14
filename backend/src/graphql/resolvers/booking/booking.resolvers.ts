@@ -277,7 +277,7 @@ const resolvers: Resolvers = {
 
       try {
         // Notify managers using the functional service
-        await notifyNewBooking(booking);
+        await notifyNewBooking(booking, ctx.prisma);
 
         // Optionally publish to subscription
         ctx.pubSub.publish('createdBook', { createdBook: booking });
@@ -350,10 +350,10 @@ const resolversComposition: ResolversComposerMapping<any> = {
     isAuthenticated(),
     hasRoles([Role.MANAGER, Role.ADMIN]),
   ],
-  // 'Subscription.createdBook': [
-  //   isAuthenticated(),
-  //   hasRoles([Role.MANAGER, Role.ADMIN]),
-  // ],
+  'Subscription.createdBook': [
+    isAuthenticated(),
+    hasRoles([Role.MANAGER, Role.ADMIN]),
+  ],
 };
 
 export default composeResolvers(resolvers, resolversComposition);

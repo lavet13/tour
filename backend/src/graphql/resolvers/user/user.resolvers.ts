@@ -21,6 +21,13 @@ const resolvers: Resolvers = {
         },
       });
     },
+    async telegramChats(_, __, ctx) {
+      return ctx.prisma.telegramChat.findMany({
+        where: {
+          userId: ctx.me!.id,
+        },
+      });
+    },
   },
   Mutation: {
     async refreshToken(_, __, ctx) {
@@ -269,6 +276,40 @@ const resolvers: Resolvers = {
 
       return true;
     },
+    async updateTelegramChatIds(_, args, ctx) {
+      const { telegramChatIds } = args.input;
+
+      let transactionResult;
+
+      try {
+        transactionResult = await ctx.prisma.$transaction(async tx => {
+          await tx.telegramChat.deleteMany({
+            where: {
+              userId: ctx.me!.id,
+            },
+          });
+
+          // Update the user record with the Telegram chat IDs
+          await Promise.all(
+            telegramChatIds.map(chatId =>
+              tx.telegramChat.create({
+                data: {
+                  userId: ctx.me?.id,
+                  chatId,
+                },
+              }),
+            ),
+          );
+        });
+      } catch (reason) {
+        console.error(`It failed: ${reason}`);
+        throw new GraphQLError(
+          `Transacition failed while processing telegram Chat IDs`,
+        );
+      }
+
+      return true;
+    },
   },
   User: {
     async roles(parent, _, ctx) {
@@ -287,11 +328,16 @@ const resolvers: Resolvers = {
 
       return roles;
     },
+    async telegramChats(parent, _, ctx) {
+      return ctx.loaders.telegramChatIdsLoader.load(parent.id);
+    },
   },
 };
 
 const resolversComposition: ResolversComposerMapping<any> = {
   'Query.me': [isAuthenticated()],
+  'Query.telegramChats': [isAuthenticated()],
+  'Mutation.updateTelegramChatIds': [isAuthenticated()],
 };
 
 export default composeResolvers(resolvers, resolversComposition);

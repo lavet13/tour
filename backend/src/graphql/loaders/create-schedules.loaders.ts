@@ -3,19 +3,6 @@ import prismaClient from '@/prisma';
 import { Schedule } from '@prisma/client';
 
 export const createSchedulesLoader = (prisma: typeof prismaClient) => {
-  // return new DataLoader<string, Booking[]>(async (routeIds: readonly string[]) => {
-  //   const schedules = await prisma.schedule.findMany({
-  //     where: {
-  //       routeId: { in: routeIds as string[] },
-  //     },
-  //   });
-  //
-  //   const bookingsByRouteId = routeIds.map((routeId) =>
-  //     schedules.filter((schedule) => schedule.routeId === routeId)
-  //   );
-  //
-  //   return bookingsByRouteId;
-  // });
   return new DataLoader(async (routeIds: readonly string[]) => {
     // Fetch all schedules for the provided route IDs
     const schedules = await prisma.schedule.findMany({

@@ -14,7 +14,7 @@ import { SparklesText } from '@/components/ui/sparkles-text';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import { useAtom } from 'jotai';
 import { breakpointsAtom } from '@/lib/atoms/tailwind';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useRouteByIds } from '@/features/routes';
 import { keepPreviousData } from '@tanstack/react-query';
 import { activeStepAtom, containerRefAtom } from '@/lib/atoms/ui';
@@ -22,7 +22,6 @@ import { Loader2 } from 'lucide-react';
 import BookingResult from '@/pages/home/__booking-result';
 import DepartureArrivalCitiesInfo from '@/pages/home/__departure-arrival-cities-info';
 import SchedulesInfo from '@/pages/home/__schedules-info';
-import { is } from 'date-fns/locale';
 import { useIsFirstRender } from '@/hooks/use-is-first-render';
 
 export type DefaultValues = {

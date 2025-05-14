@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { graphql } from '@/gql';
-import { MeQuery } from '@/gql/graphql';
+import { MeQuery, TelegramChatIdsQuery } from '@/gql/graphql';
 import { client } from '@/graphql/graphql-request';
 import { client as queryClient } from '@/react-query';
 import { InitialDataOptions } from '@/react-query/types/initial-data-options';
@@ -23,7 +23,7 @@ export const useGetMe = (options?: InitialDataOptions<MeQuery>) => {
     }
   `);
 
-  return useQuery<MeQuery>({
+  return useQuery({
     queryKey: [(me.definitions[0] as any).name.value],
     queryFn: async () => {
       try {
@@ -62,6 +62,27 @@ export const useGetMe = (options?: InitialDataOptions<MeQuery>) => {
     retry: false,
     meta: {
       toastEnabled: false,
+    },
+    ...options,
+  });
+};
+
+export const useTelegramChatIds = (
+  options?: InitialDataOptions<TelegramChatIdsQuery>,
+) => {
+  const telegramChatIds = graphql(`
+    query TelegramChatIds {
+      telegramChats {
+        id
+        chatId
+      }
+    }
+  `);
+
+  return useQuery({
+    queryKey: [(telegramChatIds.definitions[0] as any).name.value],
+    queryFn: async () => {
+      return await client.request(telegramChatIds);
     },
     ...options,
   });

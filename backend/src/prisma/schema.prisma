@@ -29,9 +29,19 @@ model User {
   updatedAt    DateTime       @updatedAt
   RefreshToken RefreshToken[]
   roles        UserRole[]
+  telegramChat TelegramChat[]
 
   @@index([email])
   @@map("users")
+}
+
+model TelegramChat {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  chatId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {

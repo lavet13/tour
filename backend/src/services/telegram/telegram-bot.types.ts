@@ -3,7 +3,6 @@ import TelegramBot from 'node-telegram-bot-api';
 export type TelegramBotConfig = {
   enabled: boolean;
   botToken?: string;
-  managerChatIds: readonly string[];
 };
 
 export type TelegramBotState = Readonly<{

@@ -9,6 +9,7 @@ import { createRegionLoader } from '@/graphql/loaders/create-region.loaders';
 import { createRoutesLoader } from '@/graphql/loaders/create-routes.loaders';
 import { createScheduleDaysLoader } from './create-schedule-days.loaders';
 import { createScheduleLoader } from './create-schedule.loaders';
+import { createTelegramChatIdsLoader } from './create-telegram-chat-ids.loaders';
 
 export const createLoaders = (prisma: typeof prismaClient) => ({
   regionLoader: createRegionLoader(prisma),
@@ -21,4 +22,5 @@ export const createLoaders = (prisma: typeof prismaClient) => ({
   scheduleLoader: createScheduleLoader(prisma),
   departureTripsLoader: createDepartureTripsLoader(prisma),
   arrivalTripsLoader: createArrivalTripsLoader(prisma),
+  telegramChatIdsLoader: createTelegramChatIdsLoader(prisma),
 });

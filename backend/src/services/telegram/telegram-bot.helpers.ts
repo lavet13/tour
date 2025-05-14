@@ -1,6 +1,11 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { getBotState, handleTelegramError } from './telegram-bot.core';
-import { $Enums, Booking } from '@prisma/client';
+import { $Enums, Booking, BookingStatus, Role } from '@prisma/client';
+import {
+  formatRussianDate,
+  formatRussianDateTime,
+} from '@/helpers/format-russian-date';
+import prisma from '@/prisma';
 
 /**
  * Helper function to send a message with error handling
@@ -32,41 +37,80 @@ export const sendTelegramMessage = async (
   }
 };
 
+export function getBookingStatus(status: $Enums.BookingStatus) {
+  if (status === 'PENDING') {
+    return '💤 Ожидает';
+  }
+  if (status === 'CONFIRMED') {
+    return '✅ Принят';
+  }
+
+  return '-';
+}
+
+export function formatBookingMessage(booking: Booking): string {
+  return `
+<b>📢 Новая заявка!</b>
+
+<b><em>ID</em></b>\n<code>${booking.id}</code>\n
+<b><em>Фамилия</em></b>\n<code>${booking.lastName}</code>\n
+<b><em>Имя</em></b>\n<code>${booking.firstName}</code>\n
+<b><em>Телефон</em></b>\n${booking.phoneNumber}\n
+<b><em>🪑 Мест</em></b> ${booking.seatsCount}\n
+<b><em>🗓 Дата поездки</em></b>\n${formatRussianDate(booking.travelDate)}\n
+<b><em>⏰ Создано</em></b>\n${formatRussianDateTime(booking.createdAt)}\n
+<b>Статус</b>\n${getBookingStatus(booking.status)}
+`;
+}
+
 // Notify about a new booking
-export const notifyNewBooking = async (booking: Booking): Promise<void> => {
+export const notifyNewBooking = async (
+  booking: Booking,
+  prismaClient: typeof prisma,
+): Promise<void> => {
   const { bot, config } = getBotState();
 
   if (!bot || !config.enabled) return;
-
-  const getBookingStatus = (status: $Enums.BookingStatus) => {
-    if (status === 'PENDING') {
-      return 'Ожидает';
-    }
-    if (status === 'CONFIRMED') {
-      return 'Принят';
-    }
-
-    return '-';
-  };
-
-  const formatBookingMessage = (booking: Booking): string => `
-<b>📢 Новая заявка!</b>
-<b>ID:</b> <code>${booking.id}</code>
-<b>Фамилия и Имя:</b> ${booking.lastName} ${booking.firstName}
-<b>Телефон:</b> ${booking.phoneNumber}
-🪑 Мест: ${booking.seatsCount}
-🗓 Дата поездки: ${new Date(booking.travelDate).toLocaleDateString()}
-⏰ Создано: ${new Date(booking.createdAt).toLocaleString()}
-<b>Статус:</b> ${getBookingStatus(booking.status)}
-`;
 
   try {
     const message = formatBookingMessage(booking);
 
     // Use Promise.all for concurrent message sending
+    const chatIds = await prismaClient.telegramChat.findMany({
+      distinct: 'chatId',
+      select: {
+        chatId: true,
+      },
+      where: {
+        user: {
+          roles: {
+            some: {
+              role: { in: [Role.ADMIN, Role.MANAGER] },
+            },
+          },
+        },
+      },
+    });
+
     await Promise.all(
-      config.managerChatIds.map(chatId =>
-        bot.sendMessage(chatId, message, { parse_mode: 'HTML' }),
+      chatIds.map(({ chatId }) =>
+        sendTelegramMessage(chatId, message, {
+          parse_mode: 'HTML',
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: '✅ Принять',
+                  callback_data: `confirm_booking_${booking.id}`,
+                },
+                {
+                  text: '💤 Ожидать',
+                  callback_data: `pending_booking_${booking.id}`,
+                },
+              ],
+            ],
+          },
+        }),
       ),
     );
   } catch (error) {
@@ -77,3 +121,15 @@ export const notifyNewBooking = async (booking: Booking): Promise<void> => {
     throw error;
   }
 };
+
+/**
+ * Handler for changing booking status via Telegram bot
+ * @param chatId The Telegram chat ID of the user
+ * @param bookingId The ID of the booking to update
+ * @param newStatus The new status to set
+ */
+export async function handleBookingStatusChange(
+  chatId: number | string,
+  bookingId: string,
+  newStatus: BookingStatus,
+): Promise<void> {}

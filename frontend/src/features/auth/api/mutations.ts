@@ -6,6 +6,8 @@ import {
   LoginMutationVariables,
   RegisterMutation,
   RegisterMutationVariables,
+  UpdateTelegramChatIdsMutation,
+  UpdateTelegramChatIdsMutationVariables,
 } from '@/gql/graphql';
 import { graphql } from '@/gql';
 import { client } from '@/graphql/graphql-request';
@@ -59,7 +61,7 @@ export const useLogin = (
   `);
 
   return useMutation({
-    mutationFn: (variables: LoginMutationVariables) => {
+    mutationFn: variables => {
       return client.request(login, variables);
     },
     ...options,
@@ -83,7 +85,28 @@ export const useSignup = (
   `);
 
   return useMutation({
-    mutationFn: (variables: RegisterMutationVariables) => {
+    mutationFn: variables => {
+      return client.request(register, variables);
+    },
+    ...options,
+  });
+};
+
+export const useUpdateTelegramChatIds = (
+  options?: UseMutationOptions<
+    UpdateTelegramChatIdsMutation,
+    Error,
+    UpdateTelegramChatIdsMutationVariables
+  >,
+) => {
+  const register = graphql(`
+    mutation UpdateTelegramChatIds($input: UpdateTelegramChatIdsInput!) {
+      updateTelegramChatIds(input: $input)
+    }
+  `);
+
+  return useMutation({
+    mutationFn: variables => {
       return client.request(register, variables);
     },
     ...options,

@@ -18,7 +18,9 @@ const documents = {
     "\n    mutation RefreshToken {\n      refreshToken {\n        accessToken\n        refreshToken\n      }\n    }\n  ": types.RefreshTokenDocument,
     "\n    mutation Login($loginInput: LoginInput!) {\n      login(loginInput: $loginInput) {\n        accessToken\n        refreshToken\n      }\n    }\n  ": types.LoginDocument,
     "\n    mutation Register($signupInput: SignupInput!) {\n      signup(signupInput: $signupInput) {\n        accessToken\n        refreshToken\n      }\n    }\n  ": types.RegisterDocument,
+    "\n    mutation UpdateTelegramChatIds($input: UpdateTelegramChatIdsInput!) {\n      updateTelegramChatIds(input: $input)\n    }\n  ": types.UpdateTelegramChatIdsDocument,
     "\n    query Me {\n      me {\n        id\n        email\n        name\n        roles\n      }\n    }\n  ": types.MeDocument,
+    "\n    query TelegramChatIds {\n      telegramChats {\n        id\n        chatId\n      }\n    }\n  ": types.TelegramChatIdsDocument,
     "\n    mutation UpdateBooking($input: UpdateBookingInput!) {\n      updateBooking(input: $input) {\n        id\n        firstName\n        lastName\n        phoneNumber\n        travelDate\n        seatsCount\n        status\n        createdAt\n        updatedAt\n      }\n    }\n  ": types.UpdateBookingDocument,
     "\n    mutation CreateBooking($input: CreateBookingInput!) {\n      createBooking(input: $input) {\n        id\n        firstName\n        lastName\n        phoneNumber\n        travelDate\n        seatsCount\n        status\n        createdAt\n        updatedAt\n        telegram\n        whatsapp\n      }\n    }\n  ": types.CreateBookingDocument,
     "\n    query InfiniteBookings($input: BookingsInput!) {\n      bookings(input: $input) {\n        edges {\n          id\n          firstName\n          lastName\n          phoneNumber\n          telegram\n          whatsapp\n          extraPhoneNumber\n          extraTelegram\n          extraWhatsapp\n          direction\n          travelDate\n          seatsCount\n          route {\n            id\n            arrivalCity {\n              name\n            }\n            departureCity {\n              name\n            }\n          }\n          status\n          createdAt\n          updatedAt\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  ": types.InfiniteBookingsDocument,
@@ -79,7 +81,15 @@ export function graphql(source: "\n    mutation Register($signupInput: SignupInp
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n    mutation UpdateTelegramChatIds($input: UpdateTelegramChatIdsInput!) {\n      updateTelegramChatIds(input: $input)\n    }\n  "): (typeof documents)["\n    mutation UpdateTelegramChatIds($input: UpdateTelegramChatIdsInput!) {\n      updateTelegramChatIds(input: $input)\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n    query Me {\n      me {\n        id\n        email\n        name\n        roles\n      }\n    }\n  "): (typeof documents)["\n    query Me {\n      me {\n        id\n        email\n        name\n        roles\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    query TelegramChatIds {\n      telegramChats {\n        id\n        chatId\n      }\n    }\n  "): (typeof documents)["\n    query TelegramChatIds {\n      telegramChats {\n        id\n        chatId\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
