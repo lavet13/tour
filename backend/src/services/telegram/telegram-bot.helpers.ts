@@ -1,11 +1,13 @@
 import TelegramBot from 'node-telegram-bot-api';
 import { getBotState, handleTelegramError } from './telegram-bot.core';
-import { $Enums, Booking, BookingStatus, Role } from '@prisma/client';
+import { $Enums, Booking, Role } from '@prisma/client';
 import {
   formatRussianDate,
   formatRussianDateTime,
 } from '@/helpers/format-russian-date';
 import prisma from '@/prisma';
+import { BookingStatus } from '@/graphql/__generated__/types';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 /**
  * Helper function to send a message with error handling
@@ -52,7 +54,6 @@ export function formatBookingMessage(booking: Booking): string {
   return `
 <b>📢 Новая заявка!</b>
 
-<b><em>ID</em></b>\n<code>${booking.id}</code>\n
 <b><em>Фамилия</em></b>\n<code>${booking.lastName}</code>\n
 <b><em>Имя</em></b>\n<code>${booking.firstName}</code>\n
 <b><em>Телефон</em></b>\n${booking.phoneNumber}\n
@@ -61,6 +62,28 @@ export function formatBookingMessage(booking: Booking): string {
 <b><em>⏰ Создано</em></b>\n${formatRussianDateTime(booking.createdAt)}\n
 <b>Статус</b>\n${getBookingStatus(booking.status)}
 `;
+}
+
+/**
+ * Create booking actions keyboard with confirm/pending buttons
+ * @param bookingId ID of the booking
+ * @returns Inline keyboard markup
+ */
+export function getBookingActionsKeyboard(bookingId: string) {
+  return {
+    inline_keyboard: [
+      [
+        {
+          text: '✅ Принять',
+          callback_data: `confirm_booking_${bookingId}`,
+        },
+        {
+          text: '💤 Ожидать',
+          callback_data: `pending_booking_${bookingId}`,
+        },
+      ],
+    ],
+  };
 }
 
 // Notify about a new booking
@@ -96,20 +119,7 @@ export const notifyNewBooking = async (
       chatIds.map(({ chatId }) =>
         sendTelegramMessage(chatId, message, {
           parse_mode: 'HTML',
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: '✅ Принять',
-                  callback_data: `confirm_booking_${booking.id}`,
-                },
-                {
-                  text: '💤 Ожидать',
-                  callback_data: `pending_booking_${booking.id}`,
-                },
-              ],
-            ],
-          },
+          reply_markup: getBookingActionsKeyboard(booking.id),
         }),
       ),
     );
@@ -130,6 +140,59 @@ export const notifyNewBooking = async (
  */
 export async function handleBookingStatusChange(
   chatId: number | string,
+  messageId: number,
   bookingId: string,
   newStatus: BookingStatus,
-): Promise<void> {}
+): Promise<void> {
+  const { bot } = getBotState();
+  if (!bot) return;
+
+  try {
+    // Update the booking
+    const { status: currentStatus } = await prisma.booking.findUniqueOrThrow({
+      where: { id: bookingId },
+      select: {
+        status: true,
+      },
+    });
+
+    if (currentStatus === newStatus) return;
+
+    const booking = await prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: newStatus,
+        updatedAt: new Date(),
+      },
+    });
+
+    const message = formatBookingMessage(booking);
+
+    await bot?.editMessageText(message, {
+      chat_id: chatId,
+      message_id: messageId,
+      parse_mode: 'HTML',
+      reply_markup: getBookingActionsKeyboard(bookingId),
+    });
+  } catch (error) {
+    console.error('Error handling booking status change:', error);
+
+    // Check if it's a not found error
+    if (
+      error instanceof PrismaClientKnownRequestError &&
+      error.code === 'P2025'
+    ) {
+      await sendTelegramMessage(
+        chatId,
+        `❌ Бронирование с ID ${bookingId} не существует.`,
+      );
+    } else {
+      handleTelegramError(error);
+
+      await sendTelegramMessage(
+        chatId,
+        '❌ Не вышло обновить статус. Попробуйте позже.',
+      );
+    }
+  }
+}

@@ -11,11 +11,9 @@ import {
 } from '@/services/telegram/telegram-bot.types';
 import { config } from '@/services/telegram/telegram-bot.config';
 import {
-  formatBookingMessage,
-  getBookingStatus,
+  handleBookingStatusChange,
   sendTelegramMessage,
 } from '@/services/telegram/telegram-bot.helpers';
-import prisma from '@/prisma';
 import { BookingStatus } from '@/graphql/__generated__/types';
 
 // Private singleton instance
@@ -81,6 +79,36 @@ const getMainMenuKeyboard = () => {
 };
 
 /**
+ * Handle callback query for booking status update
+ * @param chatId Chat ID
+ * @param messageId Message ID
+ * @param data Callback data
+ */
+async function handleBookingCallback(
+  chatId: number,
+  messageId: number,
+  data: string,
+) {
+  if (data?.startsWith('confirm_booking_')) {
+    const bookingId = data.replace('confirm_booking_', '');
+    await handleBookingStatusChange(
+      chatId,
+      messageId,
+      bookingId,
+      BookingStatus.Confirmed,
+    );
+  } else if (data?.startsWith('pending_booking_')) {
+    const bookingId = data.replace('pending_booking_', '');
+    await handleBookingStatusChange(
+      chatId,
+      messageId,
+      bookingId,
+      BookingStatus.Pending,
+    );
+  }
+}
+
+/**
  * Sets up command handlers for the bot
  * @param bot TelegramBot instance
  * @returns The same bot instance or null
@@ -119,64 +147,11 @@ const setupCommandHandlers = (bot: TelegramBot | null): TelegramBot | void => {
       await bot.answerCallbackQuery(query.id);
 
       // Process different callback data
-      if (data?.startsWith('confirm_booking_')) {
-        const bookingId = data.replace('confirm_booking_', '');
-
-        try {
-          // Update the booking
-          const { status: bookingStatus } = await prisma.booking.findUniqueOrThrow({
-            where: { id: bookingId },
-            select: {
-              status: true,
-            },
-          });
-          if (bookingStatus === BookingStatus.Confirmed) return;
-          const booking = await prisma.booking.update({
-            where: { id: bookingId },
-            data: {
-              status: 'CONFIRMED',
-              updatedAt: new Date(),
-            },
-          });
-
-          const message = formatBookingMessage(booking);
-
-          await bot?.editMessageText(message, {
-            chat_id: chatId,
-            message_id: messageId,
-            parse_mode: 'HTML',
-            reply_markup: {
-              inline_keyboard: [
-                [
-                  {
-                    text: '✅ Принять',
-                    callback_data: `confirm_booking_${booking.id}`,
-                  },
-                  {
-                    text: '💤 Ожидать',
-                    callback_data: `pending_booking_${booking.id}`,
-                  },
-                ],
-              ],
-            },
-          });
-        } catch (error) {
-          console.error('Error handling booking status change:', error);
-
-          // Check if it's a not found error
-          if (error.code === 'P2025') {
-            await sendTelegramMessage(
-              chatId,
-              `❌ Бронирование с ID ${bookingId} не существует.`,
-            );
-            return;
-          }
-
-          await sendTelegramMessage(
-            chatId,
-            '❌ Не вышло обновить статус. Попробуйте позже.',
-          );
-        }
+      if (
+        data?.startsWith('confirm_booking_') ||
+        data?.startsWith('pending_booking_')
+      ) {
+        await handleBookingCallback(chatId, messageId, data);
       } else if (data === 'show_contacts') {
         await bot.editMessageText(
           `

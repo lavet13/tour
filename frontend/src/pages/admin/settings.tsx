@@ -99,112 +99,114 @@ function SettingsPage() {
           Можете настроить ваш аватар, уведомления и т.д.
         </PageHeaderDescription>
       </PageHeader>
-      <div className='container mx-0 px-3 py-4 max-w-md'>
-        <h2 className='scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0'>
-          Telegram
-        </h2>
-        {!isPending && (
-          <Form {...form}>
-            <form className='space-y-3' onSubmit={form.handleSubmit(onSubmit)}>
-              {fields.map((_field, index) => {
-                return (
-                  <Fragment key={_field.id}>
-                    <FormField
-                      control={form.control}
-                      name={`telegramChatIds.${index}.value`}
-                      rules={{
-                        required: 'Не указан Chat ID!',
-                      }}
-                      render={({ field: { value, ...field } }) => {
-                        console.log({ field });
-                        return (
-                          <FormItem className='gap-y-0 sm:gap-y-0'>
-                            <div className='flex flex-col gap-y-1.5'>
-                              <FormLabel className='flex justify-between'>
-                                <span>Chat ID для Telegram бота</span>
-                                {index === 0 ? (
-                                  <Button
-                                    onClick={() => {
-                                      append({
-                                        value: '',
-                                      });
-                                    }}
-                                    type='button'
-                                    className='size-fit p-0 m-0 leading-none text-xs underline-offset-2'
-                                    variant='link'
-                                  >
-                                    Добавить Chat ID
-                                  </Button>
-                                ) : null}
-                              </FormLabel>
+      <div className="container">
+        <div className='px-3 py-4 max-w-md'>
+          <h2 className='scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0'>
+            Telegram
+          </h2>
+          {!isPending && (
+            <Form {...form}>
+              <form className='space-y-3' onSubmit={form.handleSubmit(onSubmit)}>
+                {fields.map((_field, index) => {
+                  return (
+                    <Fragment key={_field.id}>
+                      <FormField
+                        control={form.control}
+                        name={`telegramChatIds.${index}.value`}
+                        rules={{
+                          required: 'Не указан Chat ID!',
+                        }}
+                        render={({ field: { value, ...field } }) => {
+                          console.log({ field });
+                          return (
+                            <FormItem className='gap-y-0 sm:gap-y-0'>
+                              <div className='flex flex-col gap-y-1.5'>
+                                <FormLabel className='flex justify-between'>
+                                  <span>Chat ID для Telegram бота</span>
+                                  {index === 0 ? (
+                                    <Button
+                                      onClick={() => {
+                                        append({
+                                          value: '',
+                                        });
+                                      }}
+                                      type='button'
+                                      className='size-fit p-0 m-0 leading-none text-xs underline-offset-2'
+                                      variant='link'
+                                    >
+                                      Добавить Chat ID
+                                    </Button>
+                                  ) : null}
+                                </FormLabel>
 
-                              <div className='relative'>
-                                {index !== 0 && (
-                                  <Button
-                                    onClick={() => remove(index)}
-                                    type='button'
-                                    className='absolute -top-2 -right-2 [&_svg]:size-3 size-5 rounded-sm'
-                                    variant='outline'
-                                    size='icon'
-                                  >
-                                    <X />
-                                    <span className='sr-only'>
-                                      Удалить Chat ID
-                                    </span>
-                                  </Button>
-                                )}
-                                <FormControl>
-                                  <Input
-                                    placeholder='Введите Chat ID'
-                                    value={value || ''}
-                                    {...field}
-                                  />
-                                </FormControl>
+                                <div className='relative'>
+                                  {index !== 0 && (
+                                    <Button
+                                      onClick={() => remove(index)}
+                                      type='button'
+                                      className='absolute -top-2 -right-2 [&_svg]:size-3 size-5 rounded-sm'
+                                      variant='outline'
+                                      size='icon'
+                                    >
+                                      <X />
+                                      <span className='sr-only'>
+                                        Удалить Chat ID
+                                      </span>
+                                    </Button>
+                                  )}
+                                  <FormControl>
+                                    <Input
+                                      placeholder='Введите Chat ID'
+                                      value={value || ''}
+                                      {...field}
+                                    />
+                                  </FormControl>
+                                </div>
+                                <FormMessage />
                               </div>
-                              <FormMessage />
-                            </div>
-                          </FormItem>
-                        );
-                      }}
-                    />
-                  </Fragment>
-                );
-              })}
-              <div className='flex gap-2 sm:flex-row flex-col'>
-                <Button
-                  type='submit'
-                  className='w-full'
-                  disabled={isSubmitting || !isDirty}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className='animate-spin' /> Сохраняется
-                    </>
-                  ) : (
-                    <>
-                      <Save />
-                      Сохранить
-                    </>
-                  )}
-                </Button>
-                {isDirty && (
+                            </FormItem>
+                          );
+                        }}
+                      />
+                    </Fragment>
+                  );
+                })}
+                <div className='flex gap-2 sm:flex-row flex-col'>
                   <Button
-                    type='button'
-                    onClick={() => {
-                      form.reset({
-                        telegramChatIds:
-                          chatIds.length === 0 ? undefined : chatIds,
-                      });
-                    }}
-                    variant='secondary'
+                    type='submit'
+                    className='w-full'
+                    disabled={isSubmitting || !isDirty}
                   >
-                    Сбросить
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className='animate-spin' /> Сохраняется
+                      </>
+                    ) : (
+                      <>
+                        <Save />
+                        Сохранить
+                      </>
+                    )}
                   </Button>
-                )}
-              </div>
-            </form>
-          </Form>
-        )}
+                  {isDirty && (
+                    <Button
+                      type='button'
+                      onClick={() => {
+                        form.reset({
+                          telegramChatIds:
+                            chatIds.length === 0 ? undefined : chatIds,
+                        });
+                      }}
+                      variant='secondary'
+                    >
+                      Сбросить
+                    </Button>
+                  )}
+                </div>
+              </form>
+            </Form>
+          )}
+        </div>
       </div>
     </>
   );
