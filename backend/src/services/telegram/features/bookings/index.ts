@@ -1,9 +1,7 @@
-import { BotFeature } from '@/services/telegram/telegram-bot.types';
 import { handlers } from '@/services/telegram/features/bookings/handlers';
+import { BotFeature } from '@/services/telegram/telegram-bot.types';
 
 export const bookingsFeature: BotFeature = {
-  name: 'bookings',
-
   callbackHandlers: [
     {
       canHandle: data =>

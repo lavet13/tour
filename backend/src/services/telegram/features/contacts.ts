@@ -2,8 +2,6 @@ import { BotFeature } from '@/services/telegram/telegram-bot.types';
 import { handleTelegramError } from '@/services/telegram/services/error.service';
 
 export const contactsFeature: BotFeature = {
-  name: 'contacts',
-
   callbackHandlers: [
     {
       canHandle: data => data === 'contacts:show',

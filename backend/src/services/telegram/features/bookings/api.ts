@@ -42,6 +42,6 @@ const notifyNewBooking = async (
   }
 };
 
-export const actions = {
+export const bookingsAPI = {
   notifyNewBooking,
 };

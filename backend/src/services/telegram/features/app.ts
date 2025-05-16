@@ -1,6 +1,7 @@
 import { BotFeature } from '@/services/telegram/telegram-bot.types';
 import { sendMessage } from '@/services/telegram/services/message.service';
 import { getBotState } from '@/services/telegram/telegram-bot.core';
+import { handleTelegramError } from '@/services/telegram/services/error.service';
 
 /**
  * Shows the mini app button
@@ -35,8 +36,6 @@ export async function showMiniApp(chatId: number): Promise<void> {
 }
 
 export const appFeature: BotFeature = {
-  name: 'app',
-
   commands: [
     { command: 'app', description: 'Открыть мини-приложение' },
     {
@@ -56,12 +55,17 @@ export const appFeature: BotFeature = {
     {
       regex: /\/mychatid/,
       handler: async msg => {
-        const chatId = msg.chat.id;
-        await sendMessage(
-          chatId,
-          `Ваш Телеграмм Chat ID: <code>${chatId}</code>\n\nИспользуйте его для привязки с вашим аккаунтом в веб-приложении.\n\n<strong><em>Только для администраторов</em></strong>`,
-          { parse_mode: 'HTML' },
-        );
+        try {
+          const chatId = msg.chat.id;
+          await sendMessage(
+            chatId,
+            `Ваш Телеграмм Chat ID: <code>${chatId}</code>\n\nИспользуйте его для привязки с вашим аккаунтом в веб-приложении.\n\n<strong><em>Только для администраторов</em></strong>`,
+            { parse_mode: 'HTML' },
+          );
+        } catch (error) {
+          console.error('Failed to show Chat ID:', error);
+          handleTelegramError(error);
+        }
       },
     },
   ],

@@ -5,8 +5,8 @@ import {
   BotFeature,
 } from '@/services/telegram/telegram-bot.types';
 import { config } from '@/services/telegram/telegram-bot.config';
-import { registerFeatures } from '@/services/telegram/features';
-import { handleTelegramError } from './services/error.service';
+import { handleTelegramError } from '@/services/telegram/services/error.service';
+import { getFeatures } from '@/services/telegram/features';
 
 // Private singleton instance
 let botStateInstance: TelegramBotState | null = null;
@@ -135,7 +135,7 @@ const setupCommandHandlers = (
  */
 const initializeBotState = (config: TelegramBotConfig): TelegramBotState => {
   const bot = createBot(config);
-  const features = registerFeatures();
+  const features = getFeatures();
 
   if (bot) {
     setupBotCommands(bot, features);
@@ -144,7 +144,6 @@ const initializeBotState = (config: TelegramBotConfig): TelegramBotState => {
 
   return {
     bot,
-    features,
     config,
   };
 };

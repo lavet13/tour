@@ -26,7 +26,6 @@ export type CallbackHandler = {
 };
 
 export type BotFeature = {
-  name: string;
   commands?: TelegramBot.BotCommand[];
   commandHandlers?: CommandHandler[];
   callbackHandlers?: CallbackHandler[];
@@ -35,7 +34,6 @@ export type BotFeature = {
 
 export type TelegramBotState = Readonly<{
   bot: TelegramBot | null;
-  features: BotFeature[];
   config: TelegramBotConfig;
 }>;
 

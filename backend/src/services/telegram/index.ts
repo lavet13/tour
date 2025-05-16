@@ -1,5 +1,5 @@
-import { getBotState } from '.';
-import { actions } from '@/services/telegram/features/bookings/actions';
+import { getBotState } from '@/services/telegram';
+import { getPublicAPIs } from '@/services/telegram/features';
 
 export * from './telegram-bot.config';
 export * from './telegram-bot.core';
@@ -10,10 +10,9 @@ export * from './telegram-bot.types';
  * @returns TelegramBotState object
  */
 const createBotService = () => {
-  getBotState();
-
   return {
-    notifyNewBooking: actions.notifyNewBooking,
+    ...getBotState(),
+    ...getPublicAPIs(),
   };
 };
 
