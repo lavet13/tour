@@ -8,6 +8,7 @@ import {
   TelegramBotConfig,
   TelegramBotError,
   TelegramBotState,
+  BotFeature,
 } from '@/services/telegram/telegram-bot.types';
 import { config } from '@/services/telegram/telegram-bot.config';
 import {
@@ -15,6 +16,7 @@ import {
   sendTelegramMessage,
 } from '@/services/telegram/telegram-bot.helpers';
 import { BookingStatus } from '@/graphql/__generated__/types';
+import { registerFeatures } from './features';
 
 // Private singleton instance
 let botStateInstance: TelegramBotState | null = null;
@@ -39,15 +41,7 @@ const createBot = (config: TelegramBotConfig): TelegramBot | null => {
         `Polling error:`,
         error instanceof Error ? error.message : String(error),
       );
-
-      // Type guard for checking if the error has the expected structure
-      if (isErrorWithCode(error)) {
-        console.error(`Error code: ${error.code}`);
-      }
-
-      if (isErrorWithResponse(error)) {
-        console.error('Error details:', error.response.body);
-      }
+      handleTelegramError(error);
     });
 
     return bot;
@@ -58,85 +52,55 @@ const createBot = (config: TelegramBotConfig): TelegramBot | null => {
 };
 
 /**
- * Creates main menu keyboard
- * @returns Inline keyboard markup for main menu
+ * Sets up bot commands with descriptions that appear in the menu
+ * @param bot TelegramBot instance
  */
-const getMainMenuKeyboard = () => {
-  return {
-    resize_keyboard: true,
-    inline_keyboard: [
-      [
-        { text: '📞 Контакты', callback_data: 'show_contacts' },
-        {
-          text: 'Открыть приложение',
-          web_app: {
-            url: import.meta.env.VITE_TELEGRAM_MINI_APP_URL,
-          },
-        },
-      ],
-    ],
-  };
-};
+const setupBotCommands = async (
+  bot: TelegramBot | null,
+  features: BotFeature[],
+): Promise<TelegramBot | void> => {
+  if (!bot) return;
 
-/**
- * Handle callback query for booking status update
- * @param chatId Chat ID
- * @param messageId Message ID
- * @param data Callback data
- */
-async function handleBookingCallback(
-  chatId: number,
-  messageId: number,
-  data: string,
-) {
-  if (data?.startsWith('confirm_booking_')) {
-    const bookingId = data.replace('confirm_booking_', '');
-    await handleBookingStatusChange(
-      chatId,
-      messageId,
-      bookingId,
-      BookingStatus.Confirmed,
-    );
-  } else if (data?.startsWith('pending_booking_')) {
-    const bookingId = data.replace('pending_booking_', '');
-    await handleBookingStatusChange(
-      chatId,
-      messageId,
-      bookingId,
-      BookingStatus.Pending,
-    );
+  try {
+    const commands = features.reduce((allCommands, feature) => {
+      if (feature.commands) {
+        return [...allCommands, ...feature.commands];
+      }
+
+      return allCommands;
+    }, [] as TelegramBot.BotCommand[]);
+
+    await bot.setMyCommands(commands);
+    console.log('Bot commands set successfully');
+  } catch (error) {
+    console.error('Failed to set bot commands:', error);
+    handleTelegramError(error);
   }
-}
+
+  return bot;
+};
 
 /**
  * Sets up command handlers for the bot
  * @param bot TelegramBot instance
  * @returns The same bot instance or null
  */
-const setupCommandHandlers = (bot: TelegramBot | null): TelegramBot | void => {
+const setupCommandHandlers = (
+  bot: TelegramBot | null,
+  features: BotFeature[],
+): TelegramBot | void => {
   if (!bot) return;
 
-  bot.onText(/\/start/, async msg => {
-    const chatId = msg.chat.id;
-    await showMainMenu(chatId);
-  });
-
-  bot.onText(/\/mychatid/, async msg => {
-    const chatId = msg.chat.id;
-    await sendTelegramMessage(
-      chatId,
-      `Ваш Телеграмм Chat ID: <code>${chatId}</code>\n\nИспользуйте его для привязки с вашим аккаунтом в веб-приложении.\n\n<strong><em>Только для администраторов</em></strong>`,
-      { parse_mode: 'HTML' },
-    );
-  });
-
-  bot.onText(/\/app/, async msg => {
-    const chatId = msg.chat.id;
-    await showMiniApp(chatId);
+  features.forEach(feature => {
+    if (feature.commandHandlers) {
+      feature.commandHandlers.forEach(handler => {
+        bot.onText(handler.regex, handler.handler);
+      });
+    }
   });
 
   bot.on('callback_query', async query => {
-    if (!query.message) return;
+    if (!query.message || !query.data) return;
 
     const chatId = query.message.chat.id;
     const messageId = query.message.message_id;
@@ -146,47 +110,23 @@ const setupCommandHandlers = (bot: TelegramBot | null): TelegramBot | void => {
       // Answer the callback query to remove the loading state
       await bot.answerCallbackQuery(query.id);
 
-      // Process different callback data
-      if (
-        data?.startsWith('confirm_booking_') ||
-        data?.startsWith('pending_booking_')
-      ) {
-        await handleBookingCallback(chatId, messageId, data);
-      } else if (data === 'show_contacts') {
-        await bot.editMessageText(
-          `
-<b>Наши контакты</b>
+      let handled = false;
 
-📞 Феникс: +79493180304
-📞 Феникс: +79494395616
-📩 Whatsapp: <a href="https://wa.me/+380713180304">+380713180304</a>
-📩 Telegram: <a href="https://t.me/+79493180304">+79493180304</a>
-Мы ВКонтакте:
-vk.com/go_to_krym
-Присоединяйтесь к нашему телеграмм каналу:
-t.me/Donbass_Tur
-Наш сайт:
-donbass-tour.online
-`,
-          {
-            chat_id: chatId,
-            message_id: messageId,
-            parse_mode: 'HTML',
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: 'Назад', callback_data: 'back_to_main' }],
-              ],
-            },
-          },
-        );
-      } else if (data === 'back_to_main') {
-        // Go back to the main menu
-        await bot.editMessageText('Давайте приступим!\n', {
-          chat_id: chatId,
-          message_id: messageId,
-          reply_markup: getMainMenuKeyboard(),
-        });
-      } else {
+      for (const feature of features) {
+        if (feature.callbackHandlers) {
+          for (const handler of feature.callbackHandlers) {
+            if (handler.canHandle(data)) {
+              await handler.handle(bot, chatId, messageId, data, query);
+              handled = true;
+              break;
+            }
+          }
+          if (handled) break;
+        }
+      }
+
+      if (!handled) {
+        console.warn(`No handler found for callback data: ${data}`);
         await bot.sendMessage(chatId, 'Unknown command');
       }
     } catch (error) {
@@ -199,88 +139,22 @@ donbass-tour.online
 };
 
 /**
- * Sets up bot commands with descriptions that appear in the menu
- * @param bot TelegramBot instance
- */
-const setupBotCommands = async (
-  bot: TelegramBot | null,
-): Promise<TelegramBot | void> => {
-  if (!bot) return;
-
-  try {
-    await bot.setMyCommands([
-      { command: 'start', description: 'Начать разговор с ботом' },
-      { command: 'app', description: 'Открыть мини-приложение' },
-      {
-        command: 'mychatid',
-        description: 'Показать ваш Chat ID для связки аккаунта',
-      },
-    ]);
-    console.log('Bot commands set successfully');
-  } catch (error) {
-    console.error('Failed to set bot commands:', error);
-    handleTelegramError(error);
-  }
-
-  return bot;
-};
-
-/**
- * Shows the main menu with inline buttons
- * @param chatId Chat ID to send the menu to
- */
-async function showMainMenu(chatId: number | string): Promise<void> {
-  try {
-    await sendTelegramMessage(chatId, 'Давайте приступим!\n', {
-      reply_markup: getMainMenuKeyboard(),
-    });
-  } catch (error) {
-    console.error(`Failed to show main menu to ${chatId}`, error);
-    handleTelegramError(error);
-  }
-}
-
-async function showMiniApp(chatId: number): Promise<void> {
-  try {
-    await sendTelegramMessage(
-      chatId,
-      '📱 Откройте наше приложение для заказа билета:',
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              {
-                text: 'Открыть приложение',
-                web_app: {
-                  url: import.meta.env.VITE_TELEGRAM_MINI_APP_URL,
-                },
-              },
-            ],
-          ],
-        },
-      },
-    );
-  } catch (error) {
-    console.error(`Failed to show mini app button to ${chatId}:`, error);
-    handleTelegramError(error);
-  }
-}
-
-/**
  * Initializes the bot state
  * @param config Bot configuration
  * @returns TelegramBotState object
  */
 const initializeBotState = (config: TelegramBotConfig): TelegramBotState => {
   const bot = createBot(config);
+  const features = registerFeatures();
 
   if (bot) {
-    setupBotCommands(bot);
-    setupCommandHandlers(bot);
+    setupBotCommands(bot, features);
+    setupCommandHandlers(bot, features);
   }
 
   return {
     bot,
+    features,
     config,
   };
 };
@@ -291,24 +165,7 @@ const initializeBotState = (config: TelegramBotConfig): TelegramBotState => {
  */
 export const getBotState = (): TelegramBotState => {
   if (!botStateInstance) {
-    botStateInstance = initializeBotState({
-      botToken: config.botToken,
-      enabled: config.enabled,
-    });
+    botStateInstance = initializeBotState(config);
   }
   return botStateInstance;
-};
-
-export const handleTelegramError = (error: unknown): void => {
-  if (error instanceof TelegramFatalError) {
-    console.error('Фатальная ошибка:', error.message);
-  } else if (error instanceof TelegramParseError) {
-    console.error('Ошибка парсинга:', error.message, error.response?.body);
-  } else if (error instanceof TelegramAPIError) {
-    console.error('Ошибка Telegram API:', error.response?.body);
-  } else if (error instanceof TelegramBotError) {
-    console.error(`Telegram ошибка (${error.code}):`, error.message);
-  } else {
-    console.error('Неизвестная ошибка:', error);
-  }
 };

@@ -1,8 +1,10 @@
 import { getBotState } from '@/services/telegram/telegram-bot.core';
+import { sendMessage } from '@/services/telegram/services/message.service';
 import {
-  sendTelegramMessage,
-  notifyNewBooking,
-} from '@/services/telegram/telegram-bot.helpers';
+  bookingsFeature,
+  contactsFeature,
+  appFeature,
+} from '@/services/telegram/features';
 
 /*
  * Creates the bot service singleton
@@ -13,10 +15,7 @@ const createBotService = () => {
   getBotState();
 
   // Return the service object with methods
-  return {
-    sendTelegramMessage,
-    notifyNewBooking,
-  };
+  return {};
 };
 
 // Create the singleton service instance
