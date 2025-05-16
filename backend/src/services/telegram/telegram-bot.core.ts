@@ -1,22 +1,12 @@
 import TelegramBot from 'node-telegram-bot-api';
 import {
-  TelegramAPIError,
-  TelegramFatalError,
-  TelegramParseError,
-  isErrorWithCode,
-  isErrorWithResponse,
   TelegramBotConfig,
-  TelegramBotError,
   TelegramBotState,
   BotFeature,
 } from '@/services/telegram/telegram-bot.types';
 import { config } from '@/services/telegram/telegram-bot.config';
-import {
-  handleBookingStatusChange,
-  sendTelegramMessage,
-} from '@/services/telegram/telegram-bot.helpers';
-import { BookingStatus } from '@/graphql/__generated__/types';
-import { registerFeatures } from './features';
+import { registerFeatures } from '@/services/telegram/features';
+import { handleTelegramError } from './services/error.service';
 
 // Private singleton instance
 let botStateInstance: TelegramBotState | null = null;
