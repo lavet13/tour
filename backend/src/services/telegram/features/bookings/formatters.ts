@@ -65,11 +65,11 @@ const formatBookingMessage = async (
   let extraWhatsapp: string = ``;
 
   if (booking.whatsapp) {
-    mainWhatsapp += `<b><em>Whatsapp(основной)</em></b>\n<a href="https://wa.me/${booking.phoneNumber}">${booking.phoneNumber}</a>`;
+    mainWhatsapp += `<b><em>Whatsapp(основной)</em></b>\n<a>${booking.phoneNumber}</a>`;
   }
 
   if (booking.extraWhatsapp) {
-    extraWhatsapp += `<b><em>Whatsapp(доп.)</em></b>\n<a href="https://wa.me/${booking.extraWhatsapp}">${booking.extraWhatsapp}</a>`;
+    extraWhatsapp += `<b><em>Whatsapp(доп.)</em></b>\n<a>${booking.extraWhatsapp}</a>`;
   }
 
   return `

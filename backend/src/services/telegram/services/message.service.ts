@@ -61,7 +61,7 @@ export const getMainMenuKeyboard = () => {
  */
 export async function showMainMenu(chatId: number | string): Promise<void> {
   try {
-    await sendMessage(chatId, 'Главное меню:', {
+    await sendMessage(chatId, 'Главное меню', {
       reply_markup: getMainMenuKeyboard(),
     });
   } catch (error) {

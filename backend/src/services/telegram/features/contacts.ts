@@ -13,7 +13,7 @@ export const contactsFeature: BotFeature = {
 
 📞 Феникс: +79493180304
 📞 Феникс: +79494395616
-📩 Whatsapp: <a href="https://wa.me/+380713180304">+380713180304</a>
+📩 Whatsapp: +380713180304
 📩 Telegram: <a href="https://t.me/+79493180304">+79493180304</a>
 Мы ВКонтакте:
 vk.com/go_to_krym

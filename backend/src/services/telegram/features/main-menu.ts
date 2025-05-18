@@ -1,5 +1,5 @@
 import { BotFeature } from '@/services/telegram/telegram-bot.types';
-import { showMainMenu } from '@/services/telegram/services/message.service';
+import { getMainMenuKeyboard, showMainMenu } from '@/services/telegram/services/message.service';
 import { handleTelegramError } from '@/services/telegram/services/error.service';
 
 export const mainMenuFeature: BotFeature = {
@@ -23,19 +23,7 @@ export const mainMenuFeature: BotFeature = {
           await bot.editMessageText('Главное меню\n', {
             chat_id: chatId,
             message_id: messageId,
-            reply_markup: {
-              inline_keyboard: [
-                [{ text: '☎  Контакты', callback_data: 'contacts:show' }],
-                [
-                  {
-                    text: '📲 Открыть приложение',
-                    web_app: {
-                      url: import.meta.env.VITE_TELEGRAM_MINI_APP_URL,
-                    },
-                  },
-                ],
-              ],
-            },
+            reply_markup: getMainMenuKeyboard(),
           });
         } catch (error) {
           console.error('Failed to edit main menu:', error);
