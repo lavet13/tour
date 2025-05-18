@@ -1,16 +1,17 @@
-import TelegramBot from 'node-telegram-bot-api';
 import { BookingStatus } from '@/graphql/__generated__/types';
-import prisma from '@/prisma';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { formatters } from '@/services/telegram/features/bookings/formatters';
 import { sendMessage } from '@/services/telegram/services/message.service';
 import { handleTelegramError } from '@/services/telegram/services/error.service';
+import { CallbackHandler } from '../..';
 
-const bookingStatusChange = async (
-  bot: TelegramBot,
-  chatId: number | string,
-  messageId: number,
-  data: string,
+const bookingStatusChange: CallbackHandler['handle'] = async (
+  bot,
+  chatId,
+  messageId,
+  data,
+  _query,
+  prismaClient,
 ): Promise<void> => {
   let bookingId: string;
   let newStatus: BookingStatus;
@@ -27,7 +28,7 @@ const bookingStatusChange = async (
   }
 
   try {
-    const { status: currentStatus } = await prisma.booking.findUniqueOrThrow({
+    const { status: currentStatus } = await prismaClient.booking.findUniqueOrThrow({
       where: { id: bookingId },
       select: {
         status: true,
@@ -36,7 +37,7 @@ const bookingStatusChange = async (
 
     if (currentStatus === newStatus) return;
 
-    const booking = await prisma.booking.update({
+    const booking = await prismaClient.booking.update({
       where: {
         id: bookingId,
       },
@@ -45,7 +46,7 @@ const bookingStatusChange = async (
       },
     });
 
-    const message = formatters.formatBookingMessage(booking);
+    const message = await formatters.formatBookingMessage(booking, prismaClient);
 
     await bot?.editMessageText(message, {
       chat_id: chatId,

@@ -42,8 +42,8 @@ export const getMainMenuKeyboard = () => {
   return {
     resize_keyboard: true,
     inline_keyboard: [
+      [{ text: '📞 Контакты', callback_data: 'contacts:show' }],
       [
-        { text: '📞 Контакты', callback_data: 'contacts:show' },
         {
           text: 'Открыть приложение',
           web_app: {
@@ -61,7 +61,7 @@ export const getMainMenuKeyboard = () => {
  */
 export async function showMainMenu(chatId: number | string): Promise<void> {
   try {
-    await sendMessage(chatId, 'Давайте приступим!\n', {
+    await sendMessage(chatId, 'Главное меню:', {
       reply_markup: getMainMenuKeyboard(),
     });
   } catch (error) {

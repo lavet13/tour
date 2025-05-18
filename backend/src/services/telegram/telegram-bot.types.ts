@@ -1,3 +1,4 @@
+import prisma from '@/prisma';
 import TelegramBot from 'node-telegram-bot-api';
 
 export type TelegramBotConfig = {
@@ -22,6 +23,7 @@ export type CallbackHandler = {
     messageId: number,
     data: string,
     query: TelegramBot.CallbackQuery,
+    prismaClient: typeof prisma,
   ) => Promise<void>;
 };
 

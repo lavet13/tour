@@ -7,6 +7,7 @@ import {
 import { config } from '@/services/telegram/telegram-bot.config';
 import { handleTelegramError } from '@/services/telegram/services/error.service';
 import { getFeatures } from '@/services/telegram/features';
+import prisma from '@/prisma';
 
 // Private singleton instance
 let botStateInstance: TelegramBotState | null = null;
@@ -27,11 +28,11 @@ const createBot = (config: TelegramBotConfig): TelegramBot | null => {
     console.log('Telegram bot initialized successfully');
 
     bot.on('polling_error', (error: Error) => {
-      console.error(
-        `Polling error:`,
-        error instanceof Error ? error.message : String(error),
-      );
-      handleTelegramError(error);
+      // console.error(
+      //   `Polling error:`,
+      //   error instanceof Error ? error.message : String(error),
+      // );
+      // handleTelegramError(error);
     });
 
     return bot;
@@ -106,7 +107,7 @@ const setupCommandHandlers = (
         if (feature.callbackHandlers) {
           for (const handler of feature.callbackHandlers) {
             if (handler.canHandle(data)) {
-              await handler.handle(bot, chatId, messageId, data, query);
+              await handler.handle(bot, chatId, messageId, data, query, prisma);
               handled = true;
               break;
             }

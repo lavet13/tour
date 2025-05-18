@@ -1,8 +1,9 @@
-import { $Enums, Booking } from '@prisma/client';
+import { $Enums, Booking, Route } from '@prisma/client';
 import {
   formatRussianDate,
   formatRussianDateTime,
 } from '@/helpers/format-russian-date';
+import prisma from '@/prisma';
 
 /**
  * Format booking status for display
@@ -25,13 +26,62 @@ const getBookingStatus = (status: $Enums.BookingStatus): string => {
  * @param booking Booking object
  * @returns Formatted message in HTML
  */
-const formatBookingMessage = (booking: Booking): string => {
+const formatBookingMessage = async (
+  booking: Booking,
+  prismaClient: typeof prisma,
+): Promise<string> => {
+  const route = await prismaClient.route.findUniqueOrThrow({
+    where: {
+      id: booking.routeId as string,
+    },
+    include: {
+      departureCity: {
+        select: {
+          name: true,
+        },
+      },
+      arrivalCity: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  const isForward = booking.direction === 'FORWARD';
+  const isBackward = booking.direction === 'BACKWARD';
+
+  let routeName: string = '';
+
+  if (isForward) {
+    routeName += `${route.departureCity.name} - ${route.arrivalCity.name}`;
+  }
+
+  if (isBackward) {
+    routeName += `${route.arrivalCity.name} - ${route.departureCity.name}`;
+  }
+
+  let mainWhatsapp: string = ``;
+  let extraWhatsapp: string = ``;
+
+  if (booking.whatsapp) {
+    mainWhatsapp += `<b><em>Whatsapp(основной)</em></b>\n<a href="https://wa.me/${booking.phoneNumber}">${booking.phoneNumber}</a>`;
+  }
+
+  if (booking.extraWhatsapp) {
+    extraWhatsapp += `<b><em>Whatsapp(доп.)</em></b>\n<a href="https://wa.me/${booking.extraWhatsapp}">${booking.extraWhatsapp}</a>`;
+  }
+
   return `
 <b>📢 Новая заявка!</b>
 
 <b><em>Фамилия</em></b>\n<code>${booking.lastName}</code>\n
 <b><em>Имя</em></b>\n<code>${booking.firstName}</code>\n
-<b><em>Телефон</em></b>\n${booking.phoneNumber}\n
+<b><em>Телефон(основной)</em></b>\n${booking.phoneNumber}
+${mainWhatsapp}
+${booking.extraPhoneNumber ? `<b><em>Телефон(доп.)</em></b>\n${booking.extraPhoneNumber}` : ``}
+${extraWhatsapp}
+<b><em>Маршрут</em></b>\n${routeName}\n
 <b><em>🪑 Мест</em></b> ${booking.seatsCount}\n
 <b><em>🗓 Дата поездки</em></b>\n${formatRussianDate(booking.travelDate)}\n
 <b><em>⏰ Создано</em></b>\n${formatRussianDateTime(booking.createdAt)}\n

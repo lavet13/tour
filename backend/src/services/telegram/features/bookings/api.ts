@@ -9,7 +9,7 @@ const notifyNewBooking = async (
   prismaClient: typeof prisma = prisma,
 ): Promise<void> => {
   try {
-    const message = formatters.formatBookingMessage(booking);
+    const message = await formatters.formatBookingMessage(booking, prismaClient);
 
     const chatIds = await prismaClient.telegramChat.findMany({
       distinct: 'chatId',
