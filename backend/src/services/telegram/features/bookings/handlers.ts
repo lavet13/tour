@@ -52,7 +52,7 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
       chat_id: chatId,
       message_id: messageId,
       parse_mode: 'HTML',
-      reply_markup: formatters.getBookingActionsKeyboard(booking.id),
+      reply_markup: formatters.getBookingActionsKeyboard(booking.id, newStatus),
     });
   } catch (error) {
     console.error('Error handling booking status change:', error);

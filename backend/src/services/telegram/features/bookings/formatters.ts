@@ -1,9 +1,10 @@
-import { $Enums, Booking, Route } from '@prisma/client';
+import { $Enums, Booking, BookingStatus, Route } from '@prisma/client';
 import {
   formatRussianDate,
   formatRussianDateTime,
 } from '@/helpers/format-russian-date';
 import prisma from '@/prisma';
+import TelegramBot from 'node-telegram-bot-api';
 
 /**
  * Format booking status for display
@@ -61,32 +62,48 @@ const formatBookingMessage = async (
     routeName += `${route.arrivalCity.name} - ${route.departureCity.name}`;
   }
 
-  let mainWhatsapp: string = ``;
-  let extraWhatsapp: string = ``;
+  let content = ``;
 
+  content += `<b>📢 Новая заявка!</b>\n\n`;
+  content += `<b>👤 Клиент</b>\n<code>${booking.lastName} ${booking.firstName}</code>\n\n`;
+  content += `<b>📞 Основные контакты</b>\n`;
+  content += `├ <b><em>Телефон</em></b>\n<a>${booking.phoneNumber}</a>\n`;
+
+  if (booking.telegram) {
+    const separator = booking.whatsapp ? `├` : `└`;
+    content += `${separator} <b><em>Telegram</em></b>\n<a href="https://t.me/${booking.phoneNumber}">перейти к чату</a>${booking.whatsapp ? `\n` : `\n\n`}`;
+  }
   if (booking.whatsapp) {
-    mainWhatsapp += `<b><em>Whatsapp(основной)</em></b>\n<a>${booking.phoneNumber}</a>`;
+    content += `└ <b><em>Whatsapp</em></b>\n<a href="https://wa.me/${booking.phoneNumber}">перейти к чату</a>\n\n`;
   }
 
+  if (booking.extraPhoneNumber) {
+    content += `<b>📱 Дополнительные контакты</b>\n`;
+  }
+
+  if (booking.extraPhoneNumber) {
+    content += `├ <b><em>Телефон</em></b>\n${booking.extraPhoneNumber}\n`;
+  }
+
+  if (booking.extraTelegram) {
+    const separator = booking.extraWhatsapp ? `├` : `└`;
+    content += `${separator} <b><em>Telegram</em></b>\n<a href="https://t.me/${booking.extraPhoneNumber}">перейти к чату</a>${booking.extraWhatsapp ? `\n` : `\n\n`}`;
+  }
   if (booking.extraWhatsapp) {
-    extraWhatsapp += `<b><em>Whatsapp(доп.)</em></b>\n<a>${booking.extraWhatsapp}</a>`;
+    content += `└ <b><em>Whatsapp: </em></b>\n<a href="https://wa.me/${booking.extraPhoneNumber}">перейти к чату</a>\n\n`;
   }
 
-  return `
-<b>📢 Новая заявка!</b>
+  content += `<b>🚍 Маршрут</b>\n${routeName}\n\n`;
 
-<b><em>Фамилия</em></b>\n<code>${booking.lastName}</code>\n
-<b><em>Имя</em></b>\n<code>${booking.firstName}</code>\n
-<b><em>Телефон(основной)</em></b>\n${booking.phoneNumber}
-${mainWhatsapp}
-${booking.extraPhoneNumber ? `<b><em>Телефон(доп.)</em></b>\n${booking.extraPhoneNumber}` : ``}
-${extraWhatsapp}
-<b><em>Маршрут</em></b>\n${routeName}\n
-<b><em>🪑 Мест</em></b> ${booking.seatsCount}\n
-<b><em>🗓 Дата поездки</em></b>\n${formatRussianDate(booking.travelDate)}\n
-<b><em>⏰ Создано</em></b>\n${formatRussianDateTime(booking.createdAt)}\n
-<b>Статус</b>\n${getBookingStatus(booking.status)}
-`;
+  content += `<b>🪑 Мест</b>\n${booking.seatsCount}\n\n`;
+
+  content += `<b>📅 Дата поездки</b>\n${formatRussianDate(booking.travelDate)}\n\n`;
+
+  content += `<b>⏰ Дата создания</b>\n${formatRussianDateTime(booking.createdAt)}\n\n`;
+
+  content += `<b>Статус</b>\n${getBookingStatus(booking.status)}`;
+
+  return content;
 };
 
 /**
@@ -94,20 +111,28 @@ ${extraWhatsapp}
  * @param bookingId ID of the booking
  * @returns Inline keyboard markup
  */
-const getBookingActionsKeyboard = (bookingId: string) => {
+const getBookingActionsKeyboard = (
+  bookingId: string,
+  status: BookingStatus,
+): TelegramBot.InlineKeyboardMarkup => {
+  const buttons = [];
+
+  if (status === 'PENDING') {
+    buttons.push({
+      text: '✅ Принять',
+      callback_data: `booking:confirm_${bookingId}`,
+    });
+  } else if (status === 'CONFIRMED') {
+    buttons.push({
+      text: '💤 Ожидать',
+      callback_data: `booking:pending_${bookingId}`,
+    });
+  } else {
+    throw new Error('Failed on rendering status buttons');
+  }
+
   return {
-    inline_keyboard: [
-      [
-        {
-          text: '✅ Принять',
-          callback_data: `booking:confirm_${bookingId}`,
-        },
-        {
-          text: '💤 Ожидать',
-          callback_data: `booking:pending_${bookingId}`,
-        },
-      ],
-    ],
+    inline_keyboard: [buttons],
   };
 };
 

@@ -1,4 +1,4 @@
-import { Booking, Role } from '@prisma/client';
+import { Booking, BookingStatus, Role } from '@prisma/client';
 import prisma from '@/prisma';
 import { formatters } from '@/services/telegram/features/bookings/formatters';
 import { sendMessage } from '@/services/telegram/services/message.service';
@@ -9,7 +9,10 @@ const notifyNewBooking = async (
   prismaClient: typeof prisma = prisma,
 ): Promise<void> => {
   try {
-    const message = await formatters.formatBookingMessage(booking, prismaClient);
+    const message = await formatters.formatBookingMessage(
+      booking,
+      prismaClient,
+    );
 
     const chatIds = await prismaClient.telegramChat.findMany({
       distinct: 'chatId',
@@ -31,7 +34,10 @@ const notifyNewBooking = async (
       chatIds.map(({ chatId }) =>
         sendMessage(chatId, message, {
           parse_mode: 'HTML',
-          reply_markup: formatters.getBookingActionsKeyboard(booking.id),
+          reply_markup: {
+            ...formatters.getBookingActionsKeyboard(booking.id, booking.status),
+            resize_keyboard: true,
+          },
         }),
       ),
     );

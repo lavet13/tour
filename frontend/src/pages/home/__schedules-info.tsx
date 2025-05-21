@@ -275,9 +275,6 @@ const SchedulesInfo: FC = () => {
                                   <RPNInput
                                     inputComponent={Input}
                                     placeholder='Введите номер телефона'
-                                    country={'RU'}
-                                    international
-                                    withCountryCallingCode
                                     labels={ru}
                                     {...field}
                                   />
