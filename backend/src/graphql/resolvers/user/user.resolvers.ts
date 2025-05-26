@@ -11,6 +11,9 @@ import createTokens from '@/helpers/create-tokens';
 import { ErrorCode } from '@/helpers/error-codes';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { cookieOpts } from '@/helpers/cookie-opts';
+import { hasRoles } from '@/graphql/composition/authorization';
+import crypto from 'crypto';
+import validatePassword from '@/helpers/validate-password';
 
 const resolvers: Resolvers = {
   Query: {
@@ -183,62 +186,308 @@ const resolvers: Resolvers = {
         refreshToken: transactionResult.refreshToken,
       };
     },
+    async authenticateWithTelegram(_, args, ctx) {
+      const { hash, ...dataToCheck } = args.input;
+      console.log({ input: args.input });
+      const botToken = ctx.telegramBot.config.botToken;
+
+      if (!botToken) {
+        throw new GraphQLError('Telegram bot token not configured');
+      }
+
+      const dataCheckString = Object.keys(dataToCheck)
+        .sort()
+        .map(key => `${key}=${dataToCheck[key as keyof typeof dataToCheck]}`)
+        .join('\n');
+
+      const secretKey = crypto.createHash('sha256').update(botToken).digest();
+
+      const hmac = crypto.createHmac('sha256', secretKey);
+      hmac.update(dataCheckString);
+
+      const calculatedHash = hmac.digest('hex');
+
+      // Verify the Telegram authentication data
+      const isValidTelegramAuth = calculatedHash === hash;
+
+      if (!isValidTelegramAuth) {
+        throw new GraphQLError('Invalid Telegram authentication data');
+      }
+
+      // Check if auth data is fresh (not older than 10 minutes)
+      const authTimestamp = parseInt(dataToCheck.auth_date) * 1000; // Convert to milliseconds
+      const now = Date.now();
+      const maxAgeMinutes = 10;
+      const maxAge = maxAgeMinutes * 60 * 1000; // Convert to milliseconds
+
+      const isTelegramAuthDataFresh = now - authTimestamp <= maxAge;
+
+      if (!isTelegramAuthDataFresh) {
+        throw new GraphQLError('Telegram authentication data is too old.');
+      }
+
+      const telegramId = BigInt(dataToCheck.id);
+      const authDate = new Date(authTimestamp);
+
+      let transactionResult;
+
+      try {
+        transactionResult = await ctx.prisma.$transaction(async tx => {
+          let telegramUser = await tx.telegramUser.findUnique({
+            where: { telegramId },
+          });
+
+          let user: any;
+          let isNewUser = false;
+
+          if (telegramUser) {
+            // Update existing Telegram user data
+            telegramUser = await tx.telegramUser.update({
+              where: { telegramId },
+              data: {
+                firstName: dataToCheck.first_name,
+                lastName: dataToCheck.last_name,
+                username: dataToCheck.username,
+                photoUrl: dataToCheck.photo_url,
+                authDate,
+                hash,
+              },
+              include: { user: { include: { roles: true } } },
+            });
+
+            if (telegramUser.userId) {
+              user = await tx.user.findUniqueOrThrow({
+                where: {
+                  id: telegramUser.userId,
+                },
+              });
+            } else {
+              // Telegram user exists but no linked User account
+              // Create a new User account and link it
+              user = await tx.user.create({
+                data: {
+                  name: `${dataToCheck.first_name}${dataToCheck.last_name}`,
+                  email: `telegram_${telegramId}@temp.local`,
+                  password: crypto.randomBytes(32).toString('hex'),
+                  roles: {
+                    create: {
+                      role: 'USER',
+                    },
+                  },
+                },
+                include: { roles: true },
+              });
+
+              // Link the User to TelegramUser
+              await tx.telegramUser.update({
+                where: { telegramId },
+                data: { userId: user.id },
+              });
+
+              isNewUser = true;
+            }
+          } else {
+            // Create new User and TelegramUser
+            user = await tx.user.create({
+              data: {
+                name: `${dataToCheck.first_name}${dataToCheck.last_name}`,
+                email: `telegram_${telegramId}@temp.local`,
+                password: crypto.randomBytes(32).toString('hex'),
+                roles: {
+                  create: {
+                    role: 'USER',
+                  },
+                },
+              },
+            });
+
+            // Create TelegramUser record
+            await tx.telegramUser.create({
+              data: {
+                telegramId,
+                firstName: dataToCheck.first_name,
+                lastName: dataToCheck.last_name,
+                username: dataToCheck.username,
+                photoUrl: dataToCheck.photo_url,
+                authDate,
+                hash,
+                userId: user.id,
+              },
+            });
+
+            isNewUser = true;
+          }
+
+          const { accessToken, refreshToken } = createTokens(user);
+
+          await tx.refreshToken.create({
+            data: {
+              token: refreshToken,
+              userId: user.id,
+            },
+          });
+
+          console.log('Telegram authentication successful');
+          return { user, isNewUser, accessToken, refreshToken };
+        });
+      } catch (error) {
+        console.error('Telegram authentication error:', error);
+        throw new GraphQLError('Failed to authenticate with Telegram');
+      }
+
+      // If transaction succeeded, set the cookies
+      try {
+        await ctx.request.cookieStore?.set({
+          name: 'accessToken',
+          value: transactionResult.accessToken,
+          ...cookieOpts,
+        });
+        await ctx.request.cookieStore?.set({
+          name: 'refreshToken',
+          value: transactionResult.refreshToken,
+          ...cookieOpts,
+        });
+        console.log('Telegram authentication cookies set successfully');
+      } catch (reason) {
+        console.error(`Failed to set cookies: ${reason}`);
+
+        // Attempt to clean up the refresh token that was created
+        try {
+          await ctx.prisma.refreshToken.delete({
+            where: {
+              token: transactionResult.refreshToken,
+            },
+          });
+          console.log('Cleaned up refresh token due to cookie setting failure');
+        } catch (cleanupError) {
+          console.error('Failed to cleanup refresh token: ' + cleanupError);
+        }
+
+        throw new GraphQLError('Failed while setting the cookie');
+      }
+
+      return {
+        user: transactionResult.user,
+        isNewUser: transactionResult.isNewUser,
+        accessToken: transactionResult.accessToken,
+        refreshToken: transactionResult.refreshToken,
+      };
+    },
     async login(_, args, ctx) {
       const { login, password } = args.loginInput;
-      const { refreshToken, accessToken } = await ctx.prisma.user.login(
-        login,
-        password,
-      );
 
+      let transactionResult;
+      try {
+      transactionResult = await ctx.prisma.$transaction(async tx => {
+        const user = await tx.user.findFirst({
+          where: {
+            OR: [
+              {
+                name: login,
+              },
+              {
+                email: login,
+              },
+            ],
+          },
+          include: {
+            roles: true,
+          },
+        });
+
+        if (!user) {
+          throw new GraphQLError('Такого пользователя не существует!');
+        }
+
+        const isValid = await validatePassword(password, user.password);
+        if (!isValid) {
+          throw new GraphQLError('Введен неверный пароль!');
+        }
+
+        const { accessToken, refreshToken } = createTokens(user);
+
+        await tx.refreshToken.create({
+          data: {
+            token: refreshToken,
+            userId: user.id,
+          },
+        });
+
+        console.log('User logged in successfully');
+        return { accessToken, refreshToken };
+      });
+      } catch(error) {
+        console.error('Transaction failed while logging in ther user', error);
+        throw new GraphQLError('Неизвестная ошибка при попытке войти');;
+      }
+
+      // If transaction succeeded, set the cookie
       try {
         await ctx.request.cookieStore?.set({
           name: 'accessToken',
-          value: accessToken,
+          value: transactionResult.accessToken,
           ...cookieOpts,
         });
 
         await ctx.request.cookieStore?.set({
           name: 'refreshToken',
-          value: refreshToken,
+          value: transactionResult.refreshToken,
           ...cookieOpts,
         });
+        console.log('Login cookies set successfully');
       } catch (reason) {
-        console.error(`It failed: ${reason}`);
-        throw new GraphQLError(`Failed while setting the cookie`);
+        console.error(`Failed to set cookies: ${reason}`);
+
+        // Attempt to roll back the token update if cookie setting fails
+        try {
+          await ctx.prisma.refreshToken.delete({
+            where: {
+              token: transactionResult.refreshToken,
+            },
+          });
+          console.log('Cleaned up refresh token due to cookie setting failure');
+        } catch (cleanupError) {
+          console.error('Failed to cleanup refresh token: ' + cleanupError);
+        }
+
+        throw new GraphQLError('Failed while setting the cookie');
       }
 
-      return { accessToken, refreshToken };
+      return {
+        accessToken: transactionResult.accessToken,
+        refreshToken: transactionResult.refreshToken,
+      };
     },
-    async signup(_, args, ctx) {
-      const { email, name, password } = args.signupInput;
-
-      const { refreshToken, accessToken } = await ctx.prisma.user.signup(
-        email,
-        name,
-        password,
-      );
-
-      try {
-        await ctx.request.cookieStore?.set({
-          name: 'accessToken',
-          value: accessToken,
-          ...cookieOpts,
-        });
-        await ctx.request.cookieStore?.set({
-          name: 'refreshToken',
-          value: refreshToken,
-          ...cookieOpts,
-        });
-      } catch (reason) {
-        console.error(`It failed: ${reason}`);
-        throw new GraphQLError(`Failed while setting the cookie`);
-      }
-
-      // console.log({ authorization: await ctx.request.cookieStore?.get('authorization') });
-      // console.log({ cookies: await ctx.request.cookieStore?.getAll()});
-
-      return { accessToken, refreshToken };
-    },
+    // async signup(_, args, ctx) {
+    //   const { email, name, password } = args.signupInput;
+    //
+    //   const { refreshToken, accessToken } = await ctx.prisma.user.signup(
+    //     email,
+    //     name,
+    //     password,
+    //   );
+    //
+    //   try {
+    //     await ctx.request.cookieStore?.set({
+    //       name: 'accessToken',
+    //       value: accessToken,
+    //       ...cookieOpts,
+    //     });
+    //     await ctx.request.cookieStore?.set({
+    //       name: 'refreshToken',
+    //       value: refreshToken,
+    //       ...cookieOpts,
+    //     });
+    //   } catch (reason) {
+    //     console.error(`It failed: ${reason}`);
+    //     throw new GraphQLError(`Failed while setting the cookie`);
+    //   }
+    //
+    //   // console.log({ authorization: await ctx.request.cookieStore?.get('authorization') });
+    //   // console.log({ cookies: await ctx.request.cookieStore?.getAll()});
+    //
+    //   return { accessToken, refreshToken };
+    // },
     async logout(_, __, ctx) {
       const refreshToken = await ctx.request.cookieStore?.get('refreshToken');
 
@@ -328,16 +577,25 @@ const resolvers: Resolvers = {
 
       return roles;
     },
-    async telegramChats(parent, _, ctx) {
-      return ctx.loaders.telegramChatIdsLoader.load(parent.id);
+    async telegram(parent, _, ctx) {
+      const telegramUser = await ctx.prisma.telegramUser.findUnique({
+        where: {
+          userId: parent.id,
+        },
+      });
+
+      return telegramUser;
     },
   },
 };
 
 const resolversComposition: ResolversComposerMapping<any> = {
   'Query.me': [isAuthenticated()],
-  'Query.telegramChats': [isAuthenticated()],
-  'Mutation.updateTelegramChatIds': [isAuthenticated()],
+  'Query.telegramChats': [isAuthenticated(), hasRoles(['ADMIN', 'MANAGER'])],
+  'Mutation.updateTelegramChatIds': [
+    isAuthenticated(),
+    hasRoles(['ADMIN', 'MANAGER']),
+  ],
 };
 
 export default composeResolvers(resolvers, resolversComposition);

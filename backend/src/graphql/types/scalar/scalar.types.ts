@@ -6,4 +6,5 @@ export default gql`
  scalar Time
  scalar Cuid
  scalar Byte
+ scalar BigInt
 `;

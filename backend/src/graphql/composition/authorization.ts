@@ -25,7 +25,6 @@ export const isAuthenticated =
 
     try {
       const decoded = verifyAccessToken(ctx.token);
-      console.log({ decoded });
       ctx.me = decoded;
     } catch (err) {
       throw err;

@@ -17,9 +17,9 @@ const documents = {
     "\n    mutation Logout {\n      logout\n    }\n  ": types.LogoutDocument,
     "\n    mutation RefreshToken {\n      refreshToken {\n        accessToken\n        refreshToken\n      }\n    }\n  ": types.RefreshTokenDocument,
     "\n    mutation Login($loginInput: LoginInput!) {\n      login(loginInput: $loginInput) {\n        accessToken\n        refreshToken\n      }\n    }\n  ": types.LoginDocument,
-    "\n    mutation Register($signupInput: SignupInput!) {\n      signup(signupInput: $signupInput) {\n        accessToken\n        refreshToken\n      }\n    }\n  ": types.RegisterDocument,
+    "\n    mutation AuthenticateWithTelegram($input: TelegramAuthInput!) {\n      authenticateWithTelegram(input: $input) {\n        user {\n          id\n          email\n          name\n          telegram {\n            id\n            telegramId\n            firstName\n            lastName\n            username\n            photoUrl\n            authDate\n          }\n        }\n        isNewUser\n        accessToken\n        refreshToken\n      }\n    }\n  ": types.AuthenticateWithTelegramDocument,
     "\n    mutation UpdateTelegramChatIds($input: UpdateTelegramChatIdsInput!) {\n      updateTelegramChatIds(input: $input)\n    }\n  ": types.UpdateTelegramChatIdsDocument,
-    "\n    query Me {\n      me {\n        id\n        email\n        name\n        roles\n      }\n    }\n  ": types.MeDocument,
+    "\n    query Me {\n      me {\n        id\n        email\n        name\n        roles\n        telegram {\n          telegramId\n          firstName\n          lastName\n          username\n          photoUrl\n          authDate\n          hash\n        }\n      }\n    }\n  ": types.MeDocument,
     "\n    query TelegramChatIds {\n      telegramChats {\n        id\n        chatId\n      }\n    }\n  ": types.TelegramChatIdsDocument,
     "\n    mutation UpdateBooking($input: UpdateBookingInput!) {\n      updateBooking(input: $input) {\n        id\n        firstName\n        lastName\n        phoneNumber\n        travelDate\n        seatsCount\n        status\n        createdAt\n        updatedAt\n      }\n    }\n  ": types.UpdateBookingDocument,
     "\n    mutation CreateBooking($input: CreateBookingInput!) {\n      createBooking(input: $input) {\n        id\n        firstName\n        lastName\n        phoneNumber\n        travelDate\n        seatsCount\n        status\n        createdAt\n        updatedAt\n        telegram\n        whatsapp\n      }\n    }\n  ": types.CreateBookingDocument,
@@ -77,7 +77,7 @@ export function graphql(source: "\n    mutation Login($loginInput: LoginInput!) 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    mutation Register($signupInput: SignupInput!) {\n      signup(signupInput: $signupInput) {\n        accessToken\n        refreshToken\n      }\n    }\n  "): (typeof documents)["\n    mutation Register($signupInput: SignupInput!) {\n      signup(signupInput: $signupInput) {\n        accessToken\n        refreshToken\n      }\n    }\n  "];
+export function graphql(source: "\n    mutation AuthenticateWithTelegram($input: TelegramAuthInput!) {\n      authenticateWithTelegram(input: $input) {\n        user {\n          id\n          email\n          name\n          telegram {\n            id\n            telegramId\n            firstName\n            lastName\n            username\n            photoUrl\n            authDate\n          }\n        }\n        isNewUser\n        accessToken\n        refreshToken\n      }\n    }\n  "): (typeof documents)["\n    mutation AuthenticateWithTelegram($input: TelegramAuthInput!) {\n      authenticateWithTelegram(input: $input) {\n        user {\n          id\n          email\n          name\n          telegram {\n            id\n            telegramId\n            firstName\n            lastName\n            username\n            photoUrl\n            authDate\n          }\n        }\n        isNewUser\n        accessToken\n        refreshToken\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -85,7 +85,7 @@ export function graphql(source: "\n    mutation UpdateTelegramChatIds($input: Up
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n    query Me {\n      me {\n        id\n        email\n        name\n        roles\n      }\n    }\n  "): (typeof documents)["\n    query Me {\n      me {\n        id\n        email\n        name\n        roles\n      }\n    }\n  "];
+export function graphql(source: "\n    query Me {\n      me {\n        id\n        email\n        name\n        roles\n        telegram {\n          telegramId\n          firstName\n          lastName\n          username\n          photoUrl\n          authDate\n          hash\n        }\n      }\n    }\n  "): (typeof documents)["\n    query Me {\n      me {\n        id\n        email\n        name\n        roles\n        telegram {\n          telegramId\n          firstName\n          lastName\n          username\n          photoUrl\n          authDate\n          hash\n        }\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

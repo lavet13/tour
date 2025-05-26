@@ -110,7 +110,8 @@ export function NavUser() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={async () => {
-                await Promise.all([logout(), refetchUser()]);
+                await logout();
+                await refetchUser();
                 navigate('/');
               }}
             >

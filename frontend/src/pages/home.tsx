@@ -63,9 +63,7 @@ export default function HomePage() {
   const isInitialRender = useIsFirstRender();
 
   const [breakpoints] = useAtom(breakpointsAtom);
-  const isDesktop = useMediaQuery(`(min-width: ${breakpoints.lg}px)`);
   const isTablet = useMediaQuery(`(min-width: ${breakpoints.md}px)`);
-  const isMobile = useMediaQuery(`(min-width: ${breakpoints.sm}px)`);
 
   const [activeStep, setActiveStep] = useAtom(activeStepAtom);
   useEffect(() => {
@@ -206,18 +204,6 @@ export default function HomePage() {
   const handleBack = () => {
     setActiveStep(prevActiveStep => prevActiveStep - 1);
   };
-
-  let size = 'sm' as 'sm' | 'md' | 'lg';
-  if (isMobile) {
-    size = 'sm' as const;
-  }
-  if (isTablet) {
-    size = 'md' as const;
-  }
-  if (isDesktop) {
-    size = 'lg' as const;
-  }
-  console.log({ size });
 
   return (
     <div className='flex-1 flex flex-col bg-gradient-to-b from-background to-background/95 font-inter'>

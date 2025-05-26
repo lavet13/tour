@@ -19,6 +19,15 @@ export const useGetMe = (options?: InitialDataOptions<MeQuery>) => {
         email
         name
         roles
+        telegram {
+          telegramId
+          firstName
+          lastName
+          username
+          photoUrl
+          authDate
+          hash
+        }
       }
     }
   `);

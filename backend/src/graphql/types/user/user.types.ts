@@ -11,11 +11,11 @@ export default gql`
     password: String!
   }
 
-  input SignupInput {
-    email: String!
-    name: String!
-    password: String!
-  }
+  # input SignupInput {
+  #   email: String!
+  #   name: String!
+  #   password: String!
+  # }
 
   input UpdateTelegramChatIdsInput {
     telegramChatIds: [String!]!
@@ -23,10 +23,28 @@ export default gql`
 
   type Mutation {
     login(loginInput: LoginInput!): AuthPayload!
-    signup(signupInput: SignupInput!): AuthPayload!
+    # signup(signupInput: SignupInput!): AuthPayload!
     logout: Boolean!
     refreshToken: AuthPayload!
     updateTelegramChatIds(input: UpdateTelegramChatIdsInput!): Boolean!
+    authenticateWithTelegram(input: TelegramAuthInput!): TelegramAuthPayload!
+  }
+
+  type TelegramAuthPayload {
+    accessToken: String!
+    refreshToken: String!
+    user: User!
+    isNewUser: Boolean!
+  }
+
+  input TelegramAuthInput {
+    id: BigInt!
+    first_name: String!
+    last_name: String
+    username: String
+    photo_url: String
+    auth_date: Date!
+    hash: String!
   }
 
   type AuthPayload {
@@ -39,13 +57,27 @@ export default gql`
     email: String!
     name: String!
     roles: [Role!]!
-    telegramChats: [TelegramChat]!
+    telegram: TelegramUser
   }
 
   type TelegramChat {
     id: ID!
     chatId: String!
     user: User!
+    createdAt: Date!
+    updatedAt: Date!
+  }
+
+  type TelegramUser {
+    id: ID!
+    telegramId: BigInt!
+    firstName: String!
+    lastName: String
+    username: String
+    photoUrl: String
+    authDate: Date!
+    hash: String!
+    user: User
     createdAt: Date!
     updatedAt: Date!
   }

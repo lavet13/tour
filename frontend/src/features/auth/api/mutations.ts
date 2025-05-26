@@ -8,6 +8,8 @@ import {
   RegisterMutationVariables,
   UpdateTelegramChatIdsMutation,
   UpdateTelegramChatIdsMutationVariables,
+  AuthenticateWithTelegramMutation,
+  AuthenticateWithTelegramMutationVariables,
 } from '@/gql/graphql';
 import { graphql } from '@/gql';
 import { client } from '@/graphql/graphql-request';
@@ -68,16 +70,31 @@ export const useLogin = (
   });
 };
 
-export const useSignup = (
+export const useAuthenticateTelegram = (
   options?: UseMutationOptions<
-    RegisterMutation,
+    AuthenticateWithTelegramMutation,
     Error,
-    RegisterMutationVariables
+    AuthenticateWithTelegramMutationVariables
   >,
 ) => {
-  const register = graphql(`
-    mutation Register($signupInput: SignupInput!) {
-      signup(signupInput: $signupInput) {
+  const authenticateWithTelegram = graphql(`
+    mutation AuthenticateWithTelegram($input: TelegramAuthInput!) {
+      authenticateWithTelegram(input: $input) {
+        user {
+          id
+          email
+          name
+          telegram {
+            id
+            telegramId
+            firstName
+            lastName
+            username
+            photoUrl
+            authDate
+          }
+        }
+        isNewUser
         accessToken
         refreshToken
       }
@@ -86,11 +103,36 @@ export const useSignup = (
 
   return useMutation({
     mutationFn: variables => {
-      return client.request(register, variables);
+      return client.request(authenticateWithTelegram, variables);
     },
+    retry: false,
     ...options,
   });
 };
+
+// export const useSignup = (
+//   options?: UseMutationOptions<
+//     RegisterMutation,
+//     Error,
+//     RegisterMutationVariables
+//   >,
+// ) => {
+//   const register = graphql(`
+//     mutation Register($signupInput: SignupInput!) {
+//       signup(signupInput: $signupInput) {
+//         accessToken
+//         refreshToken
+//       }
+//     }
+//   `);
+//
+//   return useMutation({
+//     mutationFn: variables => {
+//       return client.request(register, variables);
+//     },
+//     ...options,
+//   });
+// };
 
 export const useUpdateTelegramChatIds = (
   options?: UseMutationOptions<

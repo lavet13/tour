@@ -20,6 +20,24 @@ model UserRole {
   @@map("user_roles")
 }
 
+model TelegramUser {
+  id         String   @id @default(cuid())
+  telegramId BigInt   @unique
+  firstName  String
+  lastName   String?
+  username   String?
+  photoUrl   String?
+  authDate   DateTime
+  hash       String
+  userId     String?  @unique
+  user       User?    @relation(fields: [userId], references: [id]) // onDelete: SetNull
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([telegramId])
+  @@map("telegram_users")
+}
+
 model User {
   id           String         @id @default(cuid())
   name         String
@@ -29,6 +47,7 @@ model User {
   updatedAt    DateTime       @updatedAt
   RefreshToken RefreshToken[]
   roles        UserRole[]
+  telegramUser TelegramUser?
   telegramChat TelegramChat[]
 
   @@index([email])

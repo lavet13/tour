@@ -12,7 +12,7 @@ declare module 'tailwind-config' {
   export default config;
 }
 
-import '@tanstack/react-table'; //or vue, svelte, solid, qwik, etc.
+import '@tanstack/react-table';
 import { List } from 'lucide-react';
 
 declare module '@tanstack/react-table' {
@@ -27,5 +27,11 @@ declare module '@tanstack/react-table' {
     // updateData: (originalId: string, columnId: string, value: unknown) => void;
     onEdit?: (id: string) => void;
     onDelete?: (id: string) => void;
+  }
+}
+
+declare global {
+  interface Window {
+    [key: string]: any;
   }
 }
