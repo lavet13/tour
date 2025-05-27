@@ -57,7 +57,7 @@ const Header: FC = () => {
             )}
             {!meIsPending && user?.telegram && (
               <Button
-                className='ml-2 rounded-full'
+                className='ml-2 h-7 rounded-full'
                 size='sm'
                 disabled={logoutIsPending}
                 onClick={async () => {
