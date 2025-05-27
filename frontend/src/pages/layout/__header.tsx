@@ -48,6 +48,7 @@ const Header: FC = () => {
             <ModeToggle />
             {!meIsPending && !user && (
               <TelegramLogin
+                className='ml-2'
                 botName={'DonbassTourBot'}
                 buttonSize='small'
                 canSendMessages
@@ -55,6 +56,7 @@ const Header: FC = () => {
             )}
             {!meIsPending && user?.telegram && (
               <Button
+                className='ml-2'
                 size='sm'
                 onClick={async () => {
                   await logout();

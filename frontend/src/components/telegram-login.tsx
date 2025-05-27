@@ -1,4 +1,5 @@
 import { useAuthenticateTelegram, useGetMe, useLogout } from '@/features/auth';
+import { cn } from '@/lib/utils';
 import { Loader2 } from 'lucide-react';
 import { FC, useEffect, useRef } from 'react';
 
@@ -26,6 +27,7 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
   cornerRadius,
   canSendMessages = false,
   showUserPhoto = true,
+  className,
   ...props
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -103,7 +105,7 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
 
   return (
     <div
-      className='flex justify-center text-center'
+      className={cn('flex justify-center text-center', className)}
       ref={containerRef}
       {...props}
     >

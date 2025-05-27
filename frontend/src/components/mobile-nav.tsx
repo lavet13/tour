@@ -85,9 +85,9 @@ const MobileNav = () => {
 
   const { data, isPending } = useGetMe();
   const { me: user } = data || {};
-  const isAdminOrManagerButNotUser =
-    user?.roles?.some(role => role === Role.Admin || role === Role.Manager) &&
-    !user?.roles?.includes(Role.User);
+  const isAdminOrManagerButNotUser = user?.roles?.some(
+    role => role === Role.Admin || role === Role.Manager,
+  );
 
   const { data: ldnrRegion } = useRegionByName('ЛДНР');
   const { data: coastalRegion } = useRegionByName('Азовское побережье');

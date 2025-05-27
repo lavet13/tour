@@ -99,9 +99,9 @@ const MainNav: FC = () => {
   const { me: user } = data || {};
   const [contactIsOpen, setContactIsOpen] = useState(false);
 
-  const isAdminOrManagerButNotUser =
-    user?.roles?.some(role => role === Role.Admin || role === Role.Manager) &&
-    !user?.roles?.includes(Role.User);
+  const isAdminOrManagerButNotUser = user?.roles?.some(
+    role => role === Role.Admin || role === Role.Manager,
+  );
 
   // const {
   //   data: ldnrData,
