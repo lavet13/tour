@@ -24,33 +24,42 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
   const { mutateAsync: authenticate, isPending } = useAuthenticateTelegram();
 
   const handleTelegramAuth = async () => {
-    // Construct the auth URL with proper parameters
+    // Add timestamp to force fresh auth each time
+    const timestamp = Date.now();
+
     const params = new URLSearchParams({
       bot_id: botId.toString(),
-      origin: window.location.origin,
+      origin: 'https://donbass-tour.online',
       embed: '1',
       request_access: canSendMessages ? 'write' : 'read',
       return_to: window.location.origin,
+      // Add cache buster to force fresh authentication
+      _t: timestamp.toString(),
     });
 
     const telegramUrl = `https://oauth.telegram.org/auth?${params.toString()}`;
 
     console.log('Opening Telegram auth URL:', telegramUrl);
-    console.log('Current origin:', window.location.origin);
 
-    // Open popup window
+    // Open popup window with cache prevention
     const popup = window.open(
       telegramUrl,
-      'telegram-login',
+      `telegram-login-${timestamp}`, // Unique window name
       'width=550,height=470,resizable=0,scrollbars=0,menubar=0,toolbar=0,status=0',
     );
 
     if (!popup) {
       console.error('Failed to open popup - popup blocker might be active');
+      toast.error('Не удалось открыть окно авторизации. Проверьте блокировщик всплывающих окон.');
       return;
     }
 
+    let isAuthCompleted = false;
+
     const messageHandler = async (event: MessageEvent) => {
+      // Prevent duplicate processing
+      if (isAuthCompleted) return;
+
       // Accept messages from telegram.org domains and same origin
       if (
         !event.origin.includes('telegram.org') &&
@@ -75,27 +84,46 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
         }
 
         if (userData && userData.id && userData.hash) {
+          isAuthCompleted = true;
           window.removeEventListener('message', messageHandler);
           popup?.close();
 
           try {
+            console.log('Authenticating with data:', userData);
+
             await authenticate({
               input: {
+                // Convert string to BigInt for GraphQL
                 id: userData.id.toString(),
                 first_name: userData.first_name,
-                last_name: userData.last_name || '',
-                username: userData.username || '',
-                photo_url: userData.photo_url || '',
-                auth_date: userData.auth_date.toString(),
+                last_name: userData.last_name || null,
+                username: userData.username || null,
+                photo_url: userData.photo_url || null,
+                // Convert Unix timestamp to Date object
+                auth_date: new Date(parseInt(userData.auth_date) * 1000),
                 hash: userData.hash,
               },
             });
+
+            toast.success('Успешный вход через Telegram!');
           } catch (error) {
             console.error('Failed to login via telegram:', error);
+
             if (isGraphQLRequestError(error)) {
-              toast.error(error.response.errors[0].message);
+              const errorMessage = error.response.errors[0].message;
+              console.error('GraphQL Error:', errorMessage);
+
+              if (errorMessage.includes('too old')) {
+                toast.error('Данные авторизации устарели. Попробуйте войти заново.');
+              } else if (errorMessage.includes('Invalid')) {
+                toast.error('Ошибка проверки данных Telegram. Попробуйте еще раз.');
+              } else {
+                toast.error(errorMessage);
+              }
             } else if (error instanceof Error) {
               toast.error(error.message);
+            } else {
+              toast.error('Произошла ошибка при входе через Telegram');
             }
           }
         }
@@ -105,20 +133,29 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
     window.addEventListener('message', messageHandler);
 
     // Handle popup closed manually
-    const checkClosed = setInterval(() => {
+    let checkClosedInterval: NodeJS.Timeout;
+    const checkClosed = () => {
       if (popup?.closed) {
-        clearInterval(checkClosed);
+        if (!isAuthCompleted) {
+          console.log('Popup was closed manually without completing auth');
+          toast.info('Авторизация была отменена');
+        }
+        clearInterval(checkClosedInterval);
         window.removeEventListener('message', messageHandler);
-        console.log('Popup was closed manually');
       }
-    }, 1000);
+    };
+
+    checkClosedInterval = setInterval(checkClosed, 1000);
 
     // Cleanup after 5 minutes
     setTimeout(() => {
-      clearInterval(checkClosed);
+      clearInterval(checkClosedInterval);
       window.removeEventListener('message', messageHandler);
       if (!popup?.closed) {
         popup?.close();
+        if (!isAuthCompleted) {
+          toast.error('Время авторизации истекло');
+        }
       }
     }, 300000);
   };
@@ -131,7 +168,7 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
       disabled={isPending}
       {...props}
     >
-      {isPending && <Loader2 className='animate-spin' />}
+      {isPending && <Loader2 className='animate-spin mr-2' />}
       {!isPending && <>Войти через Telegram</>}
     </Button>
   );

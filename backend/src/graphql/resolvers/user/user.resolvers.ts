@@ -189,43 +189,69 @@ const resolvers: Resolvers = {
     async authenticateWithTelegram(_, args, ctx) {
       const { hash, ...dataToCheck } = args.input;
       console.log({ input: args.input });
+
       const botToken = ctx.telegramBot.config.botToken;
 
       if (!botToken) {
         throw new GraphQLError('Telegram bot token not configured');
       }
 
-      const dataCheckString = Object.keys(dataToCheck)
+      // Convert input data for hash verification
+      const dataForHash = {
+        ...dataToCheck,
+        // Convert Date back to Unix timestamp for hash verification
+        auth_date: Math.floor(
+          new Date(dataToCheck.auth_date).getTime() / 1000,
+        ).toString(),
+        // Convert BigInt to string for hash verification
+        id: dataToCheck.id.toString(),
+      };
+
+      const dataCheckString = Object.keys(dataForHash)
         .sort()
-        .map(key => `${key}=${dataToCheck[key as keyof typeof dataToCheck]}`)
+        .map(key => `${key}=${dataForHash[key]}`)
         .join('\n');
 
-      const secretKey = crypto.createHash('sha256').update(botToken).digest();
+      console.log('Data check string:', dataCheckString);
 
+      const secretKey = crypto.createHash('sha256').update(botToken).digest();
       const hmac = crypto.createHmac('sha256', secretKey);
       hmac.update(dataCheckString);
-
       const calculatedHash = hmac.digest('hex');
 
       // Verify the Telegram authentication data
       const isValidTelegramAuth = calculatedHash === hash;
 
       if (!isValidTelegramAuth) {
+        console.error('Hash verification failed:', {
+          provided: hash,
+          calculated: calculatedHash,
+          dataString: dataCheckString,
+        });
         throw new GraphQLError('Invalid Telegram authentication data');
       }
 
-      // Check if auth data is fresh (not older than 10 minutes)
-      const authTimestamp = parseInt(dataToCheck.auth_date) * 1000; // Convert to milliseconds
+      // Increase the auth data freshness window to 30 minutes or 1 hour
+      const authTimestamp = new Date(dataToCheck.auth_date).getTime();
       const now = Date.now();
-      const maxAgeMinutes = 10;
-      const maxAge = maxAgeMinutes * 60 * 1000; // Convert to milliseconds
+      const maxAgeMinutes = 60; // Increased from 10 to 60 minutes
+      const maxAge = maxAgeMinutes * 60 * 1000;
 
       const isTelegramAuthDataFresh = now - authTimestamp <= maxAge;
 
       if (!isTelegramAuthDataFresh) {
-        throw new GraphQLError('Telegram authentication data is too old.');
+        console.error('Auth data too old:', {
+          authTimestamp: new Date(authTimestamp),
+          now: new Date(now),
+          ageMinutes: (now - authTimestamp) / (60 * 1000),
+          maxAgeMinutes,
+        });
+        throw new GraphQLError(
+          `Telegram authentication data is too old. Please try logging in again.`,
+        );
       }
 
+      // Convert string to BigInt for database operations
       const telegramId = BigInt(dataToCheck.id);
       const authDate = new Date(authTimestamp);
 
@@ -237,7 +263,7 @@ const resolvers: Resolvers = {
             where: { telegramId },
           });
 
-          let user: any;
+          let user;
           let isNewUser = false;
 
           if (telegramUser) {
@@ -257,16 +283,18 @@ const resolvers: Resolvers = {
 
             if (telegramUser.userId) {
               user = await tx.user.findUniqueOrThrow({
-                where: {
-                  id: telegramUser.userId,
-                },
+                where: { id: telegramUser.userId },
+                include: { roles: true },
               });
             } else {
-              // Telegram user exists but no linked User account
-              // Create a new User account and link it
+              // Create new User and link to existing TelegramUser
+              const displayName = dataToCheck.last_name
+                ? `${dataToCheck.first_name} ${dataToCheck.last_name}`
+                : dataToCheck.first_name;
+
               user = await tx.user.create({
                 data: {
-                  name: `${dataToCheck.first_name}${dataToCheck.last_name}`,
+                  name: displayName,
                   email: `telegram_${telegramId}@temp.local`,
                   password: crypto.randomBytes(32).toString('hex'),
                   roles: {
@@ -278,7 +306,6 @@ const resolvers: Resolvers = {
                 include: { roles: true },
               });
 
-              // Link the User to TelegramUser
               await tx.telegramUser.update({
                 where: { telegramId },
                 data: { userId: user.id },
@@ -288,9 +315,13 @@ const resolvers: Resolvers = {
             }
           } else {
             // Create new User and TelegramUser
+            const displayName = dataToCheck.last_name
+              ? `${dataToCheck.first_name} ${dataToCheck.last_name}`
+              : dataToCheck.first_name;
+
             user = await tx.user.create({
               data: {
-                name: `${dataToCheck.first_name}${dataToCheck.last_name}`,
+                name: displayName,
                 email: `telegram_${telegramId}@temp.local`,
                 password: crypto.randomBytes(32).toString('hex'),
                 roles: {
@@ -299,9 +330,9 @@ const resolvers: Resolvers = {
                   },
                 },
               },
+              include: { roles: true },
             });
 
-            // Create TelegramUser record
             await tx.telegramUser.create({
               data: {
                 telegramId,
@@ -327,15 +358,18 @@ const resolvers: Resolvers = {
             },
           });
 
-          console.log('Telegram authentication successful');
+          console.log(
+            'Telegram authentication successful for user:',
+            user.name,
+          );
           return { user, isNewUser, accessToken, refreshToken };
         });
       } catch (error) {
-        console.error('Telegram authentication error:', error);
+        console.error('Telegram authentication transaction error:', error);
         throw new GraphQLError('Failed to authenticate with Telegram');
       }
 
-      // If transaction succeeded, set the cookies
+      // Set cookies
       try {
         await ctx.request.cookieStore?.set({
           name: 'accessToken',
@@ -351,19 +385,17 @@ const resolvers: Resolvers = {
       } catch (reason) {
         console.error(`Failed to set cookies: ${reason}`);
 
-        // Attempt to clean up the refresh token that was created
         try {
           await ctx.prisma.refreshToken.delete({
-            where: {
-              token: transactionResult.refreshToken,
-            },
+            where: { token: transactionResult.refreshToken },
           });
-          console.log('Cleaned up refresh token due to cookie setting failure');
         } catch (cleanupError) {
-          console.error('Failed to cleanup refresh token: ' + cleanupError);
+          console.error('Failed to cleanup refresh token:', cleanupError);
         }
 
-        throw new GraphQLError('Failed while setting the cookie');
+        throw new GraphQLError(
+          'Failed while setting the authentication cookie',
+        );
       }
 
       return {
@@ -378,47 +410,47 @@ const resolvers: Resolvers = {
 
       let transactionResult;
       try {
-      transactionResult = await ctx.prisma.$transaction(async tx => {
-        const user = await tx.user.findFirst({
-          where: {
-            OR: [
-              {
-                name: login,
-              },
-              {
-                email: login,
-              },
-            ],
-          },
-          include: {
-            roles: true,
-          },
+        transactionResult = await ctx.prisma.$transaction(async tx => {
+          const user = await tx.user.findFirst({
+            where: {
+              OR: [
+                {
+                  name: login,
+                },
+                {
+                  email: login,
+                },
+              ],
+            },
+            include: {
+              roles: true,
+            },
+          });
+
+          if (!user) {
+            throw new GraphQLError('Такого пользователя не существует!');
+          }
+
+          const isValid = await validatePassword(password, user.password);
+          if (!isValid) {
+            throw new GraphQLError('Введен неверный пароль!');
+          }
+
+          const { accessToken, refreshToken } = createTokens(user);
+
+          await tx.refreshToken.create({
+            data: {
+              token: refreshToken,
+              userId: user.id,
+            },
+          });
+
+          console.log('User logged in successfully');
+          return { accessToken, refreshToken };
         });
-
-        if (!user) {
-          throw new GraphQLError('Такого пользователя не существует!');
-        }
-
-        const isValid = await validatePassword(password, user.password);
-        if (!isValid) {
-          throw new GraphQLError('Введен неверный пароль!');
-        }
-
-        const { accessToken, refreshToken } = createTokens(user);
-
-        await tx.refreshToken.create({
-          data: {
-            token: refreshToken,
-            userId: user.id,
-          },
-        });
-
-        console.log('User logged in successfully');
-        return { accessToken, refreshToken };
-      });
-      } catch(error) {
+      } catch (error) {
         console.error('Transaction failed while logging in ther user', error);
-        throw new GraphQLError('Неизвестная ошибка при попытке войти');;
+        throw new GraphQLError('Неизвестная ошибка при попытке войти');
       }
 
       // If transaction succeeded, set the cookie
