@@ -43,7 +43,7 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
         last_name: user.last_name,
         username: user.username,
         photo_url: user.photo_url,
-        auth_date: user.auth_date, // Keep as Unix timestamp
+        auth_date: user.auth_date * 1000, // Keep as Unix timestamp
         hash: user.hash,
       },
     });

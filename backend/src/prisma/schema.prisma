@@ -22,7 +22,7 @@ model UserRole {
 
 model TelegramUser {
   id         String   @id @default(cuid())
-  telegramId BigInt   @unique
+  telegramId Int      @unique
   firstName  String
   lastName   String?
   username   String?

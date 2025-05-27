@@ -196,27 +196,23 @@ const resolvers: Resolvers = {
         throw new GraphQLError('Telegram bot token not configured');
       }
 
-      // The key fix: Use the auth_date as-is from Telegram widget
-      // Telegram sends auth_date as Unix timestamp (number), not as Date object
-      const dataForHash = {
-        ...dataToCheck,
-        // Keep auth_date as the original Unix timestamp (convert from Date back to number)
-        auth_date:
-          typeof dataToCheck.auth_date === 'object' &&
-          dataToCheck.auth_date instanceof Date
-            ? Math.floor(dataToCheck.auth_date.getTime() / 1000).toString()
-            : dataToCheck.auth_date.toString(),
-        // Convert BigInt to string for hash verification
-        id: dataToCheck.id.toString(),
-      };
+      // Convert auth_date to Unix timestamp in seconds if it's a Date object
+      const dataForHash = { ...dataToCheck };
+      if (dataForHash.auth_date instanceof Date) {
+        dataForHash.auth_date = Math.floor(
+          dataForHash.auth_date.getTime() / 1000,
+        );
+      } else if (typeof dataForHash.auth_date === 'number') {
+        // If auth_date is a number (likely in milliseconds due to frontend), convert to seconds
+        dataForHash.auth_date = Math.floor(dataForHash.auth_date / 1000);
+      }
 
       // Create data check string exactly as Telegram specifies
       const dataCheckString = Object.keys(dataForHash)
         .sort()
+        .filter(key => dataForHash[key as keyof typeof dataForHash] != null) // Exclude null/undefined values
         .map(key => `${key}=${dataForHash[key as keyof typeof dataForHash]}`)
         .join('\n');
-
-      console.log('Data check string:', dataCheckString);
 
       // Create HMAC signature
       const secretKey = crypto.createHash('sha256').update(botToken).digest();
@@ -227,9 +223,7 @@ const resolvers: Resolvers = {
       // Add this after creating dataCheckString for debugging
       console.log('Debug info:', {
         botToken: botToken.substring(0, 10) + '...', // Don't log full token
-        dataForHash,
         dataCheckString,
-        dataCheckStringBytes: Buffer.from(dataCheckString, 'utf8'),
         secretKeyHex: secretKey.toString('hex'),
         calculatedHash,
         providedHash: hash,
@@ -243,18 +237,17 @@ const resolvers: Resolvers = {
           provided: hash,
           calculated: calculatedHash,
           dataString: dataCheckString,
-          originalAuthDate: dataToCheck.auth_date,
-          processedAuthDate: dataForHash.auth_date,
+          originalAuthDate: args.input.auth_date,
         });
         throw new GraphQLError('Invalid Telegram authentication data');
       }
 
       // Check auth data freshness
       const authTimestamp =
-        typeof dataToCheck.auth_date === 'object' &&
-        dataToCheck.auth_date instanceof Date
-          ? dataToCheck.auth_date.getTime()
-          : dataToCheck.auth_date * 1000; // Convert Unix timestamp to milliseconds
+        typeof args.input.auth_date === 'object' &&
+        args.input.auth_date instanceof Date
+          ? args.input.auth_date.getTime()
+          : args.input.auth_date; // Convert Unix timestamp to milliseconds
 
       const now = Date.now();
       const maxAgeMinutes = 60; // 60 minutes
@@ -275,8 +268,9 @@ const resolvers: Resolvers = {
       }
 
       // Convert string to BigInt for database operations
-      const telegramId = BigInt(dataToCheck.id);
+      const telegramId = dataToCheck.id;
       const authDate = new Date(authTimestamp);
+      console.log({ authDate });
 
       let transactionResult;
 

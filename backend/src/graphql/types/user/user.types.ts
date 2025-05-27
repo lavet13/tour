@@ -38,7 +38,7 @@ export default gql`
   }
 
   input TelegramAuthInput {
-    id: BigInt!
+    id: Int!
     first_name: String!
     last_name: String
     username: String
@@ -70,7 +70,7 @@ export default gql`
 
   type TelegramUser {
     id: ID!
-    telegramId: BigInt!
+    telegramId: Int!
     firstName: String!
     lastName: String
     username: String
