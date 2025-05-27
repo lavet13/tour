@@ -209,7 +209,7 @@ const resolvers: Resolvers = {
 
       const dataCheckString = Object.keys(dataForHash)
         .sort()
-        .map(key => `${key}=${dataForHash[key]}`)
+        .map(key => `${key}=${dataForHash[key as keyof typeof dataToCheck]}`)
         .join('\n');
 
       console.log('Data check string:', dataCheckString);
