@@ -400,7 +400,7 @@ const SchedulesInfo: FC = () => {
           </div>
 
           <TelegramLogin
-            botName='DonbassTourBot'
+            botId={7970286565}
             buttonSize='large'
             canSendMessages
           />
