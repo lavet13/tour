@@ -8,6 +8,7 @@ import MainNav from '@/components/main-nav';
 import { Icons } from '@/components/icons';
 import TelegramLogin from '@/components/telegram-login';
 import { useGetMe, useLogout } from '@/features/auth';
+import { Loader2 } from 'lucide-react';
 
 const Header: FC = () => {
   const { data, isPending: meIsPending, refetch: refetchUser } = useGetMe();
@@ -56,14 +57,22 @@ const Header: FC = () => {
             )}
             {!meIsPending && user?.telegram && (
               <Button
-                className='ml-2'
+                className='ml-2 rounded-full'
                 size='sm'
+                disabled={logoutIsPending}
                 onClick={async () => {
                   await logout();
                   await refetchUser();
                 }}
               >
-                Выйти из аккаунта
+                {logoutIsPending ? (
+                  <>
+                    <Loader2 className='animate-spin' />
+                    Выходим...
+                  </>
+                ) : (
+                  <>Выйти из аккаунта</>
+                )}
               </Button>
             )}
           </nav>
