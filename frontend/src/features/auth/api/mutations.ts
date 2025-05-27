@@ -78,20 +78,6 @@ export const useAuthenticateTelegram = (
   const authenticateWithTelegram = graphql(`
     mutation AuthenticateWithTelegram($input: TelegramAuthInput!) {
       authenticateWithTelegram(input: $input) {
-        user {
-          id
-          email
-          name
-          telegram {
-            id
-            telegramId
-            firstName
-            lastName
-            username
-            photoUrl
-            authDate
-          }
-        }
         isNewUser
         accessToken
         refreshToken

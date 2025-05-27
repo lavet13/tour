@@ -1,14 +1,19 @@
 import { ModeToggle } from '@/components/mode-toggle';
 import { Link } from 'react-router-dom';
-import { buttonVariants } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { FC } from 'react';
 import { cn } from '@/lib/utils';
 import MobileNav from '@/components/mobile-nav';
 import MainNav from '@/components/main-nav';
 import { Icons } from '@/components/icons';
 import TelegramLogin from '@/components/telegram-login';
+import { useGetMe, useLogout } from '@/features/auth';
 
 const Header: FC = () => {
+  const { data, isPending: meIsPending, refetch: refetchUser } = useGetMe();
+  const { me: user } = data || {};
+  const { mutateAsync: logout, isPending: logoutIsPending } = useLogout();
+
   return (
     <header className='sticky top-0 z-50 w-full border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
       <div className='container px-2 h-14 flex items-center'>
@@ -41,11 +46,24 @@ const Header: FC = () => {
               <span className='sr-only'>Telegram</span>
             </Link>
             <ModeToggle />
-            <TelegramLogin
-              botName={'DonbassTourBot'}
-              buttonSize='small'
-              canSendMessages
-            />
+            {!meIsPending && !user && (
+              <TelegramLogin
+                botName={'DonbassTourBot'}
+                buttonSize='small'
+                canSendMessages
+              />
+            )}
+            {!meIsPending && user?.telegram && (
+              <Button
+                size='sm'
+                onClick={async () => {
+                  await logout();
+                  await refetchUser();
+                }}
+              >
+                Выйти из аккаунта
+              </Button>
+            )}
           </nav>
         </div>
       </div>

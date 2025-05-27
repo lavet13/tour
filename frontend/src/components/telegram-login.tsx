@@ -30,9 +30,7 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { mutateAsync: authenticate, isPending } = useAuthenticateTelegram();
-  const { data, isPending: meIsPending, refetch: refetchUser } = useGetMe();
-  const { mutateAsync: logout, isPending: logoutIsPending } = useLogout();
-  const { me: user } = data || {};
+  const { refetch: refetchUser } = useGetMe();
 
   const handleTelegramAuth = async (user: TelegramUser) => {
     console.log('Raw Telegram user data:', user);
@@ -53,18 +51,6 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
   };
 
   useEffect(() => {
-    // Cleanup any existing callback
-    const cleanupExistingCallback = () => {
-      const existingCallbacks = Object.keys(window).filter(key =>
-        key.startsWith('onTelegramAuth_'),
-      );
-      existingCallbacks.forEach(callback => {
-        delete window[callback];
-      });
-    };
-
-    cleanupExistingCallback();
-
     const script = document.createElement('script');
     script.src = 'https://telegram.org/js/telegram-widget.js?22';
     script.async = true;
