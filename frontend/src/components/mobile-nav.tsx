@@ -37,6 +37,7 @@ import { useRoutes } from '@/features/routes';
 import { Input } from '@/components/ui/input';
 import { useDrawerState } from '@/hooks/use-drawer-state';
 import { Separator } from '@/components/ui/separator';
+import { Role } from '@/gql/graphql';
 
 type SheetLinkProps = Omit<NavLinkProps, 'className'> & {
   children: ReactNode;
@@ -84,6 +85,9 @@ const MobileNav = () => {
 
   const { data, isPending } = useGetMe();
   const { me: user } = data || {};
+  const isAdminOrManagerButNotUser =
+    user?.roles?.some(role => role === Role.Admin || role === Role.Manager) &&
+    !user?.roles?.includes(Role.User);
 
   const { data: ldnrRegion } = useRegionByName('ЛДНР');
   const { data: coastalRegion } = useRegionByName('Азовское побережье');
@@ -305,7 +309,7 @@ const MobileNav = () => {
               )}
 
               <div className='flex flex-col items-start grow justify-end space-y-1 pt-6 pl-2'>
-                {user && !isPending && (
+                {!isPending && isAdminOrManagerButNotUser && (
                   <Button
                     variant='ghost'
                     className='w-fit px-2 py-0 space-x-1 h-9'
@@ -324,9 +328,9 @@ const MobileNav = () => {
                   onClose={() => setContactIsOpen(false)}
                 >
                   <Button
-                    className="px-2"
-                    variant="ghost"
-                    size="sm"
+                    className='px-2'
+                    variant='ghost'
+                    size='sm'
                     onClick={() => setContactIsOpen(true)}
                   >
                     <ContactRound />

@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils';
 import { FC, forwardRef, ReactNode, useMemo, useState } from 'react';
-import { Link, LinkProps, useSearchParams } from 'react-router-dom';
+import { Link, LinkProps } from 'react-router-dom';
 import {
   NavLink as RouterLink,
   NavLinkProps as RouterLinkProps,
@@ -24,14 +24,11 @@ import {
   NavigationMenuViewport as RadixNavigationMenuViewport,
   NavigationMenuTrigger as RadixNavigationMenuTrigger,
 } from '@radix-ui/react-navigation-menu';
-import { useRoutes } from '@/features/routes/api/queries';
-import { useRegionByName } from '@/features/region/api/queries';
 import { navigationMenuStateAtom } from '@/lib/atoms/ui';
 import { useAtom } from 'jotai';
 import { useGetMe } from '@/features/auth/api/queries';
 import { Input } from '@/components/ui/input';
 import {
-  processCityRoutes,
   type ProcessedCity,
   type CityConnection,
 } from '@/helpers/process-city-routes';
@@ -42,7 +39,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { useDrawerState } from '@/hooks/use-drawer-state';
+import { Role } from '@/gql/graphql';
 
 type NavLinkProps = Omit<RouterLinkProps, 'className'> & {
   children: ReactNode;
@@ -101,6 +98,10 @@ const MainNav: FC = () => {
   const { data, isPending } = useGetMe();
   const { me: user } = data || {};
   const [contactIsOpen, setContactIsOpen] = useState(false);
+
+  const isAdminOrManagerButNotUser =
+    user?.roles?.some(role => role === Role.Admin || role === Role.Manager) &&
+    !user?.roles?.includes(Role.User);
 
   // const {
   //   data: ldnrData,
@@ -266,7 +267,7 @@ const MainNav: FC = () => {
           {/*   </NavigationMenuContent> */}
           {/* </NavigationMenuItem> */}
 
-          {user && !isPending && (
+          {!isPending && isAdminOrManagerButNotUser && (
             <NavigationMenuItem>
               <NavigationMenuLink
                 className={cn(

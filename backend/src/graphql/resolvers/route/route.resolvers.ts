@@ -16,7 +16,6 @@ import path from 'path';
 import { PonyfillFile } from '@/types/file';
 import { pipeline } from 'stream/promises';
 import { Writable } from 'stream';
-import { warn } from 'console';
 
 const resolvers: Resolvers = {
   Query: {
@@ -549,10 +548,6 @@ const resolvers: Resolvers = {
 
 const resolversComposition: ResolversComposerMapping<any> = {
   'Query.routeById': [isAuthenticated(), hasRoles([Role.MANAGER, Role.ADMIN])],
-  // 'Query.infiniteRoutes': [
-  //   isAuthenticated(),
-  //   hasRoles([Role.MANAGER, Role.ADMIN]),
-  // ],
   'Mutation.uploadPhotoRoute': [
     isAuthenticated(),
     hasRoles([Role.MANAGER, Role.ADMIN]),
