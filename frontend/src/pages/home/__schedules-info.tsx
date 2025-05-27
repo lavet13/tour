@@ -36,7 +36,6 @@ import { NumericFormat } from 'react-number-format';
 import ru from 'react-phone-number-input/locale/ru.json';
 import { useAtom } from 'jotai';
 import { activeStepAtom, containerRefAtom } from '@/lib/atoms/ui';
-import TelegramLogin from '@/components/telegram-login';
 
 type Route = GetRouteByIdsQuery['routeByIds'];
 type ScheduleItem = Omit<
@@ -399,11 +398,6 @@ const SchedulesInfo: FC = () => {
             </div>
           </div>
 
-          <TelegramLogin
-            botName={'DonbassTourBot'}
-            buttonSize='large'
-            canSendMessages
-          />
         </div>
       ) : null}
     </>

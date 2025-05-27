@@ -1,6 +1,7 @@
-import { useAuthenticateTelegram } from '@/features/auth';
+import { useAuthenticateTelegram, useGetMe, useLogout } from '@/features/auth';
 import { Loader2 } from 'lucide-react';
 import { FC, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 
 type TelegramUser = {
   id: number;
@@ -30,11 +31,13 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { mutateAsync: authenticate, isPending } = useAuthenticateTelegram();
+  const { data, isPending: meIsPending, refetch: refetchUser } = useGetMe();
+  const { mutateAsync: logout, isPending: logoutIsPending } = useLogout();
+  const { me: user } = data || {};
 
   const handleTelegramAuth = async (user: TelegramUser) => {
     console.log('Raw Telegram user data:', user);
 
-    // Send the data exactly as received from Telegram
     // The auth_date should be a Unix timestamp (number of seconds since epoch)
     await authenticate({
       input: {
@@ -50,10 +53,12 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
   };
 
   useEffect(() => {
+    if (user?.telegram) return;
+
     // Cleanup any existing callback
     const cleanupExistingCallback = () => {
       const existingCallbacks = Object.keys(window).filter(key =>
-        key.startsWith('onTelegramAuth_')
+        key.startsWith('onTelegramAuth_'),
       );
       existingCallbacks.forEach(callback => {
         delete window[callback];
@@ -104,11 +109,36 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
       }
       delete (window as any)[callbackName];
     };
-  }, [botName, buttonSize, cornerRadius, canSendMessages, showUserPhoto]);
+  }, [
+    botName,
+    buttonSize,
+    cornerRadius,
+    canSendMessages,
+    showUserPhoto,
+    user?.telegram,
+  ]);
 
   return (
-    <div className="flex justify-center text-center" ref={containerRef} {...props}>
-      {isPending && <Loader2 className="animate-spin" />}
+    <div className='flex justify-center text-center' {...props}>
+      {user?.telegram ? (
+        <div>
+          <p>Logged in as {user.name}</p>
+          <Button
+            onClick={async () => {
+              await logout();
+              await refetchUser();
+            }}
+            disabled={logoutIsPending}
+            className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:opacity-50'
+          >
+            {logoutIsPending ? 'Выходим...' : 'Выйти'}
+          </Button>
+        </div>
+      ) : (
+        <div ref={containerRef}>
+          {(isPending || meIsPending) && <Loader2 className='animate-spin' />}
+        </div>
+      )}
     </div>
   );
 };

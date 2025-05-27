@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import MobileNav from '@/components/mobile-nav';
 import MainNav from '@/components/main-nav';
 import { Icons } from '@/components/icons';
+import TelegramLogin from '@/components/telegram-login';
 
 const Header: FC = () => {
   return (
@@ -40,6 +41,11 @@ const Header: FC = () => {
               <span className='sr-only'>Telegram</span>
             </Link>
             <ModeToggle />
+            <TelegramLogin
+              botName={'DonbassTourBot'}
+              buttonSize='small'
+              canSendMessages
+            />
           </nav>
         </div>
       </div>
