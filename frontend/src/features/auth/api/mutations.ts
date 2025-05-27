@@ -4,8 +4,6 @@ import {
   RefreshTokenMutation,
   LoginMutation,
   LoginMutationVariables,
-  RegisterMutation,
-  RegisterMutationVariables,
   UpdateTelegramChatIdsMutation,
   UpdateTelegramChatIdsMutationVariables,
   AuthenticateWithTelegramMutation,

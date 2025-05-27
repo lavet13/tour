@@ -30,6 +30,7 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
   ...props
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const scriptRef = useRef<HTMLScriptElement | null>(null);
   const { mutateAsync: authenticate, isPending } = useAuthenticateTelegram();
   const { data, isPending: meIsPending, refetch: refetchUser } = useGetMe();
   const { mutateAsync: logout, isPending: logoutIsPending } = useLogout();
@@ -37,25 +38,40 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
 
   const handleTelegramAuth = async (user: TelegramUser) => {
     console.log('Raw Telegram user data:', user);
-
-    // The auth_date should be a Unix timestamp (number of seconds since epoch)
-    await authenticate({
-      input: {
-        id: user.id,
-        first_name: user.first_name,
-        last_name: user.last_name,
-        username: user.username,
-        photo_url: user.photo_url,
-        auth_date: user.auth_date * 1000, // Keep as Unix timestamp
-        hash: user.hash,
-      },
-    });
+    try {
+      await authenticate({
+        input: {
+          id: user.id,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          username: user.username,
+          photo_url: user.photo_url,
+          auth_date: user.auth_date * 1000,
+          hash: user.hash,
+        },
+      });
+      await refetchUser(); // Refetch user data after successful authentication
+    } catch (error) {
+      console.error('Telegram authentication failed:', error);
+    }
   };
 
   useEffect(() => {
-    if (user?.telegram) return;
+    // Only load the script if the user is not authenticated with Telegram
+    if (user?.telegram) {
+      // Clean up any existing script if user is logged in
+      if (
+        containerRef.current &&
+        scriptRef.current &&
+        containerRef.current.contains(scriptRef.current)
+      ) {
+        containerRef.current.removeChild(scriptRef.current);
+        scriptRef.current = null;
+      }
+      return;
+    }
 
-    // Cleanup any existing callback
+    // Cleanup any existing Telegram callbacks
     const cleanupExistingCallback = () => {
       const existingCallbacks = Object.keys(window).filter(key =>
         key.startsWith('onTelegramAuth_'),
@@ -85,28 +101,38 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
       script.setAttribute('data-userpic', 'true');
     }
 
-    // Create a unique callback name
     const callbackName = `onTelegramAuth_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-
-    // Define the callback function
     (window as any)[callbackName] = (user: TelegramUser) => {
       console.log('Telegram auth callback triggered:', user);
       handleTelegramAuth(user);
     };
 
     script.setAttribute('data-onauth', `${callbackName}(user)`);
+    script.onerror = () => {
+      console.error('Failed to load Telegram widget script');
+    };
+
+    scriptRef.current = script;
 
     if (containerRef.current) {
-      // Clear any existing content
-      containerRef.current.innerHTML = '';
+      containerRef.current.innerHTML = ''; // Clear existing content
       containerRef.current.appendChild(script);
+      console.log('Script appended to container');
     }
 
     return () => {
-      // Cleanup
-      if (containerRef.current?.contains(script)) {
-        containerRef.current.removeChild(script);
+      console.log('Cleaning up script', {
+        scriptExists: !!scriptRef.current,
+        containerExists: !!containerRef.current,
+      });
+      if (
+        containerRef.current &&
+        scriptRef.current &&
+        containerRef.current.contains(scriptRef.current)
+      ) {
+        containerRef.current.removeChild(scriptRef.current);
       }
+      scriptRef.current = null;
       delete (window as any)[callbackName];
     };
   }, [
@@ -122,16 +148,26 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
     <div className='flex justify-center text-center' {...props}>
       {user?.telegram ? (
         <div>
-          <p>Logged in as {user.name}</p>
+          <p>Вошли как {user.name}</p>
           <Button
             onClick={async () => {
-              await logout();
-              await refetchUser();
+              try {
+                await logout();
+                await refetchUser();
+              } catch (error) {
+                console.error('Logout failed:', error);
+              }
             }}
             disabled={logoutIsPending}
             className='bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 disabled:opacity-50'
           >
-            {logoutIsPending ? 'Выходим...' : 'Выйти'}
+            {logoutIsPending ? (
+              <>
+                Выходим <Loader2 className='animate-spin' />
+              </>
+            ) : (
+              'Выйти'
+            )}
           </Button>
         </div>
       ) : (
