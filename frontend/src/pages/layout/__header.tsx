@@ -47,7 +47,7 @@ const Header: FC = () => {
               <span className='sr-only'>Telegram</span>
             </Link>
             <ModeToggle />
-            {!meIsPending && !user && (
+            {!meIsPending && !user && import.meta.env.PROD && (
               <TelegramLogin
                 className='ml-2'
                 botName={'DonbassTourBot'}
@@ -55,7 +55,7 @@ const Header: FC = () => {
                 canSendMessages
               />
             )}
-            {!meIsPending && user?.telegram && (
+            {!meIsPending && user?.telegram && import.meta.env.PROD && (
               <Button
                 className='ml-2 h-7 rounded-full'
                 size='sm'

@@ -1,6 +1,6 @@
 import { ChevronsUpDown, LogOut, Settings } from 'lucide-react';
 
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,14 +53,19 @@ export function NavUser() {
         {user && !isPending && (
           <>
             <Avatar className='h-8 w-8 rounded-lg'>
-              {/* <AvatarImage src={user!.avatar} alt={user.name} /> */}
+              <AvatarImage
+                src={user.telegram?.photoUrl ?? ''}
+                alt={user.name}
+              />
               <AvatarFallback className='rounded-lg'>
                 {renderNameAbbreviation(user.name)}
               </AvatarFallback>
             </Avatar>
             <div className='grid flex-1 text-left text-sm leading-tight'>
               <span className='truncate font-semibold'>{user.name}</span>
-              <span className='truncate text-xs'>{user.email}</span>
+              {user.email && (
+                <span className='truncate text-xs'>{user.email}</span>
+              )}
             </div>
           </>
         )}

@@ -99,7 +99,7 @@ const MainNav: FC = () => {
   const { me: user } = data || {};
   const [contactIsOpen, setContactIsOpen] = useState(false);
 
-  const isAdminOrManagerButNotUser = user?.roles?.some(
+  const isAdminOrManager = user?.roles?.some(
     role => role === Role.Admin || role === Role.Manager,
   );
 
@@ -267,7 +267,7 @@ const MainNav: FC = () => {
           {/*   </NavigationMenuContent> */}
           {/* </NavigationMenuItem> */}
 
-          {!isPending && isAdminOrManagerButNotUser && (
+          {!isPending && isAdminOrManager && (
             <NavigationMenuItem>
               <NavigationMenuLink
                 className={cn(

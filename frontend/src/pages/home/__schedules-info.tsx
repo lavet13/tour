@@ -117,7 +117,8 @@ const SchedulesInfo: FC = () => {
       ) : route && schedules && departureCityId && arrivalCityId ? (
         <div className='flex flex-col'>
           <RouteInfo
-            isFetching={routeIsFetching && schedulesIsFetching}
+            routeIsFetching={routeIsFetching}
+            schedulesIsLoading={schedulesIsLoading}
             route={route}
             schedules={schedules}
             handleSwapCities={handleSwapCities}
@@ -397,7 +398,6 @@ const SchedulesInfo: FC = () => {
               />
             </div>
           </div>
-
         </div>
       ) : null}
     </>
@@ -408,17 +408,18 @@ type RouteInfoProps = {
   route: NonNullable<Route>;
   schedules: ScheduleItem[];
   handleSwapCities: () => void;
-  isFetching: boolean;
+  routeIsFetching: boolean;
+  schedulesIsLoading: boolean;
 };
 
 function RouteInfo({
-  isFetching,
+  routeIsFetching,
+  schedulesIsLoading,
   route,
   schedules,
   handleSwapCities,
 }: RouteInfoProps) {
   const [, setActiveStep] = useAtom(activeStepAtom);
-  const [containerRef] = useAtom(containerRefAtom);
   // Group schedules by direction
   const filteredSchedules = [
     ...schedules.filter(s => s.direction === route.direction),
@@ -432,7 +433,7 @@ function RouteInfo({
     <div className='px-4 p-5 md:p-12 md:pb-2 flex flex-col h-full items-stretch justify-between'>
       <div>
         <div className='grid gap-1 sm:gap-y-4 xs:grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 relative mb-4'>
-          {isFetching && (
+          {routeIsFetching && (
             <div className='absolute left-1/2 -translate-x-1/2 -top-6 lg:top-10 flex justify-center col-span-full'>
               <SonnerSpinner className='bg-foreground' />
             </div>
@@ -500,6 +501,11 @@ function RouteInfo({
           </Button>
         </div>
       </div>
+      {schedulesIsLoading && (
+        <div className='py-4 flex justify-center col-span-full'>
+          <SonnerSpinner className='bg-foreground' />
+        </div>
+      )}
       {schedules.length !== 0 && (
         <Schedules
           schedules={filteredSchedules}
@@ -507,6 +513,7 @@ function RouteInfo({
           arrivalCityName={route.arrivalCity?.name}
         />
       )}
+      {false}
     </div>
   );
 }

@@ -95,21 +95,20 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
       }
       delete (window as any)[callbackName];
     };
-  }, [
-    botName,
-    buttonSize,
-    cornerRadius,
-    canSendMessages,
-    showUserPhoto,
-  ]);
+  }, [botName, buttonSize, cornerRadius, canSendMessages, showUserPhoto]);
 
   return (
-    <div
-      className={cn('flex justify-center text-center', className)}
-      ref={containerRef}
-      {...props}
-    >
-      {isPending && <Loader2 className='animate-spin' />}
+    <div className='relative flex justify-center'>
+      <div
+        className={cn('flex justify-center text-center', className)}
+        ref={containerRef}
+        {...props}
+      ></div>
+      {isPending && (
+        <div className='flex justify-center absolute w-full h-full left-[50%] translate-y-6 -translate-x-[50%] opacity-80'>
+          <Loader2 className='animate-spin size-4' />
+        </div>
+      )}
     </div>
   );
 };

@@ -9,6 +9,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 
 import { SonnerSpinner } from '@/components/sonner-spinner';
 import { useGetMe } from '@/features/auth/api/queries';
+import { Role } from './gql/graphql';
 
 type RouteComponent = (props: JSX.IntrinsicAttributes) => JSX.Element;
 type AppRoute = {
@@ -192,8 +193,12 @@ function RedirectUser({ children }: { children: JSX.Element }) {
 }
 
 function RequireAuth({ children }: { children: JSX.Element }) {
-  const { data: user, isLoading } = useGetMe();
+  const { data, isLoading } = useGetMe();
+  const { me: user } = data || {};
   const location = useLocation();
+  const isAdminOrManager = user?.roles?.some(
+    role => role === Role.Admin || role === Role.Manager,
+  );
 
   if (isLoading) {
     return (
@@ -203,7 +208,7 @@ function RequireAuth({ children }: { children: JSX.Element }) {
     );
   }
 
-  if (!user) {
+  if (!user && !isAdminOrManager) {
     return <Navigate to='/' replace state={{ from: location.pathname }} />;
   }
 

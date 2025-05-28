@@ -312,8 +312,6 @@ const resolvers: Resolvers = {
               user = await tx.user.create({
                 data: {
                   name: displayName,
-                  email: `telegram_${telegramId}@temp.local`,
-                  password: crypto.randomBytes(32).toString('hex'),
                   roles: {
                     create: {
                       role: 'USER',
@@ -339,8 +337,6 @@ const resolvers: Resolvers = {
             user = await tx.user.create({
               data: {
                 name: displayName,
-                email: `telegram_${telegramId}@temp.local`,
-                password: crypto.randomBytes(32).toString('hex'),
                 roles: {
                   create: {
                     role: 'USER',
