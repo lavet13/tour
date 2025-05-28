@@ -71,8 +71,7 @@ const processRoutes = (paths: Record<string, any>) => {
     );
 
     if (dynamicMatch) {
-      const [, routePath, paramName, nestedPath = ''] =
-        dynamicMatch;
+      const [, routePath, paramName, nestedPath = ''] = dynamicMatch;
 
       // Modify this part to handle index case correctly
       const nestedPathToUse = nestedPath === 'index' ? '' : nestedPath;
@@ -196,9 +195,6 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   const { data, isLoading } = useGetMe();
   const { me: user } = data || {};
   const location = useLocation();
-  const isAdminOrManager = user?.roles?.some(
-    role => role === Role.Admin || role === Role.Manager,
-  );
 
   if (isLoading) {
     return (
@@ -208,7 +204,17 @@ function RequireAuth({ children }: { children: JSX.Element }) {
     );
   }
 
-  if (!user && !isAdminOrManager) {
+  // First check if user exists
+  if (!user) {
+    return <Navigate to='/' replace state={{ from: location.pathname }} />;
+  }
+
+  // Then check if user has required roles
+  const isAdminOrManager = user.roles?.some(
+    role => role === Role.Admin || role === Role.Manager,
+  );
+
+  if (!isAdminOrManager) {
     return <Navigate to='/' replace state={{ from: location.pathname }} />;
   }
 
