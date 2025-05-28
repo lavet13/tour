@@ -306,8 +306,8 @@ const resolvers: Resolvers = {
             } else {
               // Create new User and link to existing TelegramUser
               const displayName = dataToCheck.last_name
-                ? `${dataToCheck.first_name} ${dataToCheck.last_name}`
-                : dataToCheck.first_name;
+                ? `${dataToCheck.first_name.toLowerCase()} ${dataToCheck.last_name.toLowerCase()}`
+                : dataToCheck.first_name.toLowerCase();
 
               user = await tx.user.create({
                 data: {
@@ -331,8 +331,8 @@ const resolvers: Resolvers = {
           } else {
             // Create new User and TelegramUser
             const displayName = dataToCheck.last_name
-              ? `${dataToCheck.first_name} ${dataToCheck.last_name}`
-              : dataToCheck.first_name;
+              ? `${dataToCheck.first_name.toLowerCase()} ${dataToCheck.last_name.toLowerCase()}`
+              : dataToCheck.first_name.toLowerCase();
 
             user = await tx.user.create({
               data: {

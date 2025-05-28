@@ -110,10 +110,13 @@ export default defineConfig(({ mode }) => {
             ],
 
             // Animations and motion
-            'animation-vendor': ['framer-motion', 'tailwindcss-animate'],
+            'animation-vendor': ['motion', 'tailwindcss-animate'],
 
             // GraphQL-related libraries
             'graphql-vendor': ['graphql', 'graphql-request', 'graphql-sse'],
+
+            // SEO and Meta
+            'seo-vendor': ['react-helmet'],
 
             // Miscellaneous
             'misc-vendor': [

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 interface CircularProgressProps extends React.HTMLAttributes<HTMLDivElement> {
   value: number; // Something between 1 and 100

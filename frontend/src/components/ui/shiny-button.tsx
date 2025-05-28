@@ -1,6 +1,6 @@
 import React from "react";
 import { Slot } from "@radix-ui/react-slot";
-import { motion, type AnimationProps } from "framer-motion";
+import { motion, type AnimationProps } from "motion/react";
 import { cn } from "@/lib/utils";
 
 const animationProps = {
