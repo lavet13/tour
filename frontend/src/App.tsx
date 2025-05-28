@@ -104,7 +104,7 @@ const processRoutes = (paths: Record<string, any>) => {
         component: Loadable(lazy(paths[path]), undefined),
       };
 
-      console.log({ route });
+      import.meta.env.DEV && console.log({ route });
 
       if (name.startsWith('admin')) {
         adminRoutes.push(route);
