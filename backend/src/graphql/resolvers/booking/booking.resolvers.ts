@@ -240,7 +240,8 @@ const resolvers: Resolvers = {
   Mutation: {
     async createBooking(_, args, ctx) {
       const { notifyNewBooking } = ctx.telegramBot;
-      const { departureCityId, arrivalCityId, ...rest } = args.input;
+      const { departureCityId, arrivalCityId, telegramId, ...rest } =
+        args.input;
 
       // Try both route directions
       const [forwardRoute, reverseRoute] = await Promise.all([
@@ -271,6 +272,7 @@ const resolvers: Resolvers = {
       const booking = await ctx.prisma.booking.create({
         data: {
           routeId: route.id,
+          telegramId,
           ...rest,
         },
       });

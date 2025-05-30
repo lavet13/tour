@@ -58,6 +58,7 @@ export type CreateBookingInput = {
   phoneNumber: Scalars['String']['input'];
   seatsCount: Scalars['Int']['input'];
   telegram: Scalars['Boolean']['input'];
+  telegramId?: InputMaybe<Scalars['BigInt']['input']>;
   travelDate: Scalars['Date']['input'];
   whatsapp: Scalars['Boolean']['input'];
 };

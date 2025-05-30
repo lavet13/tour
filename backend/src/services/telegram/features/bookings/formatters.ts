@@ -44,7 +44,7 @@ type RouteWithCities = Prisma.RouteGetPayload<{
 const formatBookingMessage = async (
   booking: Booking,
   prismaClient: typeof prisma,
-  route: RouteWithCities | null,
+  route?: RouteWithCities | null,
 ): Promise<string> => {
   if (!route) {
     route = await prismaClient.route.findUniqueOrThrow({

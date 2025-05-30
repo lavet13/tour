@@ -79,6 +79,7 @@ export default gql`
     direction: RouteDirection!
     travelDate: Date!
     seatsCount: Int!
+    telegramId: BigInt
     telegram: Boolean!
     whatsapp: Boolean!
   }

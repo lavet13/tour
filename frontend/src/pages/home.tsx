@@ -23,6 +23,7 @@ import BookingResult from '@/pages/home/__booking-result';
 import DepartureArrivalCitiesInfo from '@/pages/home/__departure-arrival-cities-info';
 import SchedulesInfo from '@/pages/home/__schedules-info';
 import { useIsFirstRender } from '@/hooks/use-is-first-render';
+import { useGetMe } from '@/features/auth';
 
 export type DefaultValues = {
   firstName: string;
@@ -87,6 +88,9 @@ export default function HomePage() {
     },
   });
 
+  const { data } = useGetMe();
+  const { me: user } = data || {};
+
   const { isSubmitting, isSubmitSuccessful, dirtyFields, errors } =
     form.formState;
   const values = form.getValues();
@@ -142,6 +146,7 @@ export default function HomePage() {
         extraTelegram,
         extraWhatsapp,
         direction,
+        telegramId: user?.telegram?.telegramId,
       };
       await createBooking({ input: payload });
 
