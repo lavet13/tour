@@ -82,7 +82,6 @@ export const useTelegramChatIds = (
   const telegramChatIds = graphql(`
     query TelegramChatIds {
       telegramChats {
-        id
         chatId
       }
     }

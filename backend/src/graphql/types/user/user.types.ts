@@ -18,7 +18,7 @@ export default gql`
   # }
 
   input UpdateTelegramChatIdsInput {
-    telegramChatIds: [String!]!
+    telegramChatIds: [BigInt!]!
   }
 
   type Mutation {
@@ -62,7 +62,7 @@ export default gql`
 
   type TelegramChat {
     id: ID!
-    chatId: String!
+    chatId: BigInt!
     user: User!
     createdAt: Date!
     updatedAt: Date!
