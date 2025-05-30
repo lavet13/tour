@@ -84,11 +84,11 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
 
       let message = '';
       message += `✅ Ваше бронирование подтверждено!\n`;
-      message += `<b>Маршрут:</b> ${routeName}\n`;
-      message += `<b>Цена:</b> ${updatedBooking.route?.price}\n`;
-      message += `<b>Дата поездки:</b> ${updatedBooking.travelDate}\n`;
-      message += `<b>Мест:</b> ${updatedBooking.seatsCount}\n\n`;
-      message += `Ожидайте звонка диспетчера для уточнения деталей.`;
+      message += `<b>🚌 Маршрут:</b> ${routeName}\n`;
+      message += `<b>💰 Цена:</b> ${updatedBooking.route?.price} ₽\n`;
+      message += `<b>📅 Дата поездки:</b> ${formatRussianDateTime(updatedBooking.travelDate)}\n`;
+      message += `<b>🪑 Мест:</b> ${updatedBooking.seatsCount}\n\n`;
+      message += `📞 Ожидайте звонка диспетчера для уточнения деталей.`;
 
       await bot.sendMessage(updatedBooking.telegramId.toString(), message, {
         parse_mode: 'HTML',
@@ -104,13 +104,13 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
     let message = formattedMessage;
     if (updatedBooking.telegramId) {
       message += `\n✅ Данные отправлены пользователю\n`;
-      message += `<i>Предварительный просмотр</i>\n\n`;
-      message += `✅ Ваше бронирование подтверждено!\n`;
-      message += `<b>Маршрут:</b> ${routeName}\n`;
-      message += `<b>Цена:</b> ${updatedBooking.route?.price}\n`;
-      message += `<b>Дата поездки:</b> ${formatRussianDateTime(updatedBooking.travelDate)}\n`;
-      message += `<b>Мест:</b> ${updatedBooking.seatsCount}\n\n`;
-      message += `Ожидайте звонка диспетчера для уточнения деталей.`;
+      message += `<i>👀 Предварительный просмотр</i>\n\n`;
+      message += `🎉 Ваше бронирование подтверждено!\n`;
+      message += `🚌 <b>Маршрут:</b> ${routeName}\n`;
+      message += `💰 <b>Цена:</b> ${updatedBooking.route?.price} ₽\n`;
+      message += `📅 <b>Дата поездки:</b> ${formatRussianDateTime(updatedBooking.travelDate)}\n`;
+      message += `🪑 <b>Мест:</b> ${updatedBooking.seatsCount}\n\n`;
+      message += `📞 Ожидайте звонка диспетчера для уточнения деталей.`;
     }
 
     await bot?.editMessageText(message, {
