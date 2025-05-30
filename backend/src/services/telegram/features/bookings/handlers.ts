@@ -4,6 +4,7 @@ import { sendMessage } from '@/services/telegram/services/message.service';
 import { handleTelegramError } from '@/services/telegram/services/error.service';
 import { CallbackHandler } from '../..';
 import { $Enums } from '@prisma/client';
+import { formatRussianDateTime } from '@/helpers/format-russian-date';
 
 const bookingStatusChange: CallbackHandler['handle'] = async (
   bot,
@@ -89,7 +90,9 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
       message += `<b>Мест:</b> ${updatedBooking.seatsCount}\n\n`;
       message += `Ожидайте звонка диспетчера для уточнения деталей.`;
 
-      await bot.sendMessage(updatedBooking.telegramId.toString(), message);
+      await bot.sendMessage(updatedBooking.telegramId.toString(), message, {
+        parse_mode: 'HTML',
+      });
     }
 
     const formattedMessage = await formatters.formatBookingMessage(
@@ -105,7 +108,7 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
       message += `✅ Ваше бронирование подтверждено!\n`;
       message += `<b>Маршрут:</b> ${routeName}\n`;
       message += `<b>Цена:</b> ${updatedBooking.route?.price}\n`;
-      message += `<b>Дата поездки:</b> ${updatedBooking.travelDate}\n`;
+      message += `<b>Дата поездки:</b> ${formatRussianDateTime(updatedBooking.travelDate)}\n`;
       message += `<b>Мест:</b> ${updatedBooking.seatsCount}\n\n`;
       message += `Ожидайте звонка диспетчера для уточнения деталей.`;
     }
