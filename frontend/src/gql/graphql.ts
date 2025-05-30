@@ -126,7 +126,7 @@ export type TelegramAuthInput = {
   auth_date: Scalars['Date']['input'];
   first_name: Scalars['String']['input'];
   hash: Scalars['String']['input'];
-  id: Scalars['Int']['input'];
+  id: Scalars['BigInt']['input'];
   last_name?: InputMaybe<Scalars['String']['input']>;
   photo_url?: InputMaybe<Scalars['String']['input']>;
   username?: InputMaybe<Scalars['String']['input']>;
@@ -192,7 +192,7 @@ export type UpdateTelegramChatIdsMutation = { __typename?: 'Mutation', updateTel
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MeQuery = { __typename?: 'Query', me?: { __typename?: 'User', id: string, email: string, name: string, roles: Array<Role>, telegram?: { __typename?: 'TelegramUser', telegramId: number, firstName: string, lastName?: string | null, username?: string | null, photoUrl?: string | null, authDate: any, hash: string } | null } | null };
+export type MeQuery = { __typename?: 'Query', me?: { __typename?: 'User', id: string, email: string, name: string, roles: Array<Role>, telegram?: { __typename?: 'TelegramUser', telegramId: any, firstName: string, lastName?: string | null, username?: string | null, photoUrl?: string | null, authDate: any, hash: string } | null } | null };
 
 export type TelegramChatIdsQueryVariables = Exact<{ [key: string]: never; }>;
 

@@ -1,4 +1,4 @@
-import { $Enums, Booking, BookingStatus, Route } from '@prisma/client';
+import { $Enums, Booking, BookingStatus } from '@prisma/client';
 import {
   formatRussianDate,
   formatRussianDateTime,
@@ -117,19 +117,19 @@ const getBookingActionsKeyboard = (
 ): TelegramBot.InlineKeyboardMarkup => {
   const buttons = [];
 
+  let text: string = '';
+
   if (status === 'PENDING') {
-    buttons.push({
-      text: '✅ Принять',
-      callback_data: `booking:confirm_${bookingId}`,
-    });
-  } else if (status === 'CONFIRMED') {
-    buttons.push({
-      text: '💤 Ожидать',
-      callback_data: `booking:pending_${bookingId}`,
-    });
-  } else {
-    throw new Error('Failed on rendering status buttons');
+    text = '✅ Принять';
   }
+  if (status === 'CONFIRMED') {
+    text = '💤 Ожидать';
+  }
+
+  buttons.push({
+    text,
+    callback_data: `booking:status_${bookingId}`,
+  });
 
   return {
     inline_keyboard: [buttons],

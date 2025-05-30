@@ -76,7 +76,6 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
 
     // Define the callback function
     (window as any)[callbackName] = (user: TelegramUser) => {
-      console.log('Telegram auth callback triggered:', user);
       handleTelegramAuth(user);
     };
 

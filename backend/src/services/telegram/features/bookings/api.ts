@@ -1,4 +1,4 @@
-import { Booking, BookingStatus, Role } from '@prisma/client';
+import { Booking, Role } from '@prisma/client';
 import prisma from '@/prisma';
 import { formatters } from '@/services/telegram/features/bookings/formatters';
 import { sendMessage } from '@/services/telegram/services/message.service';

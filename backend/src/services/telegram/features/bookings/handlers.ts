@@ -1,9 +1,9 @@
-import { BookingStatus } from '@/graphql/__generated__/types';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { formatters } from '@/services/telegram/features/bookings/formatters';
 import { sendMessage } from '@/services/telegram/services/message.service';
 import { handleTelegramError } from '@/services/telegram/services/error.service';
 import { CallbackHandler } from '../..';
+import { $Enums } from '@prisma/client';
 
 const bookingStatusChange: CallbackHandler['handle'] = async (
   bot,
@@ -14,14 +14,9 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
   prismaClient,
 ): Promise<void> => {
   let bookingId: string;
-  let newStatus: BookingStatus;
 
-  if (data.startsWith('booking:confirm_')) {
-    bookingId = data.replace('booking:confirm_', '');
-    newStatus = BookingStatus.Confirmed;
-  } else if (data.startsWith('booking:pending_')) {
-    bookingId = data.replace('booking:pending_', '');
-    newStatus = BookingStatus.Pending;
+  if (data.startsWith('booking:status_')) {
+    bookingId = data.replace('booking:status_', '');
   } else {
     console.error(`Invalid booking callback data: ${data}`);
     return;
@@ -35,7 +30,17 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
       },
     });
 
-    if (currentStatus === newStatus) return;
+    let newStatus: $Enums.BookingStatus | null = null;
+
+    if (currentStatus === 'PENDING') {
+      newStatus = 'CONFIRMED';
+    }
+    if (currentStatus === 'CONFIRMED') {
+      newStatus = 'PENDING';
+    }
+    if (!newStatus) {
+      throw new Error('Не получилось установить статус. Статус равен NULL');
+    }
 
     const booking = await prismaClient.booking.update({
       where: {
@@ -68,11 +73,6 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
       );
     } else {
       handleTelegramError(error);
-
-      await sendMessage(
-        chatId,
-        '❌ Не вышло обновить статус. Попробуйте позже.',
-      );
     }
   }
 };

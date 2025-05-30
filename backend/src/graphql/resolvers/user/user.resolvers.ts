@@ -269,6 +269,7 @@ const resolvers: Resolvers = {
 
       // Convert string to BigInt for database operations
       const telegramId = dataToCheck.id;
+      console.log({ telegramId });
       const authDate = new Date(authTimestamp);
       console.log({ authDate });
 
@@ -444,7 +445,16 @@ const resolvers: Resolvers = {
             throw new GraphQLError('Такого пользователя не существует!');
           }
 
-          const isValid = await validatePassword(password, user.password);
+          let isValid = false;
+
+          if (!user.password) {
+            throw new GraphQLError(
+              'У пользователя нет пароля. Вход только через Telegram',
+            );
+          }
+          if (user.password) {
+            isValid = await validatePassword(password, user.password);
+          }
           if (!isValid) {
             throw new GraphQLError('Введен неверный пароль!');
           }
@@ -573,19 +583,40 @@ const resolvers: Resolvers = {
     async updateTelegramChatIds(_, args, ctx) {
       const { telegramChatIds } = args.input;
 
-      let transactionResult;
-
       try {
-        transactionResult = await ctx.prisma.$transaction(async tx => {
-          await tx.telegramChat.deleteMany({
+        await ctx.prisma.$transaction(async tx => {
+          const existingChats = await tx.telegramChat.findMany({
             where: {
               userId: ctx.me!.id,
             },
+            select: {
+              chatId: true,
+            },
           });
+
+          const existingChatIds = new Set(
+            existingChats.map(chat => chat.chatId),
+          );
+          const newChatIds = new Set(telegramChatIds);
+          const chatIdsToAdd = telegramChatIds.filter(
+            id => !existingChatIds.has(id),
+          );
+          const chatIdsToRemove = existingChats
+            .filter(chat => !newChatIds.has(chat.chatId))
+            .map(chat => chat.chatId);
+
+          if (chatIdsToRemove.length > 0) {
+            await tx.telegramChat.deleteMany({
+              where: {
+                userId: ctx.me!.id,
+                chatId: { in: chatIdsToRemove },
+              },
+            });
+          }
 
           // Update the user record with the Telegram chat IDs
           await Promise.all(
-            telegramChatIds.map(chatId =>
+            chatIdsToAdd.map(chatId =>
               tx.telegramChat.create({
                 data: {
                   userId: ctx.me?.id,

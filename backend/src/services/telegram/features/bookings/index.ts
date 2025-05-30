@@ -5,8 +5,7 @@ export const bookingsFeature: BotFeature = {
   callbackHandlers: [
     {
       canHandle: data =>
-        data.startsWith('booking:confirm_') ||
-        data.startsWith('booking:pending_'),
+        data.startsWith('booking:status_'),
       handle: handlers.bookingStatusChange,
     },
   ],

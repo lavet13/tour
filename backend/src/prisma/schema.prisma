@@ -22,7 +22,7 @@ model UserRole {
 
 model TelegramUser {
   id         String   @id @default(cuid())
-  telegramId Int      @unique
+  telegramId BigInt      @unique
   firstName  String
   lastName   String?
   username   String?
@@ -61,6 +61,8 @@ model TelegramChat {
   chatId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([userId, chatId])
 }
 
 enum Role {
@@ -113,7 +115,7 @@ model Schedule {
   updatedAt DateTime       @updatedAt
 
   @@index([routeId, direction, isActive])
-  @@index([time]) // Опционально: ускоряет сортировку по времени отправления
+  @@index([routeId, time]) // Опционально: ускоряет сортировку по времени отправления
   @@map("schedules")
 }
 
@@ -151,6 +153,8 @@ model Route {
 
   @@index([departureCityId, arrivalCityId, isActive])
   @@index([regionId])
+  @@index([price])
+  @@index([departureDate])
   @@map("routes")
 }
 
@@ -168,11 +172,14 @@ model Booking {
   route            Route?         @relation(fields: [routeId], references: [id])
   routeId          String?
   travelDate       DateTime
+  telegramId       BigInt?
   seatsCount       Int
   status           BookingStatus  @default(PENDING)
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
 
-  @@index([status, routeId, travelDate, phoneNumber])
+  @@index([status, routeId, travelDate])
+  @@index([phoneNumber])
+  @@index([telegramId])
   @@map("bookings")
 }
