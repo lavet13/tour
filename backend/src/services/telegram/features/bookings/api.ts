@@ -32,7 +32,7 @@ const notifyNewBooking = async (
 
     await Promise.all(
       chatIds.map(({ chatId }) =>
-        sendMessage(chatId, message, {
+        sendMessage(chatId.toString(), message, {
           parse_mode: 'HTML',
           reply_markup: {
             ...formatters.getBookingActionsKeyboard(booking.id, booking.status),

@@ -1,4 +1,11 @@
-import { $Enums, Booking, BookingStatus } from '@prisma/client';
+import {
+  $Enums,
+  Booking,
+  BookingStatus,
+  City,
+  Prisma,
+  Route,
+} from '@prisma/client';
 import {
   formatRussianDate,
   formatRussianDateTime,
@@ -22,6 +29,13 @@ const getBookingStatus = (status: $Enums.BookingStatus): string => {
   return '-';
 };
 
+type RouteWithCities = Prisma.RouteGetPayload<{
+  include: {
+    arrivalCity: { select: { name: true } };
+    departureCity: { select: { name: true } };
+  };
+}>;
+
 /**
  * Format booking details into a readable message
  * @param booking Booking object
@@ -30,24 +44,27 @@ const getBookingStatus = (status: $Enums.BookingStatus): string => {
 const formatBookingMessage = async (
   booking: Booking,
   prismaClient: typeof prisma,
+  route: RouteWithCities | null,
 ): Promise<string> => {
-  const route = await prismaClient.route.findUniqueOrThrow({
-    where: {
-      id: booking.routeId as string,
-    },
-    include: {
-      departureCity: {
-        select: {
-          name: true,
+  if (!route) {
+    route = await prismaClient.route.findUniqueOrThrow({
+      where: {
+        id: booking.routeId as string,
+      },
+      include: {
+        departureCity: {
+          select: {
+            name: true,
+          },
+        },
+        arrivalCity: {
+          select: {
+            name: true,
+          },
         },
       },
-      arrivalCity: {
-        select: {
-          name: true,
-        },
-      },
-    },
-  });
+    });
+  }
 
   const isForward = booking.direction === 'FORWARD';
   const isBackward = booking.direction === 'BACKWARD';
