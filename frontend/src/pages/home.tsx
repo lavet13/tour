@@ -126,16 +126,20 @@ export default function HomePage() {
   }) => {
     try {
       const direction = routeData?.routeByIds?.direction as RouteDirection;
+
       const {
         value: mainPhoneNumber,
         telegram: mainTelegram,
         whatsapp: mainWhatsapp,
       } = phones[0];
+
+      // optional phone
       const {
         value: extraPhoneNumber,
         telegram: extraTelegram,
         whatsapp: extraWhatsapp,
       } = phones[1] || [];
+
       const payload: CreateBookingInput = {
         ...data,
         travelDate: data.travelDate,

@@ -1,19 +1,50 @@
 import { ModeToggle } from '@/components/mode-toggle';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { FC } from 'react';
+import { FC, useState } from 'react';
 import { cn } from '@/lib/utils';
 import MobileNav from '@/components/mobile-nav';
 import MainNav from '@/components/main-nav';
 import { Icons } from '@/components/icons';
 import TelegramLogin from '@/components/telegram-login';
 import { useGetMe, useLogout } from '@/features/auth';
-import { Loader2 } from 'lucide-react';
+import { Loader2, LogOut } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 const Header: FC = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [open, setOpen] = useState(false);
+  const isBelow2xl = useMediaQuery(`(max-width: 1600px)`);
   const { data, isPending: meIsPending, refetch: refetchUser } = useGetMe();
   const { me: user } = data || {};
-  const { mutateAsync: logout, isPending: logoutIsPending } = useLogout();
+  const { mutateAsync: logout } = useLogout();
+
+  const getShortNaming = (
+    firstName?: string | null,
+    lastName?: string | null,
+  ) => {
+    const firstChar = firstName?.at(0)?.toUpperCase() ?? '';
+    const secondChar = lastName?.at(0)?.toUpperCase() ?? '';
+
+    let shortName = `${firstChar}${secondChar}`;
+
+    if (!shortName.length) {
+      return undefined;
+    }
+
+    return shortName;
+  };
+
+  const navigate = useNavigate();
 
   return (
     <header className='sticky top-0 z-50 w-full border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
@@ -55,25 +86,58 @@ const Header: FC = () => {
                 canSendMessages
               />
             )}
-            {!meIsPending && user?.telegram && import.meta.env.PROD && (
-              <Button
-                className='ml-2 h-7 rounded-full'
-                size='sm'
-                disabled={logoutIsPending}
-                onClick={async () => {
-                  await logout();
-                  await refetchUser();
-                }}
-              >
-                {logoutIsPending ? (
-                  <>
-                    <Loader2 className='animate-spin' />
-                    Выходим...
-                  </>
-                ) : (
-                  <>Выйти из аккаунта</>
-                )}
-              </Button>
+            {!meIsPending && user && (
+              <DropdownMenu open={open} onOpenChange={setOpen}>
+                <DropdownMenuTrigger className='hover:cursor-pointer' asChild>
+                  <Avatar className='ml-2 size-8'>
+                    <AvatarImage src={user?.telegram?.photoUrl!} alt='Avatar' />
+                    <AvatarFallback className="text-sm">
+                      {user.telegram
+                        ? getShortNaming(
+                            user?.telegram?.firstName,
+                            user?.telegram?.lastName,
+                          )
+                        : getShortNaming(...user.name.split(' '))}
+                    </AvatarFallback>
+                  </Avatar>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className='w-40'
+                  {...(isBelow2xl ? { align: 'end' } : {})}
+                >
+                  <DropdownMenuLabel>Мой аккаунт</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    disabled={isLoading}
+                    onClick={async event => {
+                      event.preventDefault();
+                      setIsLoading(true);
+
+                      try {
+                        await logout();
+                        await refetchUser();
+                      } catch (error) {
+                        console.error('Logout failed:', error);
+                      } finally {
+                        setIsLoading(false);
+                        setOpen(false);
+                      }
+                    }}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className='animate-spin' />
+                        Выходим...
+                      </>
+                    ) : (
+                      <>
+                        <LogOut />
+                        Выйти
+                      </>
+                    )}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </nav>
         </div>

@@ -83,7 +83,7 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
       }
 
       let message = '';
-      message += `✅ Ваше бронирование подтверждено!\n`;
+      message += `🎉 Ваше бронирование подтверждено!\n`;
       message += `<b>🚌 Маршрут:</b> ${routeName}\n`;
       message += `<b>💰 Цена:</b> ${updatedBooking.route?.price} ₽\n`;
       message += `<b>📅 Дата поездки:</b> ${formatRussianDateTime(updatedBooking.travelDate)}\n`;
