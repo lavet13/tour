@@ -671,10 +671,13 @@ const resolvers: Resolvers = {
         return null;
       }
 
-      const photos = await bot.getUserProfilePhotos(Number(parent.telegramId), {
+      const photos = await bot.getUserProfilePhotos(Number(parent.telegramId.toString()), {
         limit: 1,
       });
-      console.log({ photos });
+      console.log('Photos response:', {
+        total_count: photos.total_count,
+        photos_length: photos.photos.length
+      });
 
       if (photos.total_count > 0 && photos.photos[0]?.length > 0) {
         const photo = photos.photos[0][0];
