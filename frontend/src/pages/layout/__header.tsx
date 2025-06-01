@@ -88,7 +88,7 @@ const Header: FC = () => {
               <DropdownMenu open={open} onOpenChange={setOpen}>
                 <DropdownMenuTrigger className='hover:cursor-pointer' asChild>
                   <Avatar className='ml-2 size-8'>
-                    <AvatarImage src={user?.telegram?.photoUrl!} alt='Avatar' />
+                    {/* <AvatarImage src={user?.telegram?.photoUrl!} alt='Avatar' /> */}
                     <AvatarFallback className="text-sm">
                       {user.telegram
                         ? getShortNaming(

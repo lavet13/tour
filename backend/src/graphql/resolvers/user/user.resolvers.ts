@@ -15,7 +15,6 @@ import { hasRoles } from '@/graphql/composition/authorization';
 import crypto from 'crypto';
 import validatePassword from '@/helpers/validate-password';
 import { PonyfillFile } from '@/types/file';
-import axios from 'axios';
 
 const resolvers: Resolvers = {
   Query: {
@@ -663,6 +662,53 @@ const resolvers: Resolvers = {
       });
 
       return telegramUser;
+    },
+  },
+  TelegramUser: {
+    async photoUrl(parent, _, ctx) {
+      const { bot } = ctx.telegramBot;
+
+      if (!bot || !parent.photoUrl) {
+        return null;
+      }
+
+      try {
+        // Fetch the image binary data and metadata
+        const response = await fetch(parent.photoUrl, {
+          headers: {
+            Accept: 'image/*', // Specify we expect an image
+          },
+        });
+
+        if (!response.ok) {
+          throw new GraphQLError(`HTTP error! Status: ${response.status}`);
+        }
+
+        // Convert response to buffer
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+
+        // Extract metadata from headers
+        const fileName = parent.photoUrl.split('/').pop() || 'image.jpg'; // Extract filename from URL or use fallback
+        const fileType =
+          response.headers.get('content-type') || 'application/octet-stream'; // Use Content-Type header
+        const contentLength = response.headers.get('content-length'); // Optional: size from headers
+        const lastModified = response.headers.get('last-modified')
+          ? new Date(response.headers.get('last-modified')!).getTime()
+          : Date.now(); // Use Last-Modified header or fallback
+
+        return {
+          name: fileName,
+          blobParts: buffer,
+          _size: contentLength ? parseInt(contentLength, 10) : buffer.length, // Use Content-Length or buffer size
+          type: fileType,
+          encoding: 'utf-8',
+          lastModified,
+        } as PonyfillFile;
+      } catch (error) {
+        console.error(`Error fetching image from ${parent.photoUrl}`);
+        return null;
+      }
     },
   },
 };
