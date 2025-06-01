@@ -674,6 +674,7 @@ const resolvers: Resolvers = {
       const photos = await bot.getUserProfilePhotos(Number(parent.telegramId), {
         limit: 1,
       });
+      console.log({ photos });
 
       if (photos.total_count > 0 && photos.photos[0]?.length > 0) {
         const photo = photos.photos[0][0];
