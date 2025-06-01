@@ -1,7 +1,7 @@
 import { ModeToggle } from '@/components/mode-toggle';
 import { Link } from 'react-router-dom';
 import { buttonVariants } from '@/components/ui/button';
-import { FC, useState } from 'react';
+import { FC, useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import MobileNav from '@/components/mobile-nav';
 import MainNav from '@/components/main-nav';
@@ -19,6 +19,25 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMediaQuery } from '@/hooks/use-media-query';
+
+// Custom AvatarImage component to handle 404 errors
+const CustomAvatarImage = ({ src, alt, ...props }: { src: string; alt: string }) => {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false); // Reset error state when src changes
+    const img = new Image();
+    img.src = src;
+    img.onload = () => setHasError(false);
+    img.onerror = () => setHasError(true);
+  }, [src]);
+
+  if (hasError) {
+    return null; // Return null to trigger fallback
+  }
+
+  return <AvatarImage src={src} alt={alt} {...props} />;
+};
 
 const Header: FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -88,8 +107,8 @@ const Header: FC = () => {
               <DropdownMenu open={open} onOpenChange={setOpen}>
                 <DropdownMenuTrigger className='hover:cursor-pointer' asChild>
                   <Avatar className='ml-2 size-8'>
-                    {/* <AvatarImage src={user?.telegram?.photoUrl!} alt='Avatar' /> */}
-                    <AvatarFallback className="text-sm">
+                    <CustomAvatarImage src={user.telegram?.photoUrl!} alt='Avatar' />
+                    <AvatarFallback className='text-sm'>
                       {user.telegram
                         ? getShortNaming(
                             user?.telegram?.firstName,
