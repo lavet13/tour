@@ -1,6 +1,6 @@
 import { ModeToggle } from '@/components/mode-toggle';
-import { Link, useNavigate } from 'react-router-dom';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
+import { buttonVariants } from '@/components/ui/button';
 import { FC, useState } from 'react';
 import { cn } from '@/lib/utils';
 import MobileNav from '@/components/mobile-nav';
@@ -23,7 +23,7 @@ import { useMediaQuery } from '@/hooks/use-media-query';
 const Header: FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const isBelow2xl = useMediaQuery(`(max-width: 1600px)`);
+  const isBelow2xl = useMediaQuery(`(max-width: 1640px)`);
   const { data, isPending: meIsPending, refetch: refetchUser } = useGetMe();
   const { me: user } = data || {};
   const { mutateAsync: logout } = useLogout();
@@ -43,8 +43,6 @@ const Header: FC = () => {
 
     return shortName;
   };
-
-  const navigate = useNavigate();
 
   return (
     <header className='sticky top-0 z-50 w-full border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60'>
