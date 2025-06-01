@@ -74,7 +74,7 @@ export default gql`
     firstName: String!
     lastName: String
     username: String
-    photoUrl: String
+    photoUrl: File!
     authDate: Date!
     hash: String!
     user: User
