@@ -32,9 +32,24 @@ const Header: FC = () => {
   useEffect(() => {
     if (user?.telegram?.photoUrl) {
       const img = new Image();
-      img.src = user.telegram.photoUrl;
-      img.onload = () => setValidPhotoUrl(user.telegram!.photoUrl!);
+
+      img.src = user.telegram!.photoUrl!;
+
+      img.onload = () => {
+        if (img.naturalWidth > 1 && img.naturalHeight > 1) {
+          setValidPhotoUrl(user.telegram!.photoUrl!);
+        } else {
+          setValidPhotoUrl(null);
+        }
+      };
+
       img.onerror = () => setValidPhotoUrl(null);
+
+      // Cleanup function
+      return () => {
+        img.onload = null;
+        img.onerror = null;
+      };
     } else {
       setValidPhotoUrl(null);
     }
