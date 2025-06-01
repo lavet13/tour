@@ -103,14 +103,17 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
 
     let message = formattedMessage;
     if (updatedBooking.telegramId) {
-      message += `\n✅ Данные отправлены пользователю\n`;
-      message += `<i>👀 Предварительный просмотр</i>\n\n`;
+      message += `\n\n✅ Уведомление отправлено пользователю в Telegram\n`;
+      message += `<i>👀 Предварительный просмотр отправленного сообщения:</i>\n\n`;
       message += `🎉 Ваше бронирование подтверждено!\n`;
       message += `🚌 <b>Маршрут:</b> ${routeName}\n`;
       message += `💰 <b>Цена:</b> ${updatedBooking.route?.price} ₽\n`;
       message += `📅 <b>Дата поездки:</b> ${formatRussianDateTime(updatedBooking.travelDate)}\n`;
       message += `🪑 <b>Мест:</b> ${updatedBooking.seatsCount}\n\n`;
       message += `📞 Ожидайте звонка диспетчера для уточнения деталей.`;
+    } else {
+      message += `\n\n❌ Уведомление не было отправлено\n`;
+      message += `<i>Причина: пользователь не был авторизован через Telegram при создании заявки</i>`;
     }
 
     await bot?.editMessageText(message, {
