@@ -4,7 +4,7 @@ import { sendMessage } from '@/services/telegram/services/message.service';
 import { handleTelegramError } from '@/services/telegram/services/error.service';
 import { CallbackHandler } from '../..';
 import { $Enums } from '@prisma/client';
-import { formatRussianDateTime } from '@/helpers/format-russian-date';
+import { formatRussianDate, formatRussianDateTime } from '@/helpers/format-russian-date';
 
 const bookingStatusChange: CallbackHandler['handle'] = async (
   bot,
@@ -108,7 +108,7 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
       message += `🎉 Ваше бронирование подтверждено!\n`;
       message += `🚌 <b>Маршрут:</b> ${routeName}\n`;
       message += `💰 <b>Цена:</b> ${updatedBooking.route?.price} ₽\n`;
-      message += `📅 <b>Дата поездки:</b> ${formatRussianDateTime(updatedBooking.travelDate)}\n`;
+      message += `📅 <b>Дата поездки:</b> ${formatRussianDate(updatedBooking.travelDate)}\n`;
       message += `🪑 <b>Мест:</b> ${updatedBooking.seatsCount}\n\n`;
       message += `📞 Ожидайте звонка диспетчера для уточнения деталей.`;
     } else {
