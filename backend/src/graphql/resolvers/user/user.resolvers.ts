@@ -665,56 +665,6 @@ const resolvers: Resolvers = {
       return telegramUser;
     },
   },
-  TelegramUser: {
-    async photoUrl(parent, _, ctx) {
-      const { bot } = ctx.telegramBot;
-
-      if (!bot || !parent.photoUrl) {
-        return null;
-      }
-
-      try {
-        // Fetch the image binary data and metadata
-        const response = await axios.get(parent.photoUrl, {
-          responseType: 'arraybuffer', // Get binary data
-        });
-
-        const buffer = Buffer.from(response.data);
-        const fileName = parent.photoUrl.split('/').pop() || 'image.jpg'; // Extract filename from URL or use fallback
-        const fileType =
-          response.headers['content-type'] || 'application/octet-stream'; // Use Content-Type header
-        const contentLength = response.headers['content-length']; // Optional: size from headers
-        const lastModified = response.headers['last-modified']
-          ? new Date(response.headers['last-modified']).getTime()
-          : Date.now(); // Use Last-Modified header or fallback
-
-        console.log({
-          name: fileName,
-          blobParts: buffer,
-          _size: contentLength ? parseInt(contentLength, 10) : buffer.length, // Use Content-Length or buffer size
-          type: fileType,
-          encoding: 'utf-8',
-          lastModified,
-        });
-
-        return {
-          name: fileName,
-          blobParts: buffer,
-          _size: contentLength ? parseInt(contentLength, 10) : buffer.length, // Use Content-Length or buffer size
-          type: fileType,
-          encoding: 'utf-8',
-          lastModified,
-        } as PonyfillFile;
-      } catch (error: any) {
-        console.error(
-          `Error fetching image from ${parent.photoUrl}: ${error.message}`,
-        );
-        throw new GraphQLError(
-          `Error fetching image from ${parent.photoUrl}: ${error.message}`,
-        );
-      }
-    },
-  },
 };
 
 const resolversComposition: ResolversComposerMapping<any> = {
