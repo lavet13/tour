@@ -14,6 +14,9 @@ import { cookieOpts } from '@/helpers/cookie-opts';
 import { hasRoles } from '@/graphql/composition/authorization';
 import crypto from 'crypto';
 import validatePassword from '@/helpers/validate-password';
+import { Writable } from 'stream';
+import { createReadStream } from 'fs';
+import { pipeline } from 'stream/promises';
 
 const resolvers: Resolvers = {
   Query: {
@@ -661,34 +664,6 @@ const resolvers: Resolvers = {
       });
 
       return telegramUser;
-    },
-  },
-  TelegramUser: {
-    async photoUrl(parent, _, ctx) {
-      const { bot, config } = ctx.telegramBot;
-
-      if (!bot) {
-        return null;
-      }
-
-      const photos = await bot.getUserProfilePhotos(Number(parent.telegramId.toString()), {
-        limit: 1,
-      });
-      console.log('Photos response:', {
-        total_count: photos.total_count,
-        photos_length: photos.photos.length
-      });
-
-      if (photos.total_count > 0 && photos.photos[0]?.length > 0) {
-        const photo = photos.photos[0][0];
-        const file = await bot.getFile(photo.file_id);
-
-        if (file.file_path) {
-          return `https://api.telegram.org/file/bot${config.botToken}/${file.file_path}`;
-        }
-      }
-
-      return null;
     },
   },
 };
