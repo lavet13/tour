@@ -20,25 +20,6 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMediaQuery } from '@/hooks/use-media-query';
 
-// Custom AvatarImage component to handle 404 errors
-const CustomAvatarImage = ({ src, alt, ...props }: { src: string; alt: string }) => {
-  const [hasError, setHasError] = useState(false);
-
-  useEffect(() => {
-    setHasError(false); // Reset error state when src changes
-    const img = new Image();
-    img.src = src;
-    img.onload = () => setHasError(false);
-    img.onerror = () => setHasError(true);
-  }, [src]);
-
-  if (hasError) {
-    return null; // Return null to trigger fallback
-  }
-
-  return <AvatarImage src={src} alt={alt} {...props} />;
-};
-
 const Header: FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
@@ -46,6 +27,18 @@ const Header: FC = () => {
   const { data, isPending: meIsPending, refetch: refetchUser } = useGetMe();
   const { me: user } = data || {};
   const { mutateAsync: logout } = useLogout();
+  const [validPhotoUrl, setValidPhotoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user?.telegram?.photoUrl) {
+      const img = new Image();
+      img.src = user.telegram.photoUrl;
+      img.onload = () => setValidPhotoUrl(user.telegram!.photoUrl!);
+      img.onerror = () => setValidPhotoUrl(null);
+    } else {
+      setValidPhotoUrl(null);
+    }
+  }, [user?.telegram?.photoUrl]);
 
   const getShortNaming = (
     firstName?: string | null,
@@ -107,7 +100,9 @@ const Header: FC = () => {
               <DropdownMenu open={open} onOpenChange={setOpen}>
                 <DropdownMenuTrigger className='hover:cursor-pointer' asChild>
                   <Avatar className='ml-2 size-8'>
-                    <CustomAvatarImage src={user.telegram?.photoUrl!} alt='Avatar' />
+                    {validPhotoUrl && (
+                      <AvatarImage src={validPhotoUrl} alt='Avatar' />
+                    )}
                     <AvatarFallback className='text-sm'>
                       {user.telegram
                         ? getShortNaming(
