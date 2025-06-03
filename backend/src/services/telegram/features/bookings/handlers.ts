@@ -83,7 +83,7 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
       }
 
       let message = '';
-      message += `🎉 Ваше бронирование подтверждено!\n`;
+      message += `🎉 Ваше бронирование подтверждено!\n\n`;
       message += `<b>🚌 Маршрут:</b> ${routeName}\n`;
       message += `<b>💰 Цена:</b> ${updatedBooking.route?.price} ₽\n`;
       message += `📅 <b>Дата поездки:</b> ${formatRussianDate(updatedBooking.travelDate)}\n`;
@@ -105,7 +105,7 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
     if (updatedBooking.telegramId) {
       message += `\n\n✅ Уведомление отправлено пользователю в Telegram\n`;
       message += `<i>👀 Предварительный просмотр отправленного сообщения:</i>\n\n`;
-      message += `🎉 Ваше бронирование подтверждено!\n`;
+      message += `🎉 Ваше бронирование подтверждено!\n\n`;
       message += `🚌 <b>Маршрут:</b> ${routeName}\n`;
       message += `💰 <b>Цена:</b> ${updatedBooking.route?.price} ₽\n`;
       message += `📅 <b>Дата поездки:</b> ${formatRussianDate(updatedBooking.travelDate)}\n`;

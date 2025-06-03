@@ -40,7 +40,6 @@ import { ComboBox } from '@/components/combo-box-filter';
 import { DatePicker } from '@/components/date-picker-filter';
 import { NumberFormatValues, NumericFormat } from 'react-number-format';
 import { Link } from 'react-router-dom';
-import { Checkbox } from '@/components/ui/checkbox';
 
 type Booking = Omit<
   InfiniteBookingsQuery['bookings']['edges'][number],
