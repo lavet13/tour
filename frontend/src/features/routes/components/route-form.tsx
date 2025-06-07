@@ -18,7 +18,7 @@ import { CalendarClock, Edit, MapPinPlus } from 'lucide-react';
 import { useRegions } from '@/features/region/api/queries';
 import { DatePicker } from '@/components/date-picker';
 import { Switch } from '@/components/ui/switch';
-import { useRouteById } from '@/features/routes/api/queries';
+import { useRouteById, useRoutesGallery } from '@/features/routes/api/queries';
 import {
   useCreateRoute,
   useUpdateRoute,
@@ -40,10 +40,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { useNavigate } from 'react-router-dom';
 import { FileUploader } from '@/components/file-uploader';
-import RoutesGallery, { Image } from './route-gallery';
-import { PonyfillFile } from '@/types/file-types';
-import { Buffer } from 'buffer';
+import RoutesGallery, { pageAtom } from './route-gallery';
 import { LazyImageWrapper } from '@/components/lazy-image';
+import { useAtom } from 'jotai';
 
 interface RouteFormProps<T extends string> {
   drawerMode: T;
@@ -54,6 +53,8 @@ interface RouteFormProps<T extends string> {
 
 export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
   memo(({ drawerMode, routeId, onClose }) => {
+    const ITEMS_PER_PAGE = 8;
+    const [page] = useAtom(pageAtom);
     const navigate = useNavigate();
     const {
       data: routeData,
@@ -68,26 +69,9 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
       },
     });
 
-    const [isPhotoSelected, setIsPhotoSelected] = useState(false);
-    const previewPhoto: Image | null = useMemo(() => {
-      if (!routeData?.routeById?.photo) return null;
-      const { name, lastModified, type, encoding, _size, blobParts } = routeData
-        .routeById.photo as PonyfillFile;
-      const buffer = Buffer.from(blobParts);
-      const image = new Blob([buffer], { type });
-      const imageUrl = URL.createObjectURL(image);
-
-      return {
-        name,
-        type,
-        encoding,
-        _size,
-        imageUrl,
-        buffer,
-        lastModified,
-      };
-    }, [routeData]);
+    const previewPhoto = routeData?.routeById?.photoName;
     console.log({ previewPhoto });
+    const [isPhotoSelected, setIsPhotoSelected] = useState(false);
     const departureCityName = routeData?.routeById?.departureCity?.name ?? '';
     const arrivalCityName = routeData?.routeById?.arrivalCity?.name ?? '';
 
@@ -176,6 +160,11 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
     // }, [cities, form.watch('departureCityId')]);
 
     const { data, mutateAsync: uploadPhoto } = useUploadPhotoRoute();
+    const { refetch: refetchGallery } = useRoutesGallery({
+      limit: ITEMS_PER_PAGE,
+      offset: page * ITEMS_PER_PAGE,
+      options: { enabled: !!open },
+    });
     console.log({ data });
 
     const onSubmit: SubmitHandler<RouteFormValues> = async ({
@@ -199,7 +188,7 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
           }
           toast.success('Маршрут успешно обновлен!', {
             richColors: true,
-            position: 'bottom-center',
+            position: 'top-center',
           });
         }
         if (drawerMode === 'addRoute') {
@@ -214,22 +203,23 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
           }
           toast.success('Новый маршрут добавлен!', {
             richColors: true,
-            position: 'bottom-center',
+            position: 'top-center',
           });
           form.reset();
         }
+        refetchGallery();
         setIsPhotoSelected(false);
         onClose();
       } catch (error) {
         console.error(error);
         if (isGraphQLRequestError(error)) {
           toast.error(error.response.errors[0].message, {
-            position: 'bottom-center',
+            position: 'top-center',
             richColors: true,
           });
         } else if (error instanceof Error) {
           toast.error(error.message, {
-            position: 'bottom-center',
+            position: 'top-center',
             richColors: true,
           });
         }
@@ -439,17 +429,17 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
                     <FormLabel>Превьюшка</FormLabel>
                     <div className='col-span-2'>
                       <div
-                        title={previewPhoto.name}
+                        title={previewPhoto}
                         className={`flex flex-col relative border rounded-md overflow-hidden transition-all`}
                       >
                         <LazyImageWrapper
-                          className='object-cover basis-2'
-                          src={previewPhoto.imageUrl}
+                          className='object-cover'
+                          src={`/uploads/images/${previewPhoto}`}
                           fallbackSrc='/placeholder.svg'
-                          alt={previewPhoto.name}
+                          alt={previewPhoto}
                         />
                         <div className='absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1 text-white text-xs truncate'>
-                          {previewPhoto.name}
+                          {previewPhoto}
                         </div>
                       </div>
                     </div>

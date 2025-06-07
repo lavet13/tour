@@ -303,19 +303,19 @@ const BookingBusPage: FC = () => {
 
       toast.success('Заявка оформлена!', {
         richColors: true,
-        position: 'bottom-center',
+        position: 'top-center',
       });
       setPhoneInputKey(prev => prev + 1);
     } catch (error) {
       console.error(error);
       if (isGraphQLRequestError(error)) {
         toast.error(error.response.errors[0].message, {
-          position: 'bottom-center',
+          position: 'top-center',
           richColors: true,
         });
       } else if (error instanceof Error) {
         toast.error(error.message, {
-          position: 'bottom-center',
+          position: 'top-center',
           richColors: true,
         });
       }

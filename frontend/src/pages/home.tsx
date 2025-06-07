@@ -159,12 +159,12 @@ export default function HomePage() {
       console.error(error);
       if (isGraphQLRequestError(error)) {
         toast.error(error.response.errors[0].message, {
-          position: 'bottom-center',
+          position: 'top-center',
           richColors: true,
         });
       } else if (error instanceof Error) {
         toast.error(error.message, {
-          position: 'bottom-center',
+          position: 'top-center',
           richColors: true,
         });
       }

@@ -14,13 +14,13 @@ export const client = new QueryClient({
       if (isGraphQLRequestError(error)) {
         console.error({ error });
         toast.error(error.response.errors[0].message, {
-          position: 'bottom-center',
+          position: 'top-center',
           duration: 4000,
           richColors: true,
         });
       } else if (error instanceof Error) {
         toast.error(error.message, {
-          position: 'bottom-center',
+          position: 'top-center',
           duration: 4000,
           richColors: true,
         });

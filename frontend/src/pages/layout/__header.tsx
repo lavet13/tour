@@ -8,7 +8,7 @@ import MainNav from '@/components/main-nav';
 import { Icons } from '@/components/icons';
 import TelegramLogin from '@/components/telegram-login';
 import { useGetMe, useLogout } from '@/features/auth';
-import { Loader2, LogOut } from 'lucide-react';
+import { Bus, ExternalLink, Loader2, LogOut, Tickets } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import { Role } from '@/gql/graphql';
 
 const Header: FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -28,6 +29,9 @@ const Header: FC = () => {
   const { me: user } = data || {};
   const { mutateAsync: logout } = useLogout();
   const [validPhotoUrl, setValidPhotoUrl] = useState<string | null>(null);
+  const isAdminOrManager = user?.roles?.some(
+    role => role === Role.Admin || role === Role.Manager,
+  );
 
   useEffect(() => {
     if (user?.telegram?.photoUrl) {
@@ -133,6 +137,22 @@ const Header: FC = () => {
                   {...(isBelow2xl ? { align: 'end' } : {})}
                 >
                   <DropdownMenuLabel>Мой аккаунт</DropdownMenuLabel>
+                  {isAdminOrManager && (
+                    <>
+                      <DropdownMenuItem asChild>
+                        <Link target='_blank' to='/admin/bookings'>
+                          <Bus />
+                          Маршруты
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link target='_blank' to='/admin/bookings'>
+                          <Tickets />
+                          Бронирования
+                        </Link>
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     disabled={isLoading}

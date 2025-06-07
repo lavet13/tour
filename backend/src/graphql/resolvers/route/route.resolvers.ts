@@ -265,37 +265,15 @@ const resolvers: Resolvers = {
         const totalCount = dir.length;
         const paginatedDir = dir.slice(offset, offset + limit);
 
-        const readFile = async (filePath: string): Promise<Buffer> => {
-          const readStream = createReadStream(filePath);
-          const chunks: Buffer[] = [];
-
-          const collectChunks = new Writable({
-            write(chunk, enc, cb) {
-              chunks.push(chunk);
-              cb();
-            },
-          });
-
-          try {
-            await pipeline(readStream, collectChunks);
-            return Buffer.concat(chunks);
-          } catch (error: any) {
-            console.error(`Error reading file: ${error.message}`);
-            throw new GraphQLError(`Error reading file at path: ${filePath}`);
-          }
-        };
-
         const images = await Promise.all(
           paginatedDir.map(async fileName => {
             const filePath = path.join(uploadsDir, fileName);
             const stats = await stat(filePath);
             const fileType =
               mime.lookup(filePath) || 'application/octet-stream';
-            const buffer = await readFile(filePath);
 
             return {
               name: fileName,
-              blobParts: buffer,
               _size: stats.size,
               type: fileType,
               encoding: 'utf-8',

@@ -29,7 +29,7 @@ services:
       context: ./telegram-mini-app
       dockerfile: Dockerfile.prod
     volumes:
-      - telegram_mini_app_dist:/app/dist          # In telegram mini-app service
+      - telegram_mini_app_dist:/app/dist
     networks:
       - webnet
 
@@ -71,6 +71,11 @@ volumes:
   nginx_secrets: # for storing certificates
   telegram_mini_app_dist: # for sharing Telegram mini-app files
   uploads:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${PWD}/backend/uploads
+      o: bind
 
 networks:
   webnet:

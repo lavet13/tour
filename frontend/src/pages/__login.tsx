@@ -67,15 +67,15 @@ const LoginPage: FC = () => {
       await refetchMe();
 
       form.reset();
-      toast.success('Вход выполнен успешно', { position: 'bottom-center' });
+      toast.success('Вход выполнен успешно', { position: 'top-center' });
     } catch (error) {
       console.error(error);
       if (isGraphQLRequestError(error)) {
         toast.error(error.response.errors[0].message, {
-          position: 'bottom-center',
+          position: 'top-center',
         });
       } else if (error instanceof Error) {
-        toast.error(error.message, { position: 'bottom-center' });
+        toast.error(error.message, { position: 'top-center' });
       }
     }
   };

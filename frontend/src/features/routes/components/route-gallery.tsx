@@ -11,13 +11,13 @@ import { ChevronLeft, ChevronRight, Images } from 'lucide-react';
 import { FC, useMemo, useState } from 'react';
 import { useRoutesGallery } from '../api/queries';
 import { SonnerSpinner } from '@/components/sonner-spinner';
-import { Buffer } from 'buffer';
 import { PonyfillFile } from '@/types/file-types';
 import { LazyImageWrapper } from '@/components/lazy-image';
 import { useFormContext } from 'react-hook-form';
 import { RouteFormValues } from './route-form.schema';
 import { useControllableState } from '@/hooks/use-controllable-state';
 import { cn } from '@/lib/utils';
+import { atom, useAtom } from 'jotai';
 
 type RouteGalleryProps<T extends string> = {
   drawerMode: T;
@@ -32,14 +32,14 @@ export type Image = {
   type: string;
   encoding: string;
   _size: number | null;
-  imageUrl: string;
-  buffer: Buffer;
   lastModified: number;
 };
 
 type PreviewFile = File & {
   preview: string;
 };
+
+export const pageAtom = atom(0);
 
 const RoutesGallery: FC<
   RouteGalleryProps<'addRoute' | 'editRoute' | 'idle'>
@@ -56,16 +56,16 @@ const RoutesGallery: FC<
   });
   const form = useFormContext<RouteFormValues>();
   const [open, setOpen] = useState(false);
-  const [page, setPage] = useState(0);
-  const ITEMS_PER_PAGE = 5;
+  const [page, setPage] = useAtom(pageAtom);
+  const ITEMS_PER_PAGE = 8;
 
   const handleSelect = (image: Image) => {
-    const selectedImage = new File([image.buffer], image.name, {
+    const selectedImage = new File([], image.name, {
       type: image.type,
       lastModified: image.lastModified,
     }) as PreviewFile;
 
-    selectedImage.preview = image.imageUrl;
+    selectedImage.preview = `/uploads/images/${selectedImage.name}`;
 
     form.setValue('photo', [selectedImage], {
       shouldValidate: true,
@@ -98,23 +98,13 @@ const RoutesGallery: FC<
   const images: Image[] = useMemo(() => {
     const gallery = (data?.routesGallery.images ?? []) as PonyfillFile[];
 
-    return gallery.map(
-      ({ name, lastModified, type, encoding, _size, blobParts }) => {
-        const buffer = Buffer.from(blobParts);
-        const image = new Blob([buffer], { type });
-        const imageUrl = URL.createObjectURL(image);
-
-        return {
-          name,
-          type,
-          encoding,
-          _size,
-          imageUrl,
-          buffer,
-          lastModified,
-        };
-      },
-    );
+    return gallery.map(({ name, lastModified, type, encoding, _size }) => ({
+      name,
+      type,
+      encoding,
+      _size,
+      lastModified,
+    }));
   }, [data]);
 
   return (
@@ -170,7 +160,7 @@ const RoutesGallery: FC<
             >
               {images.map(image => (
                 <GalleryPhoto
-                  key={image.imageUrl}
+                  key={image.name}
                   image={image}
                   onSelect={handleSelect}
                 />
@@ -223,7 +213,7 @@ function GalleryPhoto({ image, onSelect }: GalleryPhotoProps) {
     >
       <LazyImageWrapper
         className='object-cover h-48'
-        src={image.imageUrl}
+        src={`/uploads/images/${image.name}`}
         fallbackSrc='/placeholder.svg'
         alt={image.name}
       />

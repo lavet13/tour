@@ -99,7 +99,7 @@ export function ScheduleForm({
         });
         toast.success('Запись в расписании успешно обновлена!', {
           richColors: true,
-          position: 'bottom-center',
+          position: 'top-center',
         });
       }
       if (drawerMode === 'addSchedule') {
@@ -110,7 +110,7 @@ export function ScheduleForm({
         await createSchedule({ input: payload });
         toast.success('Новая запись добавлена к расписанию!', {
           richColors: true,
-          position: 'bottom-center',
+          position: 'top-center',
         });
       }
       client.invalidateQueries({ queryKey: ['GetSchedulesByRoute'] });
@@ -120,12 +120,12 @@ export function ScheduleForm({
       console.error(error);
       if (isGraphQLRequestError(error)) {
         toast.error(error.response.errors[0].message, {
-          position: 'bottom-center',
+          position: 'top-center',
           richColors: true,
         });
       } else if (error instanceof Error) {
         toast.error(error.message, {
-          position: 'bottom-center',
+          position: 'top-center',
           richColors: true,
         });
       }

@@ -7,6 +7,7 @@
 - [] command for asking a question for the tg bot. name's /question
 - [] on failed notification for telegram user, send preview message for the manager to copy paste
 - [] linking telegram account to the existing user account
+- [] create separate drawer ui for mobile phones
 
 # Unrealistic ideas:
 - [] realtime chat?
