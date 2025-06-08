@@ -66,6 +66,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { useCreatedBookingSub } from '@/features/booking/api/subscriptions';
 
 type Booking = InfiniteBookingsQuery['bookings']['edges'][number];
 
@@ -77,6 +78,12 @@ const BookingsPage: FC = () => {
     updatedAt: false,
   });
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+
+  const { createdBooking, error: createdBookingError } = useCreatedBookingSub();
+
+  useEffect(() => {
+    refetchBookings();
+  }, [createdBooking]);
 
   const {
     data,

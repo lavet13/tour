@@ -38,7 +38,7 @@ import {
   DrawerDescription,
   DrawerHeader,
   DrawerTitle,
-} from '@/components/ui/drawer';
+} from '@/components/ui/drawer-mobile';
 import { Role } from '@/gql/graphql';
 
 type NavLinkProps = Omit<RouterLinkProps, 'className'> & {
@@ -166,7 +166,7 @@ const MainNav: FC = () => {
                 <ContactRound />
                 Контакты
               </NavigationMenuLink>
-              <DrawerContent showCloseButton showTheLine={false}>
+              <DrawerContent>
                 <DrawerHeader className='pt-7 pb-2 md:pt-8 md:pb-2 md:px-5 flex flex-col flex-wrap items-center gap-2'>
                   <DrawerTitle className='flex-1'>
                     <span className='flex items-center justify-center sm:justify-start flex-wrap gap-2'>
@@ -276,7 +276,7 @@ const MainNav: FC = () => {
                 )}
                 asChild
               >
-                <Link target='_blank' to={'/admin'}>
+                <Link to={'/admin'}>
                   <ExternalLink />
                   Админ панель
                 </Link>

@@ -97,7 +97,7 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
   }, [botName, buttonSize, cornerRadius, canSendMessages, showUserPhoto]);
 
   return (
-    <div className='relative flex justify-center'>
+    <>
       <div
         className={cn('flex justify-center text-center', className)}
         ref={containerRef}
@@ -108,7 +108,7 @@ const TelegramLogin: FC<TelegramLoginProps> = ({
           <Loader2 className='animate-spin size-4' />
         </div>
       )}
-    </div>
+    </>
   );
 };
 

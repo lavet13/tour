@@ -8,7 +8,7 @@ import MainNav from '@/components/main-nav';
 import { Icons } from '@/components/icons';
 import TelegramLogin from '@/components/telegram-login';
 import { useGetMe, useLogout } from '@/features/auth';
-import { Bus, ExternalLink, Loader2, LogOut, Tickets } from 'lucide-react';
+import { Bus, Loader2, LogOut, Settings, Tickets } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -108,12 +108,14 @@ const Header: FC = () => {
             </Link>
             <ModeToggle />
             {!meIsPending && !user && import.meta.env.PROD && (
-              <TelegramLogin
-                className='ml-2'
-                botName={'DonbassTourBot'}
-                buttonSize='small'
-                canSendMessages
-              />
+              <div className='relative flex justify-center'>
+                <TelegramLogin
+                  className='ml-2'
+                  botName={'DonbassTourBot'}
+                  buttonSize='small'
+                  canSendMessages
+                />
+              </div>
             )}
             {!meIsPending && user && (
               <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -140,15 +142,21 @@ const Header: FC = () => {
                   {isAdminOrManager && (
                     <>
                       <DropdownMenuItem asChild>
-                        <Link target='_blank' to='/admin/bookings'>
+                        <Link to='/admin/bookings'>
                           <Bus />
                           Маршруты
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link target='_blank' to='/admin/bookings'>
+                        <Link to='/admin/bookings'>
                           <Tickets />
                           Бронирования
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/admin/settings">
+                          <Settings />
+                          Настройки
                         </Link>
                       </DropdownMenuItem>
                     </>

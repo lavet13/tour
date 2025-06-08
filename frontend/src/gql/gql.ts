@@ -24,6 +24,7 @@ const documents = {
     "\n    mutation UpdateBooking($input: UpdateBookingInput!) {\n      updateBooking(input: $input) {\n        id\n        firstName\n        lastName\n        phoneNumber\n        travelDate\n        seatsCount\n        status\n        createdAt\n        updatedAt\n      }\n    }\n  ": types.UpdateBookingDocument,
     "\n    mutation CreateBooking($input: CreateBookingInput!) {\n      createBooking(input: $input) {\n        id\n        firstName\n        lastName\n        phoneNumber\n        travelDate\n        seatsCount\n        status\n        createdAt\n        updatedAt\n        telegram\n        whatsapp\n      }\n    }\n  ": types.CreateBookingDocument,
     "\n    query InfiniteBookings($input: BookingsInput!) {\n      bookings(input: $input) {\n        edges {\n          id\n          firstName\n          lastName\n          phoneNumber\n          telegram\n          whatsapp\n          extraPhoneNumber\n          extraTelegram\n          extraWhatsapp\n          direction\n          travelDate\n          seatsCount\n          route {\n            id\n            arrivalCity {\n              name\n            }\n            departureCity {\n              name\n            }\n          }\n          status\n          createdAt\n          updatedAt\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  ": types.InfiniteBookingsDocument,
+    "\n    subscription CreatedBookingSubscription {\n      createdBooking {\n        id\n      }\n    }\n  ": types.CreatedBookingSubscriptionDocument,
     "\n    query GetArrivalCities($cityId: ID, $includeInactiveCities: Boolean) {\n      arrivalCities(cityId: $cityId, includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  ": types.GetArrivalCitiesDocument,
     "\n    query GetCities {\n      cities {\n        id\n        name\n      }\n    }\n  ": types.GetCitiesDocument,
     "\n    query GetDepartureCities($includeInactiveCities: Boolean) {\n      departureCities(includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  ": types.GetDepartureCitiesDocument,
@@ -44,7 +45,6 @@ const documents = {
     "\n    query GetSchedulesByRoute($routeId: ID, $direction: RouteDirection) {\n      schedulesByRoute(routeId: $routeId, direction: $direction) {\n        id\n        direction\n        stopName\n        time\n        isActive\n        createdAt\n        updatedAt\n        city {\n          id\n          name\n        }\n      }\n    }\n  ": types.GetSchedulesByRouteDocument,
     "\n    query GetScheduleById($scheduleId: ID) {\n      scheduleById(scheduleId: $scheduleId) {\n        id\n        direction\n        stopName\n        time\n        isActive\n      }\n    }\n  ": types.GetScheduleByIdDocument,
     "\n    query GetSchedulesByIds($departureCityId: ID, $arrivalCityId: ID) {\n      schedulesByIds(\n        departureCityId: $departureCityId\n        arrivalCityId: $arrivalCityId\n      ) {\n        city {\n          name\n        }\n        direction\n        stopName\n        time\n        isActive\n      }\n    }\n  ": types.GetSchedulesByIdsDocument,
-    "\n    subscription CreatedBookSubscription {\n      createdBook {\n        id\n      }\n    }\n  ": types.CreatedBookSubscriptionDocument,
     "\n        mutation RefreshToken {\n          refreshToken {\n            accessToken\n            refreshToken\n          }\n        }\n      ": types.RefreshTokenDocument,
 };
 
@@ -102,6 +102,10 @@ export function graphql(source: "\n    mutation CreateBooking($input: CreateBook
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n    query InfiniteBookings($input: BookingsInput!) {\n      bookings(input: $input) {\n        edges {\n          id\n          firstName\n          lastName\n          phoneNumber\n          telegram\n          whatsapp\n          extraPhoneNumber\n          extraTelegram\n          extraWhatsapp\n          direction\n          travelDate\n          seatsCount\n          route {\n            id\n            arrivalCity {\n              name\n            }\n            departureCity {\n              name\n            }\n          }\n          status\n          createdAt\n          updatedAt\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  "): (typeof documents)["\n    query InfiniteBookings($input: BookingsInput!) {\n      bookings(input: $input) {\n        edges {\n          id\n          firstName\n          lastName\n          phoneNumber\n          telegram\n          whatsapp\n          extraPhoneNumber\n          extraTelegram\n          extraWhatsapp\n          direction\n          travelDate\n          seatsCount\n          route {\n            id\n            arrivalCity {\n              name\n            }\n            departureCity {\n              name\n            }\n          }\n          status\n          createdAt\n          updatedAt\n        }\n        pageInfo {\n          endCursor\n          hasNextPage\n\n          startCursor\n          hasPreviousPage\n        }\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    subscription CreatedBookingSubscription {\n      createdBooking {\n        id\n      }\n    }\n  "): (typeof documents)["\n    subscription CreatedBookingSubscription {\n      createdBooking {\n        id\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -182,10 +186,6 @@ export function graphql(source: "\n    query GetScheduleById($scheduleId: ID) {\
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n    query GetSchedulesByIds($departureCityId: ID, $arrivalCityId: ID) {\n      schedulesByIds(\n        departureCityId: $departureCityId\n        arrivalCityId: $arrivalCityId\n      ) {\n        city {\n          name\n        }\n        direction\n        stopName\n        time\n        isActive\n      }\n    }\n  "): (typeof documents)["\n    query GetSchedulesByIds($departureCityId: ID, $arrivalCityId: ID) {\n      schedulesByIds(\n        departureCityId: $departureCityId\n        arrivalCityId: $arrivalCityId\n      ) {\n        city {\n          name\n        }\n        direction\n        stopName\n        time\n        isActive\n      }\n    }\n  "];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n    subscription CreatedBookSubscription {\n      createdBook {\n        id\n      }\n    }\n  "): (typeof documents)["\n    subscription CreatedBookSubscription {\n      createdBook {\n        id\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

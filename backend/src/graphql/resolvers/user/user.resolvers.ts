@@ -14,7 +14,6 @@ import { cookieOpts } from '@/helpers/cookie-opts';
 import { hasRoles } from '@/graphql/composition/authorization';
 import crypto from 'crypto';
 import validatePassword from '@/helpers/validate-password';
-import { PonyfillFile } from '@/types/file';
 
 const resolvers: Resolvers = {
   Query: {
@@ -270,9 +269,7 @@ const resolvers: Resolvers = {
 
       // Convert string to BigInt for database operations
       const telegramId = dataToCheck.id;
-      console.log({ telegramId });
       const authDate = new Date(authTimestamp);
-      console.log({ authDate });
 
       let transactionResult;
 
@@ -284,6 +281,9 @@ const resolvers: Resolvers = {
 
           let user;
           let isNewUser = false;
+          const displayName = dataToCheck.last_name
+            ? `${dataToCheck.first_name.toLowerCase()} ${dataToCheck.last_name.toLowerCase()}`
+            : dataToCheck.first_name.toLowerCase();
 
           if (telegramUser) {
             // Update existing Telegram user data
@@ -307,10 +307,6 @@ const resolvers: Resolvers = {
               });
             } else {
               // Create new User and link to existing TelegramUser
-              const displayName = dataToCheck.last_name
-                ? `${dataToCheck.first_name.toLowerCase()} ${dataToCheck.last_name.toLowerCase()}`
-                : dataToCheck.first_name.toLowerCase();
-
               user = await tx.user.create({
                 data: {
                   name: displayName,
@@ -331,22 +327,30 @@ const resolvers: Resolvers = {
               isNewUser = true;
             }
           } else {
-            // Create new User and TelegramUser
-            const displayName = dataToCheck.last_name
-              ? `${dataToCheck.first_name.toLowerCase()} ${dataToCheck.last_name.toLowerCase()}`
-              : dataToCheck.first_name.toLowerCase();
-
-            user = await tx.user.create({
-              data: {
-                name: displayName,
-                roles: {
-                  create: {
-                    role: 'USER',
-                  },
-                },
+            user = await tx.user.findUnique({
+              where: {
+                id: ctx.me!.id,
               },
               include: { roles: true },
             });
+
+            if (user) isNewUser = false;
+
+            if (!user) {
+              isNewUser = true;
+              // Create new User and TelegramUser
+              user = await tx.user.create({
+                data: {
+                  name: displayName,
+                  roles: {
+                    create: {
+                      role: 'USER',
+                    },
+                  },
+                },
+                include: { roles: true },
+              });
+            }
 
             await tx.telegramUser.create({
               data: {
@@ -360,8 +364,6 @@ const resolvers: Resolvers = {
                 userId: user.id,
               },
             });
-
-            isNewUser = true;
           }
 
           const { accessToken, refreshToken } = createTokens(user);

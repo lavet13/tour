@@ -282,7 +282,7 @@ const resolvers: Resolvers = {
         await notifyNewBooking(booking, ctx.prisma);
 
         // Optionally publish to subscription
-        ctx.pubSub.publish('createdBook', { createdBook: booking });
+        ctx.pubSub.publish('createdBooking', { createdBooking: booking });
       } catch (error) {
         // Log error but don't fail the booking creation
         console.error('Failed to send Telegram notification:', error);
@@ -336,8 +336,8 @@ const resolvers: Resolvers = {
     },
   },
   Subscription: {
-    createdBook: {
-      subscribe: (_, args, ctx) => ctx.pubSub.subscribe('createdBook'),
+    createdBooking: {
+      subscribe: (_, args, ctx) => ctx.pubSub.subscribe('createdBooking'),
     },
   },
 };
@@ -352,7 +352,7 @@ const resolversComposition: ResolversComposerMapping<any> = {
     isAuthenticated(),
     hasRoles([Role.MANAGER, Role.ADMIN]),
   ],
-  'Subscription.createdBook': [
+  'Subscription.createdBooking': [
     isAuthenticated(),
     hasRoles([Role.MANAGER, Role.ADMIN]),
   ],

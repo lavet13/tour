@@ -25,7 +25,7 @@ export default gql`
   }
 
   type Subscription {
-    createdBook: Booking!
+    createdBooking: Booking!
   }
 
   input SortingState {

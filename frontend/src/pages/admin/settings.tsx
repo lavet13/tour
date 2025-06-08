@@ -1,8 +1,10 @@
+import { Icons } from '@/components/icons';
 import {
   PageHeader,
   PageHeaderDescription,
   PageHeaderHeading,
 } from '@/components/page-header';
+import TelegramLogin from '@/components/telegram-login';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -13,7 +15,12 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { useTelegramChatIds, useUpdateTelegramChatIds } from '@/features/auth';
+import { Separator } from '@/components/ui/separator';
+import {
+  useGetMe,
+  useTelegramChatIds,
+  useUpdateTelegramChatIds,
+} from '@/features/auth';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { Loader2, Save, X } from 'lucide-react';
 import { useEffect } from 'react';
@@ -30,6 +37,12 @@ const defaultValues: DefaultValues = {
 };
 
 function SettingsPage() {
+  const {
+    data: meData,
+    isPending: meIsPending,
+  } = useGetMe();
+  const { me: user } = meData || {};
+
   const {
     data,
     isPending,
@@ -99,14 +112,17 @@ function SettingsPage() {
           Можете настроить ваш аватар, уведомления и т.д.
         </PageHeaderDescription>
       </PageHeader>
-      <div className="container">
+      <div className='container'>
         <div className='px-3 py-4 max-w-md'>
           <h2 className='scroll-m-20 pb-2 text-3xl font-semibold tracking-tight first:mt-0'>
             Telegram
           </h2>
           {!isPending && (
             <Form {...form}>
-              <form className='space-y-3' onSubmit={form.handleSubmit(onSubmit)}>
+              <form
+                className='space-y-3'
+                onSubmit={form.handleSubmit(onSubmit)}
+              >
                 {fields.map((_field, index) => {
                   return (
                     <Fragment key={_field.id}>
@@ -208,6 +224,25 @@ function SettingsPage() {
           )}
         </div>
       </div>
+      {!meIsPending && import.meta.env.PROD && !user?.telegram && (
+        <>
+          <Separator />
+          <div className='container'>
+            <div className='px-3 py-4 max-w-md'>
+              <h2 className='flex items-center gap-1 scroll-m-20 pb-2 text-3xl font-semibold leading-none tracking-tight first:mt-0'>
+                Привязать Telegram
+              </h2>
+              <div className='relative flex flex-col justify-center items-start gap-2'>
+                <TelegramLogin
+                  botName={'DonbassTourBot'}
+                  buttonSize='medium'
+                  canSendMessages
+                />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
