@@ -6,7 +6,8 @@
 - [] form for asking a question. complaints/suggestions. Should be received by the manager via telegram or admin panel
 - [] command for asking a question for the tg bot. name's /question
 - [] on failed notification for telegram user, send preview message for the manager to copy paste
-- [] linking telegram account to the existing user account
+- [] consider editing the relation for telegram user and user models
+- [x] linking telegram account to the existing user account
 - [x] create separate drawer ui for mobile phones
 
 # Unrealistic ideas:
