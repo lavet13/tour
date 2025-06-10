@@ -1,5 +1,6 @@
 import { addHours, format, startOfDay } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { toZonedTime } from 'date-fns-tz';
 
 /**
  * Форматирует дату в российском формате с названием месяца
@@ -15,7 +16,7 @@ export const formatRussianDate = (date: Date | string | number): string => {
       return 'Invalid Date';
     }
 
-    const eestDate = addHours(dateObj, 3);
+    const eestDate = toZonedTime(dateObj, 'Europe/Tallinn');
 
     const normalizedDate = startOfDay(eestDate);
 
