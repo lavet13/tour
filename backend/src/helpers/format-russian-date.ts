@@ -1,5 +1,5 @@
-import { format } from "date-fns";
-import { ru } from "date-fns/locale";
+import { addHours, format, startOfDay } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 /**
  * Форматирует дату в российском формате с названием месяца
@@ -7,8 +7,23 @@ import { ru } from "date-fns/locale";
  * @returns Отформатированная строка даты
  */
 export const formatRussianDate = (date: Date | string | number): string => {
-  const dateObj = new Date(date);
-  return format(dateObj, 'd MMMM yyyy г.', { locale: ru });
+  try {
+    const dateObj = new Date(date);
+
+    if (isNaN(dateObj.getTime())) {
+      console.error('Invalid dateObj:', date);
+      return 'Invalid Date';
+    }
+
+    const eestDate = addHours(dateObj, 3);
+
+    const normalizedDate = startOfDay(eestDate);
+
+    return format(normalizedDate, 'd MMMM yyyy г.', { locale: ru });
+  } catch (error) {
+    console.error('Error in formatRussianDate:', error, 'Input:', date);
+    return 'Error Formatting Date';
+  }
 };
 
 /**

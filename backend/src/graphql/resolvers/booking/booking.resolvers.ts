@@ -269,6 +269,8 @@ const resolvers: Resolvers = {
         );
       }
 
+      console.log('travelDate:', args.input.travelDate.toISOString());
+
       const booking = await ctx.prisma.booking.create({
         data: {
           routeId: route.id,

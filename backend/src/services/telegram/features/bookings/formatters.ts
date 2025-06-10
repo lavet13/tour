@@ -2,9 +2,7 @@ import {
   $Enums,
   Booking,
   BookingStatus,
-  City,
   Prisma,
-  Route,
 } from '@prisma/client';
 import {
   formatRussianDate,
