@@ -5,25 +5,30 @@ import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Meteors } from '@/components/magicui/meteors';
 import { LazyImageWrapper } from '@/components/lazy-image';
-import { CreateBookingInput, RouteDirection } from '@/gql/graphql';
+import {
+  CreateBookingInput,
+  CreateBookingMutation,
+  RouteDirection,
+} from '@/gql/graphql';
 import { useCreateBooking } from '@/features/booking';
 import { toast } from 'sonner';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { cn } from '@/lib/utils';
 import { SparklesText } from '@/components/ui/sparkles-text';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import { useAtom } from 'jotai';
+import { atom, useAtom } from 'jotai';
 import { breakpointsAtom } from '@/lib/atoms/tailwind';
 import { useEffect, useRef } from 'react';
 import { useRouteByIds } from '@/features/routes';
 import { keepPreviousData } from '@tanstack/react-query';
 import { activeStepAtom, containerRefAtom } from '@/lib/atoms/ui';
-import { Loader2 } from 'lucide-react';
+import { Heart, HeartHandshake, Loader2, Smile } from 'lucide-react';
 import BookingResult from '@/pages/home/__booking-result';
 import DepartureArrivalCitiesInfo from '@/pages/home/__departure-arrival-cities-info';
 import SchedulesInfo from '@/pages/home/__schedules-info';
 import { useIsFirstRender } from '@/hooks/use-is-first-render';
 import { useGetMe } from '@/features/auth';
+import { createdBookingAtom } from '@/lib/atoms/booking';
 
 export type DefaultValues = {
   firstName: string;
@@ -59,6 +64,7 @@ function getStepContent(step: number) {
 }
 
 export default function HomePage() {
+  const [, setCreatedBooking] = useAtom(createdBookingAtom);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [, setContainerRef] = useAtom(containerRefAtom);
   const isInitialRender = useIsFirstRender();
@@ -94,12 +100,6 @@ export default function HomePage() {
   const { isSubmitting, isSubmitSuccessful, dirtyFields, errors } =
     form.formState;
   const values = form.getValues();
-  console.log({ isSubmitSuccessful });
-  console.log({
-    errors,
-    dirtyFields,
-    values,
-  });
 
   const location = useLocation();
 
@@ -119,7 +119,8 @@ export default function HomePage() {
     }
   }, [isSubmitSuccessful, activeStep]);
 
-  const { mutateAsync: createBooking } = useCreateBooking();
+  const { mutateAsync: createBooking, data: receivedBooking } =
+    useCreateBooking();
   const onSubmit: SubmitHandler<DefaultValues> = async ({
     phones,
     ...data
@@ -152,7 +153,10 @@ export default function HomePage() {
         direction,
         telegramId: user?.telegram?.telegramId,
       };
-      await createBooking({ input: payload });
+
+      const createdBooking = await createBooking({ input: payload });
+
+      setCreatedBooking(receivedBooking || createdBooking);
 
       setActiveStep(3);
     } catch (error) {
@@ -194,13 +198,13 @@ export default function HomePage() {
 
   const handleComplete = () => {
     setSearchParams(p => {
-      console.log({ entries: [...p.entries()] });
       const keys = [...p.entries()].map(([key]) => key);
       const query = new URLSearchParams(p.toString());
       keys.forEach(key => query.delete(key));
       return query;
     });
     setActiveStep(1);
+    setCreatedBooking(undefined);
   };
 
   const handleNext = async () => {
@@ -293,10 +297,11 @@ export default function HomePage() {
                       ) : activeStep === 3 ? (
                         <Button
                           type='button'
-                          className='w-auto xs:w-fit'
+                          className='w-auto xs:w-fit rounded-full px-12'
                           onClick={handleComplete}
                         >
-                          Ладно, идем дальше
+                          Спасибо
+                          <HeartHandshake className='size-5' />
                         </Button>
                       ) : (
                         <Button

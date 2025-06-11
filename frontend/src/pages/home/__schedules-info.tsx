@@ -389,7 +389,7 @@ const SchedulesInfo: FC = () => {
                 render={({ field: { onChange, ...field } }) => {
                   return (
                     <FormItem className='sm:col-span-2'>
-                      <FormLabel>Количество мест</FormLabel>
+                      <FormLabel className="text-center">Количество мест</FormLabel>
                       <Counter onValueChange={onChange} {...field} />
                       <FormMessage className='text-center' />
                     </FormItem>
@@ -710,7 +710,7 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
       <FormControl>
         <div
           className={cn(
-            'flex items-center justify-center space-x-2 sm:space-x-4',
+            'flex items-center justify-center',
             value === 0 && 'text-muted-foreground',
             'focus:outline-none focus:ring-1 focus:ring-ring',
           )}
@@ -718,7 +718,7 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
           <Button
             variant='outline'
             size='icon'
-            className={cn('h-8 w-8 sm:h-10 sm:w-10 shrink-0 rounded-full')}
+            className={cn('min-h-10 min-w-10 size-14 flex-1 sm:flex-none shrink-0 rounded-full')}
             type='button'
             onClick={() => setValue(value - 1)}
             disabled={value <= 1}
@@ -727,7 +727,7 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
             <Minus className='h-4 w-4 sm:h-5 sm:w-5' />
             <span className='sr-only'>Уменьшить</span>
           </Button>
-          <div className='flex-1 text-center'>
+          <div className='text-center flex-2 shrink-0 flex-grow sm:flex-none sm:px-6'>
             <NumericFormat
               displayType='text'
               getInputRef={ref}
@@ -750,7 +750,7 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
           <Button
             variant='outline'
             size='icon'
-            className={cn('h-8 w-8 sm:h-10 sm:w-10 shrink-0 rounded-full')}
+            className={cn('min-h-10 min-w-10 size-14 flex-1 sm:flex-none shrink-0 rounded-full')}
             type='button'
             onClick={() => setValue(value + 1)}
             disabled={value >= 20}

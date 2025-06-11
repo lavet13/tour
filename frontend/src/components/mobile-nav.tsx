@@ -24,6 +24,7 @@ import {
   ChevronRight,
   ContactRound,
   ExternalLink,
+  MessageCircleQuestion,
   Search,
   X,
 } from 'lucide-react';
@@ -315,12 +316,29 @@ const MobileNav = () => {
                     className='w-fit px-2 py-0 space-x-1 h-9'
                     asChild
                   >
-                    <Link target='_blank' to='/admin' rel='noreferrer'>
+                    <Link to='/admin' rel='noreferrer'>
                       <ExternalLink />
                       <span>Админ панель</span>
                     </Link>
                   </Button>
                 )}
+
+                <Button
+                  variant='ghost'
+                  className='w-fit px-2 py-0 space-x-1 h-9'
+                  asChild
+                >
+                  <Link
+                    onClick={() => {
+                      setOpen(false);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    to='/question'
+                  >
+                    <MessageCircleQuestion />
+                    <span>Жалоба/Вопрос</span>
+                  </Link>
+                </Button>
 
                 <Drawer
                   open={contactIsOpen}

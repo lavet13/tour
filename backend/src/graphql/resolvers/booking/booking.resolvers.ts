@@ -124,8 +124,6 @@ const resolvers: Resolvers = {
         })
         .filter(Boolean);
 
-      console.log({ columnConditions });
-
       // const globalCondition = query
       //   ? {
       //       OR: globalFilterableColumns.map(column => {
@@ -268,8 +266,6 @@ const resolvers: Resolvers = {
           'Неверный/Несуществующий маршрут, указанный для бронирования.',
         );
       }
-
-      console.log('travelDate:', args.input.travelDate.toISOString());
 
       const booking = await ctx.prisma.booking.create({
         data: {

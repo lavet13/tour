@@ -16,7 +16,12 @@ import {
   NavigationMenuViewport,
 } from '@/components/ui/navigation-menu';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { ChevronDown, ExternalLink, ContactRound } from 'lucide-react';
+import {
+  ChevronDown,
+  ExternalLink,
+  ContactRound,
+  MessageCircleQuestion,
+} from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
@@ -150,6 +155,25 @@ const MainNav: FC = () => {
         }}
       >
         <NavigationMenuList>
+          <NavigationMenuItem>
+            <NavigationMenuLink
+              className={cn(
+                buttonVariants({ variant: 'ghost', size: 'sm' }),
+                'bg-background/10',
+              )}
+              asChild
+            >
+              <Link
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                to={'/question'}
+              >
+                <MessageCircleQuestion />
+                Жалоба/Вопрос
+              </Link>
+            </NavigationMenuLink>
+          </NavigationMenuItem>
           <NavigationMenuItem>
             <Drawer
               open={contactIsOpen}

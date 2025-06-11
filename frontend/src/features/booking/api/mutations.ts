@@ -55,13 +55,26 @@ export const useCreateBooking = (
         firstName
         lastName
         phoneNumber
+        telegram
+        whatsapp
+        extraPhoneNumber
+        extraTelegram
+        extraWhatsapp
         travelDate
         seatsCount
         status
         createdAt
         updatedAt
-        telegram
-        whatsapp
+        direction
+        route {
+          price
+          departureCity {
+            name
+          }
+          arrivalCity {
+            name
+          }
+        }
       }
     }
   `);
@@ -77,4 +90,3 @@ export const useCreateBooking = (
     }),
   };
 };
-
