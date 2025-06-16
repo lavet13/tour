@@ -111,7 +111,7 @@ const bookingStatusChange: CallbackHandler['handle'] = async (
       message += `📅 <b>Дата поездки:</b> ${formatRussianDate(updatedBooking.travelDate)}\n`;
       message += `🪑 <b>Мест:</b> ${updatedBooking.seatsCount}\n\n`;
       message += `📞 Ожидайте звонка диспетчера для уточнения деталей.\n\n`;
-      message += `🖤 Спасибо, что обратились к нам!`;
+      message += `♥ Спасибо, что обратились к нам!`;
 
       return message;
     };

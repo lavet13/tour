@@ -4,6 +4,7 @@ import { mainMenuFeature } from '@/services/telegram/features/main-menu';
 import { BotFeature } from '@/services/telegram/telegram-bot.types';
 import { bookingsFeature } from '@/services/telegram/features/bookings';
 import { bookingsAPI } from '@/services/telegram/features/bookings/api';
+import { feedbackAPIs } from '@/services/telegram/features/feedback/api';
 
 /**
  * Register all features with the bot
@@ -15,6 +16,7 @@ export const getFeatures = (): BotFeature[] => {
 
 export const getPublicAPIs = () => ({
   ...bookingsAPI,
+  ...feedbackAPIs,
 });
 
 export * from './app';

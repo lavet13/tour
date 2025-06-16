@@ -1,5 +1,5 @@
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Link, NavLink, NavLinkProps, useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import {
   FC,
@@ -36,45 +36,44 @@ import {
 import { useRegionByName } from '@/features/region';
 import { useRoutes } from '@/features/routes';
 import { Input } from '@/components/ui/input';
-import { useDrawerState } from '@/hooks/use-drawer-state';
 import { Separator } from '@/components/ui/separator';
 import { Role } from '@/gql/graphql';
+import {
+  NavLink as RouterLink,
+  NavLinkProps as RouterLinkProps,
+} from 'react-router-dom';
 
-type SheetLinkProps = Omit<NavLinkProps, 'className'> & {
+type NavLinkProps = Omit<RouterLinkProps, 'className'> & {
   children: ReactNode;
   className?: string;
-  onOpenChange: (open: boolean) => void;
 };
 
-const SheetLink: FC<SheetLinkProps> = forwardRef<
-  HTMLAnchorElement,
-  SheetLinkProps
->(({ to, children, className, onOpenChange, ...props }, ref) => {
-  const handleClick = useCallback(() => {
-    onOpenChange(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, [onOpenChange]);
+export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(
+  ({ to, className, onClick, ...props }, ref) => {
+    // Combine the scroll behavior with any custom onClick handler
+    const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+      window.scrollTo({ top: 0 });
+      onClick?.(e); // Call the custom onClick if provided
+    };
 
-  return (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        cn(
-          'block py-3 text-sm transition-colors',
-          isActive
-            ? 'border-l-4 bg-muted/30 border-foreground pl-4 -ml-px text-foreground font-medium'
-            : 'pl-4 border-l-4 -ml-px text-foreground/80 hover:text-foreground',
-          className,
-        )
-      }
-      ref={ref}
-      onClick={handleClick}
-      {...props}
-    >
-      {children}
-    </NavLink>
-  );
-});
+    return (
+      <RouterLink
+        to={to}
+        ref={ref}
+        onClick={handleClick}
+        className={({ isActive }) =>
+          cn(
+            buttonVariants({ variant: 'ghost', size: 'sm' }),
+            'transition-colors whitespace-nowrap',
+            isActive && 'bg-accent',
+            className,
+          )
+        }
+        {...props}
+      />
+    );
+  },
+);
 
 const MobileNav = () => {
   const [open, setOpen] = useState(false);
@@ -328,7 +327,7 @@ const MobileNav = () => {
                   className='w-fit px-2 py-0 space-x-1 h-9'
                   asChild
                 >
-                  <Link
+                  <NavLink
                     onClick={() => {
                       setOpen(false);
                       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -336,8 +335,8 @@ const MobileNav = () => {
                     to='/question'
                   >
                     <MessageCircleQuestion />
-                    <span>Жалоба/Вопрос</span>
-                  </Link>
+                    <span>Задать вопрос</span>
+                  </NavLink>
                 </Button>
 
                 <Drawer

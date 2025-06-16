@@ -26,9 +26,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import RPNInput, {
-  isPossiblePhoneNumber,
-} from 'react-phone-number-input/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/date-picker';
 import { useControllableState } from '@/hooks/use-controllable-state';
@@ -36,6 +33,8 @@ import { NumericFormat } from 'react-number-format';
 import ru from 'react-phone-number-input/locale/ru.json';
 import { useAtom } from 'jotai';
 import { activeStepAtom, containerRefAtom } from '@/lib/atoms/ui';
+import { isPossiblePhoneNumber } from 'react-phone-number-input/input';
+import { PhoneInput } from '@/components/phone-input';
 
 type Route = GetRouteByIdsQuery['routeByIds'];
 type ScheduleItem = Omit<
@@ -236,7 +235,13 @@ const SchedulesInfo: FC = () => {
                           <FormItem className='gap-y-0 sm:gap-y-0'>
                             <div className='flex flex-col gap-y-1.5'>
                               <FormLabel className='flex justify-between'>
-                                <span>Телефон</span>
+                                <span>
+                                  {index !== 0 ? (
+                                    <>Доп. телефон</>
+                                  ) : (
+                                    <>Телефон</>
+                                  )}
+                                </span>
                                 {index === 0 ? (
                                   <Button
                                     onClick={() => {
@@ -262,7 +267,7 @@ const SchedulesInfo: FC = () => {
                                   <Button
                                     onClick={() => remove(index)}
                                     type='button'
-                                    className='absolute -top-2 -right-2 [&_svg]:size-3 size-5 rounded-sm'
+                                    className='absolute -top-2 -right-2 [&_svg]:size-3 size-5 rounded-sm z-[15]'
                                     variant='outline'
                                     size='icon'
                                   >
@@ -273,10 +278,13 @@ const SchedulesInfo: FC = () => {
                                   </Button>
                                 )}
                                 <FormControl>
-                                  <RPNInput
-                                    inputComponent={Input}
+                                  <PhoneInput
                                     placeholder='Введите номер телефона'
+                                    countries={['RU']}
+                                    international
                                     labels={ru}
+                                    countryCallingCodeEditable={false}
+                                    defaultCountry={'RU'}
                                     {...field}
                                   />
                                 </FormControl>
@@ -389,7 +397,9 @@ const SchedulesInfo: FC = () => {
                 render={({ field: { onChange, ...field } }) => {
                   return (
                     <FormItem className='sm:col-span-2'>
-                      <FormLabel className="text-center">Количество мест</FormLabel>
+                      <FormLabel className='text-center'>
+                        Количество мест
+                      </FormLabel>
                       <Counter onValueChange={onChange} {...field} />
                       <FormMessage className='text-center' />
                     </FormItem>
@@ -481,6 +491,7 @@ function RouteInfo({
         </div>
         <div className='flex flex-wrap justify-center items-center gap-2 py-2'>
           <Button
+            type='button'
             onClick={handleBack}
             className='flex rounded-full px-6'
             size='sm'
@@ -718,7 +729,9 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
           <Button
             variant='outline'
             size='icon'
-            className={cn('min-h-10 min-w-10 size-14 flex-1 sm:flex-none shrink-0 rounded-full')}
+            className={cn(
+              'min-h-10 min-w-10 size-14 flex-1 sm:flex-none shrink-0 rounded-full',
+            )}
             type='button'
             onClick={() => setValue(value - 1)}
             disabled={value <= 1}
@@ -750,7 +763,9 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
           <Button
             variant='outline'
             size='icon'
-            className={cn('min-h-10 min-w-10 size-14 flex-1 sm:flex-none shrink-0 rounded-full')}
+            className={cn(
+              'min-h-10 min-w-10 size-14 flex-1 sm:flex-none shrink-0 rounded-full',
+            )}
             type='button'
             onClick={() => setValue(value + 1)}
             disabled={value >= 20}

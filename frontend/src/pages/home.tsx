@@ -259,7 +259,13 @@ export default function HomePage() {
             className='max-w-3xl mx-auto relative overflow-hidden'
           >
             <Form {...form}>
-              <form noValidate className='space-y-6'>
+              <form
+                onSubmit={e => {
+                  e.preventDefault();
+                }}
+                noValidate
+                className='space-y-6'
+              >
                 <div className='max-w-4xl mx-auto border bg-background rounded-2xl relative overflow-hidden z-10'>
                   <div className='absolute inset-0 z-0'>
                     <Meteors number={5} />
@@ -281,7 +287,7 @@ export default function HomePage() {
                       {activeStep === 2 ? (
                         <Button
                           className='px-8'
-                          type='button'
+                          type='submit'
                           onClick={form.handleSubmit(onSubmit)}
                           disabled={isSubmitting}
                         >
@@ -291,13 +297,13 @@ export default function HomePage() {
                               Принимаем заявку
                             </>
                           ) : (
-                            'Заказать билет'
+                            <>Заказать билет</>
                           )}
                         </Button>
                       ) : activeStep === 3 ? (
                         <Button
                           type='button'
-                          className='w-auto xs:w-fit rounded-full px-12'
+                          className='w-auto xs:w-fit px-12'
                           onClick={handleComplete}
                         >
                           Спасибо

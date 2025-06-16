@@ -66,10 +66,9 @@ export const NavLink = forwardRef<HTMLAnchorElement, NavLinkProps>(
         onClick={handleClick}
         className={({ isActive }) =>
           cn(
-            'transition-colors font-semibold whitespace-nowrap',
-            isActive
-              ? 'text-foreground underline-offset-4 underline bg-background/5 hover:text-foreground/90'
-              : 'hover:text-foreground/80 text-foreground/60',
+            buttonVariants({ variant: 'ghost', size: 'sm' }),
+            'transition-colors whitespace-nowrap',
+            isActive && 'bg-accent',
             className,
           )
         }
@@ -156,23 +155,10 @@ const MainNav: FC = () => {
       >
         <NavigationMenuList>
           <NavigationMenuItem>
-            <NavigationMenuLink
-              className={cn(
-                buttonVariants({ variant: 'ghost', size: 'sm' }),
-                'bg-background/10',
-              )}
-              asChild
-            >
-              <Link
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                to={'/question'}
-              >
-                <MessageCircleQuestion />
-                Жалоба/Вопрос
-              </Link>
-            </NavigationMenuLink>
+            <NavLink to={'/question'}>
+              <MessageCircleQuestion />
+              Задать вопрос
+            </NavLink>
           </NavigationMenuItem>
           <NavigationMenuItem>
             <Drawer

@@ -6,7 +6,7 @@ import {
   CheckCircle,
   UserRound,
 } from 'lucide-react';
-import { FC } from 'react';
+import { FC, Fragment } from 'react';
 import { useAtom } from 'jotai';
 import { createdBookingAtom } from '@/lib/atoms/booking';
 import { Button } from '@/components/ui/button';
@@ -132,7 +132,7 @@ const BookingResult: FC = () => {
             const IconComponent = detail.icon;
 
             return (
-              <>
+              <Fragment key={detail.label}>
                 <div>
                   <p className='flex items-center gap-1.5 text-foreground font-bold'>
                     <IconComponent className='size-5' />
@@ -140,7 +140,7 @@ const BookingResult: FC = () => {
                   </p>
                   <p className='text-foreground'>{detail.value}</p>
                 </div>
-              </>
+              </Fragment>
             );
           })}
         </div>

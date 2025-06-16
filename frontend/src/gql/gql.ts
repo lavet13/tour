@@ -28,6 +28,7 @@ const documents = {
     "\n    query GetArrivalCities($cityId: ID, $includeInactiveCities: Boolean) {\n      arrivalCities(cityId: $cityId, includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  ": types.GetArrivalCitiesDocument,
     "\n    query GetCities {\n      cities {\n        id\n        name\n      }\n    }\n  ": types.GetCitiesDocument,
     "\n    query GetDepartureCities($includeInactiveCities: Boolean) {\n      departureCities(includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  ": types.GetDepartureCitiesDocument,
+    "\n    mutation CreateFeedback($input: CreateFeedbackInput!) {\n      createFeedback(input: $input) {\n        reason\n        replyTo\n        message\n      }\n    }\n  ": types.CreateFeedbackDocument,
     "\n    query RegionByName($regionName: String!) {\n      regionByName(regionName: $regionName) {\n        id\n        name\n      }\n    }\n  ": types.RegionByNameDocument,
     "\n    query GetRegionForRoute($departureCityId: ID, $arrivalCityId: ID) {\n      regionForRoute(\n        departureCityId: $departureCityId\n        arrivalCityId: $arrivalCityId\n      ) {\n        id\n        name\n      }\n    }\n  ": types.GetRegionForRouteDocument,
     "\n    query Regions {\n      regions {\n        id\n        name\n      }\n    }\n  ": types.RegionsDocument,
@@ -118,6 +119,10 @@ export function graphql(source: "\n    query GetCities {\n      cities {\n      
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n    query GetDepartureCities($includeInactiveCities: Boolean) {\n      departureCities(includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  "): (typeof documents)["\n    query GetDepartureCities($includeInactiveCities: Boolean) {\n      departureCities(includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    mutation CreateFeedback($input: CreateFeedbackInput!) {\n      createFeedback(input: $input) {\n        reason\n        replyTo\n        message\n      }\n    }\n  "): (typeof documents)["\n    mutation CreateFeedback($input: CreateFeedbackInput!) {\n      createFeedback(input: $input) {\n        reason\n        replyTo\n        message\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

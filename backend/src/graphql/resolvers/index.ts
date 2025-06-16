@@ -6,6 +6,7 @@ import cityResolvers from '@/graphql/resolvers/city/city.resolvers';
 import routeResolvers from '@/graphql/resolvers/route/route.resolvers';
 import scheduleResolvers from '@/graphql/resolvers/schedule/schedule.resolvers';
 import regionResolvers from '@/graphql/resolvers/region/region.resolvers';
+import feedbackResolvers from '@/graphql/resolvers/feedback/feedback.resolvers';
 
 export default mergeResolvers([
   userResolvers,
@@ -15,4 +16,5 @@ export default mergeResolvers([
   routeResolvers,
   scheduleResolvers,
   regionResolvers,
+  feedbackResolvers,
 ]);

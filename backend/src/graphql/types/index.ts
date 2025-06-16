@@ -6,6 +6,7 @@ import cityTypes from '@/graphql/types/city/city.types';
 import routeTypes from '@/graphql/types/route/route.types';
 import regionTypes from '@/graphql/types/region/region.types';
 import scheduleTypes from '@/graphql/types/schedule/schedule.types';
+import feedbackTypes from '@/graphql/types/feedback/feedback.types';
 
 export default mergeTypeDefs([
   scalarTypes,
@@ -15,4 +16,5 @@ export default mergeTypeDefs([
   cityTypes,
   routeTypes,
   regionTypes,
+  feedbackTypes,
 ]);
