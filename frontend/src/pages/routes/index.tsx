@@ -69,8 +69,6 @@ const RoutesPage: FC = () => {
     [data],
   );
 
-  console.log({ routes });
-
   const filter = searchParams.get('filter');
   const {
     isOpen: filterIsOpen,

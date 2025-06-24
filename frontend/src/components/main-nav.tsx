@@ -276,23 +276,6 @@ const MainNav: FC = () => {
           {/*     </RadixNavigationMenuSub> */}
           {/*   </NavigationMenuContent> */}
           {/* </NavigationMenuItem> */}
-
-          {!isPending && isAdminOrManager && (
-            <NavigationMenuItem>
-              <NavigationMenuLink
-                className={cn(
-                  buttonVariants({ variant: 'ghost', size: 'sm' }),
-                  'bg-background/10',
-                )}
-                asChild
-              >
-                <Link to={'/admin'}>
-                  <ExternalLink />
-                  Админ панель
-                </Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-          )}
         </NavigationMenuList>
 
         <NavigationMenuViewport />

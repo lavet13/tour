@@ -103,7 +103,6 @@ function RoutesPage() {
       return true;
     });
   }, [regionsData, regionIdParams]);
-  console.log({ regions, regionIdParams });
 
   const handleOpenFilter = () => {
     openFilterDrawer('filter');
@@ -187,12 +186,7 @@ function RoutesPage() {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
-        <div
-          className={cn(
-            'flex justify-between items-center gap-2',
-            isMobile && 'justify-end',
-          )}
-        >
+        <div className={cn('flex items-center gap-2')}>
           {isMobile && (
             <Tooltip>
               <TooltipTrigger asChild>
@@ -219,30 +213,47 @@ function RoutesPage() {
               Добавить маршрут
             </Button>
           )}
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant='outline'
-                size='icon'
-                className='h-9 min-w-9 relative'
-                onClick={handleOpenFilter}
-              >
-                <Filter />
-                {activeSearchParamsCount > 0 && (
-                  <span className='absolute -top-1 -left-1 bg-primary text-primary-foreground rounded-full text-xs size-4 flex items-center justify-center'>
-                    {activeSearchParamsCount}
-                  </span>
-                )}
-                <span className='sr-only'>Фильтры</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent
-              align={!sidebarExpanded ? 'start' : 'center'}
-              side='bottom'
+          {!isMobile && (
+            <Button
+              variant='outline'
+              className='h-9 min-w-9 relative'
+              onClick={handleOpenFilter}
             >
+              <Filter />
               Фильтры
-            </TooltipContent>
-          </Tooltip>
+              {activeSearchParamsCount > 0 && (
+                <span className='absolute -top-1 -left-1 bg-primary text-primary-foreground rounded-full text-xs size-4 flex items-center justify-center'>
+                  {activeSearchParamsCount}
+                </span>
+              )}
+            </Button>
+          )}
+          {isMobile && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant='outline'
+                  size='icon'
+                  className='h-9 min-w-9 relative'
+                  onClick={handleOpenFilter}
+                >
+                  <Filter />
+                  {activeSearchParamsCount > 0 && (
+                    <span className='absolute -top-1 -left-1 bg-primary text-primary-foreground rounded-full text-xs size-4 flex items-center justify-center'>
+                      {activeSearchParamsCount}
+                    </span>
+                  )}
+                  <span className='sr-only'>Фильтры</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent
+                align={!sidebarExpanded ? 'start' : 'center'}
+                side='bottom'
+              >
+                Фильтры
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
 
         <Drawer

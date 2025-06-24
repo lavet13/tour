@@ -70,7 +70,6 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
     });
 
     const previewPhoto = routeData?.routeById?.photoName;
-    console.log({ previewPhoto });
     const [isPhotoSelected, setIsPhotoSelected] = useState(false);
     const departureCityName = routeData?.routeById?.departureCity?.name ?? '';
     const arrivalCityName = routeData?.routeById?.arrivalCity?.name ?? '';
@@ -88,7 +87,6 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
           photo: [],
         }
       : undefined;
-    console.log({ values });
 
     const routeInitialLoading =
       routeFetchStatus === 'fetching' && routeStatus === 'pending';
@@ -106,7 +104,6 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
     const formState = form.formState;
     const isSubmitting = formState.isSubmitting;
     const isDirty = formState.isDirty;
-    console.log({ isDirty });
 
     const { data: regionsData, isPending: regionsIsPending } = useRegions();
     const regions = useMemo(() => regionsData?.regions ?? [], [regionsData]);
@@ -165,13 +162,11 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
       offset: page * ITEMS_PER_PAGE,
       options: { enabled: !!open },
     });
-    console.log({ data });
 
     const onSubmit: SubmitHandler<RouteFormValues> = async ({
       photo,
       ...data
     }) => {
-      console.log({ photo });
       try {
         if (drawerMode === 'editRoute') {
           // editing existing route
@@ -183,7 +178,6 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
             input: payload,
           });
           if (photo?.length && routeId) {
-            console.log({ photo });
             await uploadPhoto({ file: photo[0], isPhotoSelected, routeId });
           }
           toast.success('Маршрут успешно обновлен!', {
@@ -403,7 +397,6 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
                             decimalScale={0}
                             allowNegative={false}
                             isAllowed={values => {
-                              console.log(values);
                               const floatValue = values.floatValue;
                               return (
                                 typeof floatValue === 'undefined' ||
@@ -450,7 +443,6 @@ export const RouteForm: FC<RouteFormProps<'addRoute' | 'editRoute' | 'idle'>> =
                   control={form.control}
                   name='photo'
                   render={({ field: { value, onChange, ref, ...field } }) => {
-                    console.log({ value });
 
                     return (
                       <FormItem className='sm:col-span-2'>

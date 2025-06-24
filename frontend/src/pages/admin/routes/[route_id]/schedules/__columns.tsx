@@ -96,7 +96,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
       column: { id: columnId },
     }) {
       const enumValue = getValue() as string;
-      console.log({ enumValue });
       const [isEditing, setIsEditing] = useState(false);
       const [value, setValue] = useState(enumValue);
       const [previousValue] = useState(enumValue);
@@ -350,7 +349,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
       getValue,
     }) => {
       const initialValue = getValue<GetCitiesQuery['cities'][number]>(); // This accesses the city.name property
-      console.log({ initialValue });
       const { data, isPending } = useCities();
       const cities = data?.cities ?? [];
       const { mutate: updateSchedule, isPending: updateIsPending } =
@@ -360,7 +358,6 @@ export const columns: ColumnDef<Schedule, unknown>[] = [
         <Select
           value={initialValue.id}
           onValueChange={value => {
-            console.log({ originalId, columnId, value });
             updateSchedule(
               { input: { id: originalId, [columnId]: value } },
               {
@@ -701,7 +698,6 @@ function Filter<TData>({ column }: FilterProps<TData>) {
 
   // Get current column width
   const columnWidth = column.getSize();
-  console.log({ columnWidth });
 
   switch (filterVariant) {
     case 'select':

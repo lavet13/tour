@@ -2,7 +2,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { isGraphQLRequestError } from '@/react-query/types/is-graphql-request-error';
 import { QueryErrorResetBoundary } from '@tanstack/react-query';
-import { AppWindow, ChevronRightIcon, OctagonAlert } from 'lucide-react';
+import { AppWindow, Home, OctagonAlert } from 'lucide-react';
 import { FC, useEffect, useRef } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { Link, Outlet, useLocation } from 'react-router-dom';
@@ -44,7 +44,7 @@ const Layout: FC = () => {
 
                         <div className='flex items-center gap-2 w-full flex-1 sm:w-auto sm:flex-none'>
                           <Button
-                            variant="outline"
+                            variant='outline'
                             className='text-sm w-full h-8 sm:h-9 px-4 py-2'
                             asChild
                           >
@@ -91,20 +91,6 @@ const Layout: FC = () => {
                   <SidebarTrigger className='sm:-ml-1' />
                   {/* <Separator orientation='vertical' className='mr-2 h-4' /> */}
 
-                  <div className='flex items-center gap-2 w-full flex-1 sm:w-auto sm:flex-none'>
-                    <Button
-                      variant="outline"
-                      className='text-sm w-full h-8 sm:h-9 px-4 py-2'
-                      asChild
-                    >
-                      <Link onClick={() => window.scrollTo({ top: 0 })} to='/'>
-                        <AppWindow />
-                        Вернуться на сайт
-                      </Link>
-                    </Button>
-
-                    <ModeToggle />
-                  </div>
                 </div>
               </header>
               <Outlet />

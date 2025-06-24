@@ -33,6 +33,19 @@ export const formatRussianDate = (date: Date | string | number): string => {
  * @returns Отформатированная строка даты и времени
  */
 export const formatRussianDateTime = (date: Date | string | number): string => {
-  const dateObj = new Date(date);
-  return format(dateObj, 'd MMMM yyyy г., HH:mm', { locale: ru });
+  try {
+    const dateObj = new Date(date);
+
+    if (isNaN(dateObj.getTime())) {
+      console.error('Invalid dateObj:', date);
+      return 'Invalid Date';
+    }
+
+    const eestDate = toZonedTime(dateObj, 'Europe/Tallinn');
+
+    return format(eestDate, 'd MMMM yyyy г., HH:mm', { locale: ru });
+  } catch (error) {
+    console.error('Error in formatRussianDate:', error, 'Input:', date);
+    return 'Error Formatting Date';
+  }
 };

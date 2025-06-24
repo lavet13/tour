@@ -1,9 +1,4 @@
-import {
-  $Enums,
-  Booking,
-  BookingStatus,
-  Prisma,
-} from '@prisma/client';
+import { $Enums, Booking, BookingStatus, Prisma } from '@prisma/client';
 import {
   formatRussianDate,
   formatRussianDateTime,
@@ -151,7 +146,56 @@ const getBookingActionsKeyboard = (
   };
 };
 
+const bookingMessageToSend = (
+  updatedBooking: Prisma.BookingGetPayload<{
+    include: {
+      route: {
+        include: {
+          departureCity: {
+            select: {
+              name: true;
+            };
+          };
+          arrivalCity: {
+            select: {
+              name: true;
+            };
+          };
+        };
+      };
+    };
+  }>,
+  newStatus: BookingStatus,
+) => {
+  let routeName = '';
+  if (newStatus === 'CONFIRMED') {
+    const isForward = updatedBooking.direction === 'FORWARD';
+    const isBackward = updatedBooking.direction === 'BACKWARD';
+
+    if (isForward) {
+      routeName += `${updatedBooking.route?.departureCity.name} → ${updatedBooking.route?.arrivalCity.name}`;
+    }
+
+    if (isBackward) {
+      routeName += `${updatedBooking.route?.arrivalCity.name} → ${updatedBooking.route?.departureCity.name}`;
+    }
+  }
+
+  let message = '';
+
+  message += `🎉 Ваша <b>БРОНЬ ПРИНЯТА.</b> За день до выезда с Вами свяжется диспетчер и даст полную информацию по поездке.\n\n`;
+  message += `🚌 <b>Маршрут:</b> ${routeName}\n`;
+  message += `💰 <b>Цена:</b> ${updatedBooking.route?.price} ₽\n`;
+  message += `📅 <b>Дата поездки:</b> ${formatRussianDate(updatedBooking.travelDate)}\n`;
+  message += `🪑 <b>Мест:</b> ${updatedBooking.seatsCount}\n\n`;
+  message += `📞 Ожидайте звонка диспетчера для уточнения деталей.\n\n`;
+  message += `♥ Спасибо, что обратились к нам!`;
+
+  return message;
+};
+
 export const formatters = {
+  bookingMessageToSend,
   getBookingStatus,
   formatBookingMessage,
   getBookingActionsKeyboard,

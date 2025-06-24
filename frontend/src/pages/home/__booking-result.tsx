@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import { NumericFormat } from 'react-number-format';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import { Separator } from '@/components/ui/separator';
 
 const BookingResult: FC = () => {
   const [receivedBooking] = useAtom(createdBookingAtom);
@@ -120,6 +121,17 @@ const BookingResult: FC = () => {
         >
           <Link rel='nofollow' target='_blank' to='https://t.me/+79493180304'>
             напишите в Telegram
+          </Link>
+        </Button>
+        или
+        <Button
+          className='break-words text-md inline-flex p-1.5 h-auto w-auto underline decoration-foreground/20 hover:decoration-foreground'
+          variant='link'
+          aria-label='Отправить запрос через форму'
+          asChild
+        >
+          <Link rel='nofollow' target='_blank' to='/question'>
+            отправьте запрос через форму
           </Link>
         </Button>
       </div>

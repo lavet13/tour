@@ -309,19 +309,6 @@ const MobileNav = () => {
               )}
 
               <div className='flex flex-col items-start grow justify-end space-y-1 pt-6 pl-2'>
-                {!isPending && isAdminOrManager && (
-                  <Button
-                    variant='ghost'
-                    className='w-fit px-2 py-0 space-x-1 h-9'
-                    asChild
-                  >
-                    <Link to='/admin' rel='noreferrer'>
-                      <ExternalLink />
-                      <span>Админ панель</span>
-                    </Link>
-                  </Button>
-                )}
-
                 <Button
                   variant='ghost'
                   className='w-fit px-2 py-0 space-x-1 h-9'

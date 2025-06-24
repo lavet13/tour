@@ -8,7 +8,7 @@ import MainNav from '@/components/main-nav';
 import { Icons } from '@/components/icons';
 import TelegramLogin from '@/components/telegram-login';
 import { useGetMe, useLogout } from '@/features/auth';
-import { Bus, Loader2, LogOut, Settings, Tickets } from 'lucide-react';
+import { BookOpen, Loader2, LogOut, Settings, Wrench } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -139,29 +139,31 @@ const Header: FC = () => {
                   {...(isBelow2xl ? { align: 'end' } : {})}
                 >
                   <DropdownMenuLabel>Мой аккаунт</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to='/submittions'>
+                      <BookOpen className='size-4' />
+                      Мои заявки
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   {isAdminOrManager && (
                     <>
                       <DropdownMenuItem asChild>
-                        <Link to='/admin/bookings'>
-                          <Bus />
-                          Маршруты
+                        <Link to='/admin'>
+                          <Wrench />
+                          Панель
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
-                        <Link to='/admin/bookings'>
-                          <Tickets />
-                          Бронирования
-                        </Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem asChild>
-                        <Link to="/admin/settings">
+                        <Link to='/admin/settings'>
                           <Settings />
                           Настройки
                         </Link>
                       </DropdownMenuItem>
+                      <DropdownMenuSeparator />
                     </>
                   )}
-                  <DropdownMenuSeparator />
                   <DropdownMenuItem
                     disabled={isLoading}
                     onClick={async event => {

@@ -1024,7 +1024,6 @@ export const columns: ColumnDef<Booking, unknown>[] = [
       const arrivalCity = props.row.original.route?.arrivalCity?.name;
       const departureCity = props.row.original.route?.departureCity?.name;
       const direction = props.row.original.direction;
-      console.log({ direction });
 
       return (
         <Button

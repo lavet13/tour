@@ -105,8 +105,6 @@ const BookingsPage: FC = () => {
     [data],
   );
 
-  import.meta.env.DEV && console.log({ data, flatData });
-
   const columnResizeModeRef = useRef<ColumnResizeMode>('onChange');
 
   const defaultColumn: Partial<ColumnDef<Booking>> = {

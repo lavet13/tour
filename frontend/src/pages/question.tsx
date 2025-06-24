@@ -16,13 +16,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { FC, useEffect } from 'react';
+import { FC, useEffect, useRef } from 'react';
 import { SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import ru from 'react-phone-number-input/locale/ru.json';
 import { isPossiblePhoneNumber } from 'react-phone-number-input/input';
 import { PhoneInput } from '@/components/phone-input';
 import { useCreateFeedback } from '@/features/feedback';
-import { AlertTriangle, HelpCircle, Lightbulb, Loader2, Wrench } from 'lucide-react';
+import {
+  AlertTriangle,
+  HelpCircle,
+  Lightbulb,
+  Loader2,
+  Wrench,
+} from 'lucide-react';
 
 export type DefaultValues = {
   reason: string;
@@ -51,6 +57,7 @@ const QuestionPage: FC = () => {
     control: form.control,
     name: 'contactType',
   });
+  const previousContactTypeRef = useRef(contactType);
 
   const { mutateAsync: createFeedback } = useCreateFeedback();
   const onSubmit: SubmitHandler<DefaultValues> = async data => {
@@ -75,28 +82,33 @@ const QuestionPage: FC = () => {
       replyTo,
     };
 
-    const createdFeedback = await createFeedback({
+    await createFeedback({
       input: {
         ...payload,
       },
     });
 
-    console.log({ createdFeedback });
-
     form.reset();
   };
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      form.setFocus(contactType);
-    }, 0);
+    let timer: NodeJS.Timeout | undefined;
 
+    if (previousContactTypeRef.current !== contactType) {
+      timer = setTimeout(() => {
+        form.setFocus(contactType);
+      }, 0);
+    }
+
+    previousContactTypeRef.current = contactType;
     return () => clearTimeout(timer);
   }, [contactType]);
 
   return (
     <div className='container relative z-10'>
-      <h1 className='text-center text-3xl md:text-4xl lg:text-5xl font-bold mb-4'>Задать вопрос</h1>
+      <h1 className='text-center text-3xl md:text-4xl lg:text-5xl font-bold mb-4'>
+        Задать вопрос
+      </h1>
       <div className='max-w-3xl px-2 mx-auto relative overflow-hidden'>
         <Form {...form}>
           <form className='mb-6' onSubmit={form.handleSubmit(onSubmit)}>
@@ -159,7 +171,6 @@ const QuestionPage: FC = () => {
                         <Select
                           onValueChange={value => {
                             onChange(value);
-                            console.log({ value });
                           }}
                           value={value}
                         >
@@ -247,9 +258,9 @@ const QuestionPage: FC = () => {
                         rules={{
                           required: 'Telegram обязателен к заполнению!',
                           pattern: {
-                            value: /^@[a-zA-Z0-9_]{1,32}$/,
+                            value: /^@[a-zA-Z0-9_]{4,32}$/,
                             message:
-                              'Имя пользователя должно начинаться с @ и содержать только буквы, цифры и _',
+                              'Имя пользователя должно начинаться с @ и содержать только буквы, цифры и _ (от 4 до 32 символов после @)',
                           },
                         }}
                         render={({ field: { value, onChange, ...field } }) => (
@@ -298,6 +309,10 @@ const QuestionPage: FC = () => {
                   name='message'
                   rules={{
                     required: 'Укажите сообщение',
+                    minLength: {
+                      message: 'Сообщение слишком короткое (минимум 4 символа)',
+                      value: 4,
+                    },
                   }}
                   render={({ field: { onChange, ...field } }) => (
                     <FormItem>
