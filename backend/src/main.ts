@@ -59,13 +59,6 @@ async function bootstrap() {
     }
   });
 
-  try {
-    await commands.setCommands(bot);
-    console.log('Bot commands set successfully.');
-  } catch (error) {
-    console.error('Failed to set bot commands:', error);
-  }
-
   // do not await start method, because it's infinite, unless stopped
   bot.start();
   console.log('Telegram bot started');

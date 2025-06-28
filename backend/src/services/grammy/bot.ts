@@ -48,4 +48,11 @@ bot.on('callback_query:data', async ctx => {
   });
 });
 
+try {
+  await commands.setCommands(bot);
+  console.log('Bot commands set successfully.');
+} catch (error) {
+  console.error('Failed to set bot commands:', error);
+}
+
 export { bot };
