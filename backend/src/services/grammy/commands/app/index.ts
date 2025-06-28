@@ -7,8 +7,11 @@ const keyboard = new InlineKeyboard().webApp(
   import.meta.env.VITE_TELEGRAM_MINI_APP_URL,
 );
 
-export default new Command<CustomContext>('app', 'Открыть мини-приложение в Телеграме', ctx =>
-  ctx.reply('📱 Откройте наше приложение для заказа билета:', {
-    reply_markup: keyboard,
-  }),
+export default new Command<CustomContext>(
+  'app',
+  'Открыть мини-приложение в Телеграме',
+  ctx =>
+    ctx.reply('📱 Откройте наше приложение для заказа билета:', {
+      reply_markup: keyboard,
+    }),
 );

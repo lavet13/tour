@@ -27,12 +27,11 @@ bot
   })
   .use(commands);
 
-try {
-  await commands.setCommands(bot)
-  console.log('Bot commands set successfully.');
-} catch (error) {
-  console.error('Failed to set bot commands:', error);
-}
+await bot.api.setMyCommands([
+  { command: 'start', description: 'Начать разговор с ботом' },
+  { command: 'app', description: 'Открыть мини-приложение в Телеграме' },
+  { command: 'mychatid', description: 'Показать ваш Chat ID для подключения к административной панели' },
+]);
 
 bot
   .errorBoundary((error: BotError<CustomContext>) => {
