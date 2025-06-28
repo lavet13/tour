@@ -43,25 +43,6 @@ async function bootstrap() {
 
   configure(app, yoga);
 
-  bot.catch(err => {
-    const ctx = err.ctx;
-
-    console.error(`Error while handling update ${ctx.update.update_id}:`);
-
-    const e = err.error;
-    if (e instanceof GrammyError) {
-      console.error('Error in request:', e.description);
-    } else if (e instanceof HttpError) {
-      console.error('Could not contact Telegram:', e);
-    } else {
-      console.error('Unknown error:', e);
-    }
-  });
-
-  // do not await start method, because it's infinite, unless stopped
-  bot.start();
-  console.log('Telegram bot started');
-
   if (import.meta.env.PROD) {
     app.listen(import.meta.env.VITE_PORT, () => {
       console.log(
