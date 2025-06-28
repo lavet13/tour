@@ -27,11 +27,13 @@ bot
   })
   .use(commands);
 
-await bot.api.setMyCommands([
-  { command: 'start', description: 'Начать разговор с ботом' },
-  { command: 'app', description: 'Открыть мини-приложение в Телеграме' },
-  { command: 'mychatid', description: 'Показать ваш Chat ID для подключения к административной панели' },
-]);
+try {
+  await commands.setCommands(bot, {
+    ignoreUncompliantCommands: true,
+  });
+} catch (error) {
+  console.error('Failed setting up commands for user:', error);
+}
 
 bot
   .errorBoundary((error: BotError<CustomContext>) => {
@@ -53,6 +55,5 @@ bot.on('callback_query:data', async ctx => {
     text: 'Неизвестное действие.',
   });
 });
-
 
 export { bot };
