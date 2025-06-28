@@ -73,7 +73,7 @@ const resolvers: Resolvers = {
         );
       }
 
-      const { notifyNewFeedback } = ctx.telegramBot;
+      const { notifyNewFeedback } = ctx.bot;
 
       try {
         await notifyNewFeedback(createdFeedback);

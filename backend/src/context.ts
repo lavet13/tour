@@ -4,15 +4,15 @@ import prisma from '@/prisma';
 import { getTokenFromRequest } from '@/helpers/get-token-from-request';
 import { pubSub } from '@/pubsub';
 import { createLoaders } from './graphql/loaders';
-import { getTelegramBot } from '@/services/telegram';
+import { bot, TCustomBot } from '@/services/grammy';
 
 export type ContextValue = {
-  telegramBot: ReturnType<typeof getTelegramBot>;
   prisma: typeof prisma;
   token: string | null;
   me: jwt.JwtPayload | null;
   pubSub: typeof pubSub;
   loaders: ReturnType<typeof createLoaders>;
+  bot: TCustomBot;
 } & YogaInitialContext;
 
 export async function createContext({
@@ -21,8 +21,8 @@ export async function createContext({
   return {
     prisma,
     token: await getTokenFromRequest(request),
-    telegramBot: getTelegramBot(),
     pubSub,
     loaders: createLoaders(prisma),
+    bot,
   } as ContextValue;
 }

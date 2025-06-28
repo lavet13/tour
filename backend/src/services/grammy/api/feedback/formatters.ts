@@ -18,7 +18,7 @@ function getHeaderByReason(reason: string) {
   return header;
 }
 
-function formatFeedbackMessage (feedback: Feedback) {
+export function formatFeedbackMessage(feedback: Feedback) {
   let content = ``;
 
   const header = getHeaderByReason(feedback.reason);
@@ -34,8 +34,4 @@ function formatFeedbackMessage (feedback: Feedback) {
   content += `${feedback.message}`;
 
   return content;
-};
-
-export const formatters = {
-  formatFeedbackMessage,
-};
+}

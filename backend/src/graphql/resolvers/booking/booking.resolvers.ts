@@ -237,7 +237,6 @@ const resolvers: Resolvers = {
   },
   Mutation: {
     async createBooking(_, args, ctx) {
-      const { notifyNewBooking } = ctx.telegramBot;
       const { departureCityId, arrivalCityId, telegramId, ...rest } =
         args.input;
 
@@ -273,11 +272,27 @@ const resolvers: Resolvers = {
           telegramId,
           ...rest,
         },
+        include: {
+          route: {
+            include: {
+              arrivalCity: {
+                select: {
+                  name: true,
+                },
+              },
+              departureCity: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
       });
 
       try {
-        // Notify managers using the functional service
-        await notifyNewBooking(booking, ctx.prisma);
+        // Notify managers using telegram bot
+        await ctx.bot.notifyNewBooking(booking);
 
         // Optionally publish to subscription
         ctx.pubSub.publish('createdBooking', { createdBooking: booking });

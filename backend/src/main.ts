@@ -12,6 +12,9 @@ import typeDefs from '@/graphql/types';
 import { createContext } from '@/context';
 import { createYoga } from 'graphql-yoga';
 import configure from '@/routers';
+import { bot } from '@/services/grammy';
+import { GrammyError, HttpError } from 'grammy';
+import { commands } from '@/services/grammy/commands';
 
 const schema = makeExecutableSchema({
   typeDefs,
@@ -40,6 +43,46 @@ async function bootstrap() {
   console.log({ DATABASE_URL: process.env.DATABASE_URL });
 
   configure(app, yoga);
+
+  bot.catch(err => {
+    const ctx = err.ctx;
+
+    console.error(`Error while handling update ${ctx.update.update_id}:`);
+
+    const e = err.error;
+    if (e instanceof GrammyError) {
+      console.error('Error in request:', e.description);
+    } else if (e instanceof HttpError) {
+      console.error('Could not contact Telegram:', e);
+    } else {
+      console.error('Unknown error:', e);
+    }
+  });
+
+  try {
+    await commands.setCommands(bot);
+    console.log('Bot commands set successfully.');
+  } catch (error) {
+    console.error('Failed to set bot commands:', error);
+  }
+
+  // do not await start method, because it's infinite, unless stopped
+  bot.start();
+  console.log('Telegram bot started');
+
+  // Graceful shutdown handlers
+  const gracefulShutdown = async (signal: string) => {
+    console.log(`\nReceived ${signal}, shutting down gracefully...`);
+    try {
+      await bot.stop();
+      console.log('Telegram bot stopped');
+    } catch (error) {
+      console.error('Error stopping bot:', error);
+    }
+  };
+
+  process.once('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.once('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
   if (import.meta.env.PROD) {
     app.listen(import.meta.env.VITE_PORT, () => {
