@@ -1,6 +1,7 @@
 import { Command } from '@grammyjs/commands';
+import { CustomContext } from '../..';
 
-export default new Command(
+export default new Command<CustomContext>(
   'mychatid',
   'Показать ваш Chat ID для связки аккаунта..',
   async ctx => {

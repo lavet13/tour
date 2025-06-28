@@ -1,4 +1,5 @@
 import { commands } from '@/services/grammy/commands';
+import { commands as grammyJSCommands } from '@grammyjs/commands';
 import { mainMenu } from '@/services/grammy/commands/main-menu';
 import { CustomContext, createEnhancedBot } from '@/services/grammy/types';
 import { api } from '@/services/grammy/api';
@@ -16,6 +17,8 @@ bot
     );
   })
   .use(mainMenu);
+
+bot.use(grammyJSCommands<CustomContext>);
 
 bot
   .errorBoundary((error: BotError<CustomContext>) => {
@@ -49,7 +52,7 @@ bot.on('callback_query:data', async ctx => {
 });
 
 try {
-  await commands.setCommands(bot);
+  await commands.setCommands(bot)
   console.log('Bot commands set successfully.');
 } catch (error) {
   console.error('Failed to set bot commands:', error);
