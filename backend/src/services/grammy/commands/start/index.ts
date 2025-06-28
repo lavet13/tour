@@ -6,6 +6,6 @@ export default new Command(
   'start',
   'Начать разговор с ботом',
   async ctx => {
-    await ctx.reply('Главное меню', { reply_markup: startMenu });
+    await ctx.reply('🏡 Главное меню', { reply_markup: startMenu });
   },
 );
