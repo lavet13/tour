@@ -1,7 +1,7 @@
 import { Menu } from '@grammyjs/menu';
 
 const startMenu = new Menu('start-menu')
-  .submenu('Контакты', 'contacts-menu', async ctx => {
+  .submenu('📞 Контакты', 'contacts-menu', async ctx => {
     await ctx.editMessageText(
       `
 <b>Наши контакты</b>
@@ -22,10 +22,10 @@ donbass-tour.online
       },
     );
   })
-  .webApp('Открыть приложение', import.meta.env.VITE_TELEGRAM_MINI_APP_URL);
+  .webApp('📲 Открыть приложение', import.meta.env.VITE_TELEGRAM_MINI_APP_URL);
 
 const contactsMenu = new Menu('contacts-menu').text('Назад', async ctx => {
-  await ctx.editMessageText('Главное меню', { reply_markup: startMenu });
+  await ctx.editMessageText('🏡 Главное меню', { reply_markup: startMenu });
 });
 
 startMenu.register(contactsMenu);

@@ -65,13 +65,21 @@ export const handleBookingStatus: CallbackQueryMiddleware<
     const msgToManager = await formatBookingMessage(updatedBooking);
     let message = msgToManager;
 
-    if (updatedBooking.telegramId) {
-      message += `\n\n✅ Уведомление отправлено пользователю в Telegram\n`;
-      message += `<i>👀 Предварительный просмотр отправленного сообщения:</i>\n\n`;
-      message += confirmedBookingMessage(updatedBooking, { richText: true });
-    } else {
-      message += `\n\n❌ Уведомление не было отправлено\n`;
-      message += `<i>Причина: пользователь не был авторизован через Telegram при создании заявки</i>`;
+    if (newStatus === 'CONFIRMED') {
+      if (updatedBooking.telegramId) {
+        message += `\n\n✅ Уведомление отправлено пользователю в Telegram\n`;
+        message += `<i>👀 Предварительный просмотр отправленного сообщения:</i>\n\n`;
+        message += confirmedBookingMessage(updatedBooking, { richText: true });
+
+        await ctx.api.sendMessage(
+          updatedBooking.telegramId.toString(),
+          confirmedBookingMessage(updatedBooking, { richText: true }),
+          { parse_mode: 'HTML' },
+        );
+      } else {
+        message += `\n\n❌ Уведомление не было отправлено\n`;
+        message += `<i>Причина: пользователь не был авторизован через Telegram при создании заявки</i>`;
+      }
     }
 
     const inlineKeyboard = getInlineKeyboardForBookings(

@@ -9,22 +9,33 @@ const bot = createEnhancedBot(import.meta.env.VITE_TELEGRAM_BOT_TOKEN);
 
 bot
   .errorBoundary((error: BotError<CustomContext>) => {
-    console.error('Failed action at main-menu:', error);
+    console.error(
+      'Failed action at main-menu:',
+      error,
+      formatRussianDateTime(new Date()),
+    );
   })
   .use(mainMenu);
 
 bot
   .errorBoundary((error: BotError<CustomContext>) => {
-    console.error('Error in commands:', error);
+    console.error(
+      'Error in commands:',
+      error,
+      formatRussianDateTime(new Date()),
+    );
   })
   .use(commands);
 
 bot
   .errorBoundary((error: BotError<CustomContext>) => {
-    console.error('Error in API call:', error);
+    console.error(
+      'Error in API call:',
+      error,
+      formatRussianDateTime(new Date()),
+    );
   })
   .use(api);
-
 
 bot.on('callback_query:data', async ctx => {
   const payload = ctx.callbackQuery.data;
