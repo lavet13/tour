@@ -44,19 +44,24 @@ async function bootstrap() {
 
   configure(app, yoga);
 
-  // Graceful shutdown handlers
-  const gracefulShutdown = async (signal: string) => {
-    console.log(`\nReceived ${signal}, shutting down gracefully...`);
-    try {
-      await bot.stop();
-      console.log('Telegram bot stopped');
-    } catch (error) {
-      console.error('Error stopping bot:', error);
-    }
-  };
+  bot.catch(err => {
+    const ctx = err.ctx;
 
-  process.once('SIGINT', () => gracefulShutdown('SIGINT'));
-  process.once('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    console.error(`Error while handling update ${ctx.update.update_id}:`);
+
+    const e = err.error;
+    if (e instanceof GrammyError) {
+      console.error('Error in request:', e.description);
+    } else if (e instanceof HttpError) {
+      console.error('Could not contact Telegram:', e);
+    } else {
+      console.error('Unknown error:', e);
+    }
+  });
+
+  // do not await start method, because it's infinite, unless stopped
+  bot.start();
+  console.log('Telegram bot started');
 
   if (import.meta.env.PROD) {
     app.listen(import.meta.env.VITE_PORT, () => {

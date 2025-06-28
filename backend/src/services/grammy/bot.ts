@@ -1,5 +1,4 @@
 import { commands } from '@/services/grammy/commands';
-import { commands as grammyJSCommands } from '@grammyjs/commands';
 import { mainMenu } from '@/services/grammy/commands/main-menu';
 import { CustomContext, createEnhancedBot } from '@/services/grammy/types';
 import { api } from '@/services/grammy/api';
@@ -18,8 +17,6 @@ bot
   })
   .use(mainMenu);
 
-bot.use(grammyJSCommands<CustomContext>);
-
 bot
   .errorBoundary((error: BotError<CustomContext>) => {
     console.error(
@@ -29,6 +26,13 @@ bot
     );
   })
   .use(commands);
+
+try {
+  await commands.setCommands(bot)
+  console.log('Bot commands set successfully.');
+} catch (error) {
+  console.error('Failed to set bot commands:', error);
+}
 
 bot
   .errorBoundary((error: BotError<CustomContext>) => {
@@ -51,30 +55,5 @@ bot.on('callback_query:data', async ctx => {
   });
 });
 
-try {
-  await commands.setCommands(bot)
-  console.log('Bot commands set successfully.');
-} catch (error) {
-  console.error('Failed to set bot commands:', error);
-}
-
-bot.catch(err => {
-  const ctx = err.ctx;
-
-  console.error(`Error while handling update ${ctx.update.update_id}:`);
-
-  const e = err.error;
-  if (e instanceof GrammyError) {
-    console.error('Error in request:', e.description);
-  } else if (e instanceof HttpError) {
-    console.error('Could not contact Telegram:', e);
-  } else {
-    console.error('Unknown error:', e);
-  }
-});
-
-// do not await start method, because it's infinite, unless stopped
-bot.start();
-console.log('Telegram bot started');
 
 export { bot };
