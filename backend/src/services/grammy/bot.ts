@@ -2,7 +2,7 @@ import { commands } from '@/services/grammy/commands';
 import { mainMenu } from '@/services/grammy/commands/main-menu';
 import { CustomContext, createEnhancedBot } from '@/services/grammy/types';
 import { api } from '@/services/grammy/api';
-import { BotError, GrammyError, HttpError } from 'grammy';
+import { BotError } from 'grammy';
 import { formatRussianDateTime } from '@/helpers/format-russian-date';
 
 const bot = createEnhancedBot(import.meta.env.VITE_TELEGRAM_BOT_TOKEN);

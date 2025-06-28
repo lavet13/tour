@@ -14,7 +14,6 @@ import { createYoga } from 'graphql-yoga';
 import configure from '@/routers';
 import { bot } from '@/services/grammy';
 import { GrammyError, HttpError } from 'grammy';
-import { commands } from '@/services/grammy/commands';
 
 const schema = makeExecutableSchema({
   typeDefs,
