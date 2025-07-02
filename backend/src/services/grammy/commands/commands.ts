@@ -8,6 +8,5 @@ import { CustomContext } from '..';
 const commands = new CommandGroup<CustomContext>();
 
 commands.add([startCommand, myChatIdCommand, appCommand]);
-console.log(commands.commands.map(command => command.name));
 
 export { commands };

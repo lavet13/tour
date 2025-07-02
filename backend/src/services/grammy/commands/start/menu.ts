@@ -24,7 +24,7 @@ donbass-tour.online
   })
   .webApp('📲 Открыть приложение', import.meta.env.VITE_TELEGRAM_MINI_APP_URL);
 
-const contactsMenu = new Menu('contacts-menu').text('Назад', async ctx => {
+const contactsMenu = new Menu('contacts-menu').text('« Назад', async ctx => {
   await ctx.editMessageText('🏡 Главное меню', { reply_markup: startMenu });
 });
 
