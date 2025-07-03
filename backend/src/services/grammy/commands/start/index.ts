@@ -1,7 +1,7 @@
 import { Command } from '@grammyjs/commands';
 
-import { CustomContext } from '../..';
 import { startMenu } from '@/services/grammy/commands/start/menu';
+import { CustomContext } from '../..';
 
 export default new Command<CustomContext>(
   'start',

@@ -130,21 +130,6 @@ model Schedule {
   @@map("schedules")
 }
 
-enum RouteDirection {
-  FORWARD
-  BACKWARD
-}
-
-model Region {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  routes    Route[]
-
-  @@map("regions")
-}
-
 model Route {
   id              String     @id @default(cuid())
   departureCity   City       @relation("RouteDepartureCity", fields: [departureCityId], references: [id])
@@ -167,6 +152,21 @@ model Route {
   @@index([price])
   @@index([departureDate])
   @@map("routes")
+}
+
+enum RouteDirection {
+  FORWARD
+  BACKWARD
+}
+
+model Region {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  routes    Route[]
+
+  @@map("regions")
 }
 
 model Booking {

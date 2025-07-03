@@ -76,6 +76,7 @@ const SchedulesInfo: FC = () => {
       placeholderData: keepPreviousData,
     },
   });
+  console.log({ schedulesIsFetching });
 
   // Обновим функцию сортировки расписаний, чтобы правильно обрабатывать строковые значения enum
   const schedules = useMemo(() => {
@@ -109,11 +110,11 @@ const SchedulesInfo: FC = () => {
 
   return (
     <>
-      {schedulesIsLoading && routeIsLoading ? (
+      {routeIsLoading ? (
         <div className='flex items-center justify-center col-span-full min-h-52'>
           <SonnerSpinner className='bg-foreground' />
         </div>
-      ) : route && schedules && departureCityId && arrivalCityId ? (
+      ) : route && departureCityId && arrivalCityId ? (
         <div className='flex flex-col'>
           <RouteInfo
             routeIsFetching={routeIsFetching}
@@ -129,7 +130,7 @@ const SchedulesInfo: FC = () => {
               </h2>
             </div>
 
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-4 relative z-10'>
+            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-4 relative z-10'>
               <FormField
                 control={form.control}
                 name='lastName'
@@ -430,14 +431,15 @@ function RouteInfo({
   handleSwapCities,
 }: RouteInfoProps) {
   const [, setActiveStep] = useAtom(activeStepAtom);
-  // Group schedules by direction
-  const filteredSchedules = [
-    ...schedules.filter(s => s.direction === route.direction),
-  ].sort((a, b) => (a.time > b.time ? 1 : -1));
 
   const handleBack = () => {
     setActiveStep(1);
   };
+
+  // Group schedules by direction
+  const filteredSchedules = schedules.filter(
+    s => s.direction === route.direction,
+  );
 
   return (
     <div className='px-4 p-5 md:p-12 md:pb-2 flex flex-col h-full items-stretch justify-between'>
@@ -517,7 +519,7 @@ function RouteInfo({
           <SonnerSpinner className='bg-foreground' />
         </div>
       )}
-      {schedules.length !== 0 && (
+      {schedules.length > 0 && (
         <Schedules
           schedules={filteredSchedules}
           departureCityName={route.departureCity?.name}
@@ -547,10 +549,8 @@ function Schedules({
     <>
       <div
         className={cn(
-          'overflow-hidden transition-all duration-200',
-          isOpen
-            ? 'max-h-[2000px] opacity-100 visible'
-            : 'max-h-0 opacity-0 invisible',
+          'overflow-hidden',
+          isOpen ? 'h-auto opacity-100 visible' : 'h-0 opacity-0 invisible',
         )}
       >
         <RouteStopsList
@@ -586,7 +586,7 @@ function Schedules({
             {isOpen ? 'Свернуть расписание' : 'Посмотреть расписание'}
             <ChevronDown
               className={cn(
-                'h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform duration-200 ml-1',
+                'h-3.5 w-3.5 sm:h-4 sm:w-4 ml-1',
                 isOpen && 'transform rotate-180',
               )}
             />
@@ -668,11 +668,13 @@ const RouteStopsList: FC<RouteStopsListProps> = ({ stops }) => {
     );
   }
 
+  console.log({ stops });
+
   return (
     <div className='p-3 pt-1 sm:p-4 sm:pt-1 sm:pl-16'>
       <div className='relative'>
         {/* Vertical line connecting stops */}
-        <div className='absolute z-[-10] left-2.5 top-3 bottom-3 w-[1px] bg-border' />
+        <div className='absolute z-[-10] left-2.5 top-3 bottom-4 w-[1px] bg-border' />
 
         {/* Stops */}
         <div className='space-y-1'>
@@ -730,7 +732,7 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
             variant='outline'
             size='icon'
             className={cn(
-              'min-h-10 min-w-10 size-14 flex-1 sm:flex-none shrink-0 rounded-full',
+              'min-h-10 min-w-12 h-14 w-24 flex-1 sm:flex-none shrink-0 rounded-full',
             )}
             type='button'
             onClick={() => setValue(value - 1)}
@@ -764,7 +766,7 @@ const Counter = forwardRef<HTMLInputElement, CounterProps>(
             variant='outline'
             size='icon'
             className={cn(
-              'min-h-10 min-w-10 size-14 flex-1 sm:flex-none shrink-0 rounded-full',
+              'min-h-10 min-w-12 h-14 w-24 flex-1 sm:flex-none shrink-0 rounded-full',
             )}
             type='button'
             onClick={() => setValue(value + 1)}

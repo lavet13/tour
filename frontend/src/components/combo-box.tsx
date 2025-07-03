@@ -14,7 +14,6 @@ import {
   CommandItem,
   CommandList,
 } from './ui/command';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Popover,
   PopoverContent,

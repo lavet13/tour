@@ -4,6 +4,9 @@ import defaultTheme from 'tailwindcss/defaultTheme';
 export default {
   darkMode: ['class'],
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   theme: {
   	container: {
   		center: 'true',
