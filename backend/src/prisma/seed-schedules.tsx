@@ -68,7 +68,7 @@ function generateTimeForCityStop(
     Горловка: { forward: '07:00', backward: '18:00' },
     Енакиево: { forward: '07:30', backward: '17:30' },
     Ждановка: { forward: '07:45', backward: '17:15' },
-    Кировское: { forward: '07:30', backward: '17:30' },
+    Кировское: { forward: '07:30 - 08:00', backward: '17:30' },
     Харцызск: { forward: '08:00', backward: '17:00' },
     'Кр. Луч': { forward: '06:45', backward: '18:15' },
     Снежное: { forward: '07:15', backward: '17:45' },
