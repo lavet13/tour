@@ -7,6 +7,8 @@
 - [] show all submitted bookings by the authorized telegram user, add new option inside dropdown avatar called 'Мои заявки'
 - [] reimplement the way we import schedules for routes
 - [] add a feature to gather information about submitted bookings for non-authorized users(so after signing in via telegram they can see previous bookings they made)
+- [] refactor the code where manager retrieves message from the client by using array with join('\n')
+- [] add validation for phone number on the server side
 - [x] make more distinguishable contact for question form
 - [x] on failed notification for telegram user, send preview message for the manager to copy paste
 - [x] linking telegram account to the existing user account
