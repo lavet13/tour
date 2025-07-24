@@ -76,12 +76,26 @@ export const handleBookingStatus: CallbackQueryMiddleware<
           confirmedBookingMessage(updatedBooking, { richText: true }),
           { parse_mode: 'HTML' },
         );
+
+        const inlineKeyboard = getInlineKeyboardForBookings(
+          updatedBooking.id,
+          newStatus,
+        );
+
+        await ctx.editMessageText(message, {
+          parse_mode: 'HTML',
+          reply_markup: inlineKeyboard,
+        });
+
+        return;
       } else {
         message += `\n\n❌ Уведомление не было отправлено\n`;
         message += `<i>Причина: пользователь не был авторизован через Telegram при создании заявки</i>`;
       }
     }
 
+    // if user didn't submitted with telegram credentials, return inline keyboard
+    // with copy text button
     const inlineKeyboard = getInlineKeyboardForBookings(
       updatedBooking.id,
       newStatus,

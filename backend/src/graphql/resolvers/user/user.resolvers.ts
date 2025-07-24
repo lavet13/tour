@@ -190,7 +190,7 @@ const resolvers: Resolvers = {
       const { hash, ...dataToCheck } = args.input;
       console.log({ input: args.input });
 
-      const botToken = ctx.telegramBot.config.botToken;
+      const botToken = ctx.bot.token;
 
       if (!botToken) {
         throw new GraphQLError('Telegram bot token not configured');

@@ -13,6 +13,7 @@ export type CustomContext = Context;
 export type TCustomBot = Bot<CustomContext> & {
   notifyNewBooking: NotifyNewBookingType;
   notifyNewFeedback: NotifyNewFeedbackType;
+  token: string;
 };
 
 export function createEnhancedBot(token: string): TCustomBot {
@@ -20,6 +21,7 @@ export function createEnhancedBot(token: string): TCustomBot {
 
   bot.notifyNewBooking = notifyNewBooking(bot);
   bot.notifyNewFeedback = notifyNewFeedback(bot);
+  bot.token = token;
 
   return bot;
 }

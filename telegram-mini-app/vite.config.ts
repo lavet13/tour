@@ -1,15 +1,16 @@
-import { defineConfig } from 'vite';
-import tsconfigPaths from 'vite-tsconfig-paths';
-import react from '@vitejs/plugin-react-swc';
-import mkcert from 'vite-plugin-mkcert';
+import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+import react from "@vitejs/plugin-react-swc";
+import mkcert from "vite-plugin-mkcert";
+import { resolve } from "node:path";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/telegram-mini-app/',
+  base: "/telegram-mini-app/",
   css: {
     preprocessorOptions: {
       scss: {
-        api: 'modern',
+        api: "modern",
       },
     },
   },
@@ -25,13 +26,17 @@ export default defineConfig({
     // https://www.npmjs.com/package/vite-plugin-mkcert
     process.env.HTTPS && mkcert(),
   ],
-  build: {
-    target: 'esnext',
+  resolve: {
+    alias: {
+      "@telegram-apps/sdk-react": resolve("node_modules/@telegram-apps/sdk-react/dist"),
+    },
   },
-  publicDir: './public',
+  build: {
+    target: "esnext",
+  },
+  publicDir: "./public",
   server: {
     // Exposes your dev server and makes it accessible for the devices in the same network.
     host: true,
   },
 });
-

@@ -42,7 +42,7 @@ bot.on('callback_query:data', async ctx => {
     timestamp: formatRussianDateTime(new Date()),
   });
   await ctx.answerCallbackQuery({
-    text: 'Неизвестное действие.',
+    text: 'Необработанное действие 😥',
   });
 });
 
