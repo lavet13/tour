@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import react from "@vitejs/plugin-react-swc";
 import mkcert from "vite-plugin-mkcert";
-import { resolve } from "node:path";
+import tailwindcss from "@tailwindcss/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -25,14 +25,27 @@ export default defineConfig({
     // Using this plugin requires admin rights on the first dev-mode launch.
     // https://www.npmjs.com/package/vite-plugin-mkcert
     process.env.HTTPS && mkcert(),
+    tailwindcss(),
   ],
-  resolve: {
-    alias: {
-      "@telegram-apps/sdk-react": resolve("node_modules/@telegram-apps/sdk-react/dist"),
-    },
-  },
   build: {
     target: "esnext",
+    rollupOptions: {
+      input: "./index.html",
+      output: {
+        manualChunks: {
+          "react-core": ["react", "react-dom", "react-router-dom"],
+
+          styling: ["class-variance-authority", "tailwind-merge", "clsx"],
+
+          icons: ["lucide-react"],
+          "telegram-ui": ["@telegram-apps/telegram-ui", "@tonconnect/ui-react"],
+
+          telegramSDK: ["@telegram-apps/sdk-react"],
+
+          misc: ["eruda"],
+        },
+      },
+    },
   },
   publicDir: "./public",
   server: {

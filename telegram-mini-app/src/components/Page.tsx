@@ -13,6 +13,7 @@ export function Page({ children, back = true }: PropsWithChildren<{
   useEffect(() => {
     if (back) {
       showBackButton();
+      // this is not cleaning function
       return onBackButtonClick(() => {
         navigate(-1);
       });

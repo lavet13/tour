@@ -30,6 +30,7 @@ export const Link: FC<LinkProps> = ({
     const isExternal = targetUrl.protocol !== currentUrl.protocol
       || targetUrl.host !== currentUrl.host;
 
+
     if (isExternal) {
       e.preventDefault();
       openLink(targetUrl.toString());

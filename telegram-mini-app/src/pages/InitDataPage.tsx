@@ -69,7 +69,6 @@ export const InitDataPage: FC = () => {
       </Page>
     );
   }
-
   return (
     <Page>
       <List>
