@@ -19,7 +19,7 @@ export const BookingPage: FC = () => {
             options={[{ label: "", value: "" }]}
           />
           <CenteredContent className="py-2">
-            <Button mode="bezeled" size="s">
+            <Button mode="filled" size="s">
               Далее
             </Button>
           </CenteredContent>
