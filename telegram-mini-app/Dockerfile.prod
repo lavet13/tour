@@ -1,15 +1,7 @@
 FROM node:20-alpine AS builder
 
-
 WORKDIR /app
 COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 COPY . .
 RUN yarn build
-
-
-FROM node:20-alpine
-WORKDIR /app
-COPY --from=builder /app/dist ./dist
-# Force copy files to volume on container start
-CMD ["sh", "-c", "cp -rf /app/dist/* /app/dist/ 2>/dev/null || true; echo 'Build completed at:' $(date); tail -f /dev/null"]
