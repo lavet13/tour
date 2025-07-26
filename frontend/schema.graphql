@@ -1,0 +1,374 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+"""
+Directs the executor to defer this fragment when the `if` argument is true or undefined.
+"""
+directive @defer(
+  """Deferred when true or undefined."""
+  if: Boolean! = true
+  """Unique name"""
+  label: String
+) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+
+"""
+Directs the executor to stream plural fields when the `if` argument is true or undefined.
+"""
+directive @stream(
+  """Stream when true or undefined."""
+  if: Boolean! = true
+  """Number of items to return immediately"""
+  initialCount: Int = 0
+  """Unique name"""
+  label: String
+) on FIELD
+
+type AuthPayload {
+  accessToken: String!
+  refreshToken: String!
+}
+
+"""
+The `BigInt` scalar type represents non-fractional signed whole numeric values.
+"""
+scalar BigInt
+
+type Booking {
+  createdAt: Date!
+  direction: RouteDirection!
+  extraPhoneNumber: String
+  extraTelegram: Boolean!
+  extraWhatsapp: Boolean!
+  firstName: String!
+  id: ID!
+  lastName: String!
+  phoneNumber: String!
+  route: Route
+  seatsCount: Int!
+  status: BookingStatus!
+  telegram: Boolean!
+  travelDate: Date!
+  updatedAt: Date!
+  whatsapp: Boolean!
+}
+
+enum BookingStatus {
+  CONFIRMED
+  PENDING
+}
+
+input BookingsInput {
+  after: ID
+  before: ID
+  columnFilters: [ColumnFiltersState]!
+  sorting: [SortingState!]!
+  status: BookingStatus
+  take: Int
+}
+
+type BookingsResponse {
+  edges: [Booking!]!
+  pageInfo: PageInfo!
+}
+
+"""The `Byte` scalar type represents byte value as a Buffer"""
+scalar Byte
+
+type City {
+  arrivalTrips: [Route!]!
+  createdAt: Date!
+  departureTrips: [Route!]!
+  description: String
+  id: ID!
+  name: String!
+  updatedAt: Date!
+}
+
+input ColumnFiltersState {
+  id: String!
+  value: [String]!
+}
+
+input CreateBookingInput {
+  arrivalCityId: ID!
+  departureCityId: ID!
+  direction: RouteDirection!
+  extraPhoneNumber: String
+  extraTelegram: Boolean
+  extraWhatsapp: Boolean
+  firstName: String!
+  lastName: String!
+  phoneNumber: String!
+  seatsCount: Int!
+  telegram: Boolean!
+  telegramId: BigInt
+  travelDate: Date!
+  whatsapp: Boolean!
+}
+
+input CreateFeedbackInput {
+  message: String!
+  reason: String!
+  replyTo: String!
+}
+
+input CreateRouteInput {
+  arrivalCityId: ID!
+  departureCityId: ID!
+  departureDate: Date
+  isActive: Boolean!
+  price: Int!
+  regionId: ID
+}
+
+input CreateScheduleInput {
+  cityId: ID
+  direction: RouteDirection!
+  isActive: Boolean!
+  routeId: ID!
+  stopName: String
+  time: Time
+}
+
+"""
+A field whose value conforms to the standard cuid format as specified in https://github.com/ericelliott/cuid#broken-down
+"""
+scalar Cuid
+
+"""Custom `Date` scalar type supporting multiple input formats"""
+scalar Date
+
+type Feedback {
+  createdAt: Date!
+  message: String!
+  reason: String!
+  replyTo: String!
+  updatedAt: Date!
+}
+
+scalar File
+
+type GalleryResponse {
+  images: [File!]!
+  totalCount: Int!
+}
+
+input LoginInput {
+  login: String!
+  password: String!
+}
+
+type Mutation {
+  authenticateWithTelegram(input: TelegramAuthInput!): TelegramAuthPayload!
+  createBooking(input: CreateBookingInput!): Booking!
+  createCity(name: String!): City!
+  createFeedback(input: CreateFeedbackInput!): Feedback!
+  createRoute(input: CreateRouteInput!): Route!
+  createSchedule(input: CreateScheduleInput!): Schedule!
+  deleteSchedule(id: ID!): Schedule!
+  login(loginInput: LoginInput!): AuthPayload!
+  logout: Boolean!
+  refreshToken: AuthPayload!
+  updateBooking(input: UpdateBookingInput!): Booking!
+  updateRoute(id: ID!, input: CreateRouteInput!): Route!
+  updateSchedule(input: UpdateScheduleInput!): Schedule!
+  updateTelegramChatIds(input: UpdateTelegramChatIdsInput!): Boolean!
+  uploadPhotoRoute(file: File!, isPhotoSelected: Boolean, routeId: ID!): UploadPhotoRouteResponse!
+}
+
+type PageInfo {
+  endCursor: ID
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: ID
+}
+
+type Query {
+  arrivalCities(cityId: ID, includeInactiveCities: Boolean): [City!]!
+  bookingById(id: ID!): Booking
+  bookings(input: BookingsInput!): BookingsResponse!
+  cities: [City!]!
+  departureCities(includeInactiveCities: Boolean): [City!]!
+  infiniteRoutes(input: RoutesInput!): RoutesResponse!
+  me: User
+  regionByName(regionName: String!): Region
+  regionForRoute(arrivalCityId: ID, departureCityId: ID): Region
+  regions: [Region!]!
+  routeById(id: ID): Route
+  routeByIds(arrivalCityId: ID, departureCityId: ID): Route
+  routes(regionId: ID!): [Route!]!
+  routesGallery(limit: Int, offset: Int): GalleryResponse!
+  scheduleById(scheduleId: ID): Schedule
+  schedulesByIds(arrivalCityId: ID, departureCityId: ID): [Schedule!]!
+  schedulesByRoute(direction: RouteDirection, routeId: ID): [Schedule!]!
+  telegramChats: [TelegramChat!]!
+}
+
+type Region {
+  createdAt: Date!
+  id: ID!
+  name: String!
+  routes: [Route!]!
+  updatedAt: Date!
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+}
+
+type Route {
+  arrivalCity: City
+  bookings: [Booking!]!
+  createdAt: Date!
+  departureCity: City
+  departureDate: Date
+  direction: RouteDirection
+  id: ID!
+  isActive: Boolean!
+  photoName: String
+  price: Int!
+  region: Region
+  schedules: [Schedule!]!
+  updatedAt: Date!
+}
+
+enum RouteDirection {
+  BACKWARD
+  FORWARD
+}
+
+input RoutesInput {
+  after: ID
+  arrivalCityId: ID
+  before: ID
+  departureCityId: ID
+  includeInactiveCities: Boolean
+  includeInactiveRegions: Boolean
+  initialLoading: Boolean
+  query: String
+  regionIds: [ID!]!
+  sorting: [SortingState!]!
+  take: Int
+}
+
+type RoutesResponse {
+  edges: [Route!]!
+  pageInfo: PageInfo!
+}
+
+type Schedule {
+  city: City
+  createdAt: Date!
+  direction: RouteDirection!
+  id: ID!
+  isActive: Boolean!
+  order: Int!
+  route: Route
+  stopName: String
+  time: Time
+  updatedAt: Date!
+}
+
+enum SearchTypeBookings {
+  FIRST_NAME
+  ID
+  LAST_NAME
+  PHONE
+}
+
+input SortingState {
+  desc: Boolean!
+  id: String!
+}
+
+type Subscription {
+  createdBooking: Booking!
+  createdRoute: Route!
+}
+
+input TelegramAuthInput {
+  auth_date: Date!
+  first_name: String!
+  hash: String!
+  id: BigInt!
+  last_name: String
+  photo_url: String
+  username: String
+}
+
+type TelegramAuthPayload {
+  accessToken: String!
+  isNewUser: Boolean!
+  refreshToken: String!
+  user: User!
+}
+
+type TelegramChat {
+  chatId: BigInt!
+  createdAt: Date!
+  id: ID!
+  updatedAt: Date!
+  user: User!
+}
+
+type TelegramUser {
+  authDate: Date!
+  createdAt: Date!
+  firstName: String!
+  hash: String!
+  id: ID!
+  lastName: String
+  photoUrl: String
+  telegramId: BigInt!
+  updatedAt: Date!
+  user: User
+  username: String
+}
+
+"""Time custom scalar type with format HH:mm"""
+scalar Time
+
+input UpdateBookingInput {
+  extraPhoneNumber: String
+  firstName: String
+  id: ID!
+  lastName: String
+  phoneNumber: String
+  seatsCount: Int
+  status: BookingStatus
+  telegram: Boolean
+  travelDate: Date
+  whatsapp: Boolean
+}
+
+input UpdateScheduleInput {
+  cityId: ID
+  direction: RouteDirection
+  id: ID!
+  isActive: Boolean
+  stopName: String
+  time: Time
+}
+
+input UpdateTelegramChatIdsInput {
+  telegramChatIds: [BigInt!]!
+}
+
+type UploadPhotoRouteResponse {
+  photo: File!
+  regionId: ID
+  routeId: ID!
+}
+
+type User {
+  email: String!
+  id: ID!
+  name: String!
+  roles: [Role!]!
+  telegram: TelegramUser
+}

@@ -3,6 +3,7 @@ import { TonConnectUIProvider } from "@tonconnect/ui-react";
 import { App } from "@/components/App.tsx";
 import { ErrorBoundary } from "@/components/ErrorBoundary.tsx";
 import { publicUrl } from "@/helpers/publicUrl.ts";
+import { ReactQueryProvider } from "@/react-query";
 
 function ErrorBoundaryError({ error }: { error: unknown }) {
   return (
@@ -25,7 +26,9 @@ export function Root() {
   return (
     <ErrorBoundary fallback={ErrorBoundaryError}>
       <TonConnectUIProvider manifestUrl={publicUrl("tonconnect-manifest.json")}>
-        <App />
+        <ReactQueryProvider>
+          <App />
+        </ReactQueryProvider>
       </TonConnectUIProvider>
     </ErrorBoundary>
   );
