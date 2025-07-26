@@ -13,7 +13,7 @@ services:
     volumes:
       - nginx_secrets:/etc/letsencrypt
       - uploads:/usr/share/nginx/uploads:ro
-      - ./telegram-mini-app/dist:/usr/share/nginx/telegram-mini-app:ro # Mount mini-app from volume
+      - telegram_mini_app_dist:/usr/share/nginx/telegram-mini-app:ro # Mount mini-app from volume
     ports:
       - "80:80"
       - "443:443"
@@ -29,10 +29,9 @@ services:
       context: ./telegram-mini-app
       dockerfile: Dockerfile.prod
     volumes:
-      - ./telegram-mini-app/dist:/app/dist
+      - telegram_mini_app_dist:/app/dist
     networks:
       - webnet
-    command: sh -c "echo 'Build timestamp:' $(date) && sleep 5"
 
   # GraphQL Server
   tour-graphql:
@@ -70,6 +69,7 @@ services:
 volumes:
   postgres_data:
   nginx_secrets: # for storing certificates
+  telegram_mini_app_dist: # for sharing Telegram mini-app files
   uploads:
     driver: local
     driver_opts:
