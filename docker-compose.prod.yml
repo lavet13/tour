@@ -32,6 +32,7 @@ services:
       - telegram_mini_app_dist:/app/dist
     networks:
       - webnet
+    command: sh -c "echo 'Build timestamp:' $(date) && sleep 5"
 
   # GraphQL Server
   tour-graphql:
