@@ -67,9 +67,6 @@ export const BookingPage: FC = () => {
   );
 
   const handleSwapCities = () => {
-    const departureCityId = form.getFieldValue("departureCityId");
-    const arrivalCityId = form.getFieldValue("arrivalCityId");
-
     if (departureCityId && arrivalCityId) {
       form.setFieldValue("departureCityId", arrivalCityId);
       form.setFieldValue("arrivalCityId", departureCityId);
@@ -127,6 +124,8 @@ export const BookingPage: FC = () => {
                 }}
               />
 
+              {/* Consider to use form.Subscribe for checking
+              `disabled={!departureCityId || !arrivalCityId}`*/}
               <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-1 block">
                 <IconButton
                   type="button"
