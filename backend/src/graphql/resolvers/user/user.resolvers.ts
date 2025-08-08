@@ -461,24 +461,24 @@ const resolvers: Resolvers = {
         .digest('hex');
 
       // Add this after creating dataCheckString for debugging
-      console.log('Debug info:', {
-        botToken: botToken.substring(0, 10) + '...', // Don't log full token
-        dataCheckString,
-        secretKeyHex: secretKey.toString('hex'),
-        calculatedHash,
-        providedHash: hash,
-        argsInput: args.input,
-      });
+      // console.log('Debug info:', {
+      //   botToken: botToken.substring(0, 10) + '...', // Don't log full token
+      //   dataCheckString,
+      //   secretKeyHex: secretKey.toString('hex'),
+      //   calculatedHash,
+      //   providedHash: hash,
+      //   argsInput: args.input,
+      // });
 
       // Verify the Telegram authentication data
       const isValidTelegramAuth = calculatedHash === hash;
 
       if (!isValidTelegramAuth) {
-        console.error('Hash verification failed:', {
-          provided: hash,
-          calculated: calculatedHash,
-          dataString: dataCheckString,
-        });
+        // console.error('Hash verification failed:', {
+        //   provided: hash,
+        //   calculated: calculatedHash,
+        //   dataString: dataCheckString,
+        // });
         throw new GraphQLError('Invalid Telegram authentication data');
       }
 
@@ -505,12 +505,12 @@ const resolvers: Resolvers = {
       const maxAge = maxAgeMinutes * 60 * 1000;
 
       if (now - authTimestamp > maxAge) {
-        console.error('Auth data too old:', {
-          authTimestamp: new Date(authTimestamp),
-          now: new Date(now),
-          ageMinutes: (now - authTimestamp) / (60 * 1000),
-          maxAgeMinutes,
-        });
+        // console.error('Auth data too old:', {
+        //   authTimestamp: new Date(authTimestamp),
+        //   now: new Date(now),
+        //   ageMinutes: (now - authTimestamp) / (60 * 1000),
+        //   maxAgeMinutes,
+        // });
         throw new GraphQLError(
           'Telegram authentication data is too old. Please try logging in again.',
         );
