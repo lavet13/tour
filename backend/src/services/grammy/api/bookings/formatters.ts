@@ -149,11 +149,17 @@ export const getBookingStatus = (status: $Enums.BookingStatus): string => {
   return '❌ Ошибка';
 };
 
-export const getInlineKeyboardForBookings = (
-  bookingId: string,
-  status: BookingStatus,
-  copiedText?: string,
-): InlineKeyboard => {
+export const getInlineKeyboardForBookings = ({
+  bookingId,
+  status,
+  copiedText,
+  canSendMessage = false,
+}: {
+  bookingId: string;
+  status: BookingStatus;
+  copiedText?: string;
+  canSendMessage?: boolean;
+}): InlineKeyboard => {
   const inlineKeyboard = new InlineKeyboard();
 
   let text: string = '';
@@ -167,8 +173,13 @@ export const getInlineKeyboardForBookings = (
 
   inlineKeyboard.text(text, `booking:status_${bookingId}`);
 
+
   if (copiedText && status === 'CONFIRMED') {
-    inlineKeyboard.copyText('📝 Копировать бронь', copiedText);
+    inlineKeyboard.copyText('📝 Копировать бронь', copiedText).row();
+  }
+
+  if (canSendMessage) {
+    inlineKeyboard.text('📩 Отправить сообщение', `booking:send-message_${bookingId}`);
   }
 
   return inlineKeyboard;

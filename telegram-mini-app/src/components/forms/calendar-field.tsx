@@ -18,6 +18,7 @@ const CalendarField: FC<CalendarFieldProps> = ({ label, ...props }) => {
       <Calendar
         {...props}
         required
+        className="max-w-fit"
         locale={calendarLocale}
         selected={field.state.value}
         onSelect={field.handleChange}

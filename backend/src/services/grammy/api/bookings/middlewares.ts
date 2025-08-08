@@ -71,16 +71,11 @@ export const handleBookingStatus: CallbackQueryMiddleware<
         message += `<i>👀 Предварительный просмотр отправленного сообщения:</i>\n\n`;
         message += confirmedBookingMessage(updatedBooking, { richText: true });
 
-        await ctx.api.sendMessage(
-          updatedBooking.telegramId.toString(),
-          confirmedBookingMessage(updatedBooking, { richText: true }),
-          { parse_mode: 'HTML' },
-        );
-
-        const inlineKeyboard = getInlineKeyboardForBookings(
-          updatedBooking.id,
-          newStatus,
-        );
+        const inlineKeyboard = getInlineKeyboardForBookings({
+          bookingId: updatedBooking.id,
+          status: newStatus,
+          canSendMessage: true,
+        });
 
         await ctx.editMessageText(message, {
           parse_mode: 'HTML',
@@ -96,11 +91,11 @@ export const handleBookingStatus: CallbackQueryMiddleware<
 
     // if user didn't submitted with telegram credentials, return inline keyboard
     // with copy text button
-    const inlineKeyboard = getInlineKeyboardForBookings(
-      updatedBooking.id,
-      newStatus,
-      confirmedBookingMessage(updatedBooking),
-    );
+    const inlineKeyboard = getInlineKeyboardForBookings({
+      bookingId: updatedBooking.id,
+      status: newStatus,
+      copiedText: confirmedBookingMessage(updatedBooking),
+    });
 
     await ctx.editMessageText(message, {
       parse_mode: 'HTML',
@@ -135,5 +130,71 @@ export const handleBookingStatus: CallbackQueryMiddleware<
         ? { text: `Статус изменен на ${getBookingStatus(newStatus)}!` }
         : {}),
     });
+  }
+};
+
+export const handleBookingSendMessage: CallbackQueryMiddleware<
+  CustomContext
+> = async ctx => {
+  const bookingId = ctx.match[1];
+
+  try {
+    const booking = await prisma.booking.findUniqueOrThrow({
+      where: {
+        id: bookingId,
+      },
+      include: {
+        route: {
+          include: {
+            departureCity: {
+              select: {
+                name: true,
+              },
+            },
+            arrivalCity: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!booking.telegramId) {
+      await ctx.answerCallbackQuery('❌ У пользователя нет Telegram ID');
+      return;
+    }
+
+    await ctx.api.sendMessage(
+      booking.telegramId!.toString(),
+      confirmedBookingMessage(booking, { richText: true }),
+      { parse_mode: 'HTML' },
+    );
+
+    await ctx.answerCallbackQuery('✅ Сообщение отправлено пользователю!');
+  } catch (error) {
+    // Check if it's a not found error
+    if (error instanceof PrismaClientKnownRequestError) {
+      switch (error.code) {
+        case 'P2025':
+          // Record not found
+          await ctx.reply(`❌ Бронирование с ID ${bookingId} не существует.`);
+          return;
+        case 'P2003':
+          // Foreign key constraint violation
+          await ctx.reply(
+            `❌ Ошибка: маршрут, связанный с бронированием, недействителен.`,
+          );
+          return;
+        case 'P2002':
+          // Unique constraint violation (unlikely in this case, but included for completeness)
+          await ctx.reply(
+            `❌ Ошибка: нарушение уникальности данных бронирования.`,
+          );
+          return;
+      }
+    }
+    throw error;
   }
 };

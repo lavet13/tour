@@ -32,10 +32,10 @@ export const notifyNewBooking: (bot: TCustomBot) => NotifyNewBookingType =
         chatIds.map(({ chatId }) =>
           bot.api.sendMessage(chatId.toString(), message, {
             parse_mode: 'HTML',
-            reply_markup: getInlineKeyboardForBookings(
-              booking.id,
-              booking.status,
-            ),
+            reply_markup: getInlineKeyboardForBookings({
+              bookingId: booking.id,
+              status: booking.status,
+            }),
           }),
         ),
       );
