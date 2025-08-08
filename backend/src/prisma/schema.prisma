@@ -41,7 +41,7 @@ model TelegramUser {
   authDate        DateTime
   hash            String
   languageCode    String?
-  allowsWriteToPm Boolean
+  allowsWriteToPm Boolean @default(false)
   chatInstance    BigInt?
   chatType        String?
   userId          String?  @unique
