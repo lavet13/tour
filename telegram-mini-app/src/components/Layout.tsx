@@ -1,14 +1,12 @@
+import { useAuthenticateTMA } from "@/features/auth/mutations";
 import { isGraphQLRequestError } from "@/react-query/types/is-graphql-request-error";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { retrieveRawInitData, useRawInitData } from "@telegram-apps/sdk-react";
 import { Button, Tabbar } from "@telegram-apps/telegram-ui";
 import { BusIcon, MessageCircleQuestionMark } from "lucide-react";
 import { FC, Fragment, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import {
-  Outlet,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 
 const tabs = [
   { id: "/booking", text: "Маршрут", Icon: BusIcon },
@@ -25,6 +23,27 @@ const Layout: FC = () => {
   if (currentTab !== location.pathname) {
     setCurrentTab(location.pathname);
   }
+
+  const { mutateAsync: authenticateUser, data: userData } = useAuthenticateTMA();
+  console.log({ userData });
+  const [hasAuthenticated, setHasAuthenticated] = useState(false);
+  const initDataRaw = useRawInitData();
+  console.log({ initDataRaw });
+
+  useEffect(() => {
+    if (!hasAuthenticated && initDataRaw) {
+      const authenticate = async () => {
+        await authenticateUser({
+          input: {
+            initDataRaw,
+          },
+        });
+        setHasAuthenticated(true);
+      };
+
+      authenticate();
+    }
+  }, [hasAuthenticated, initDataRaw]);
 
   return (
     <Fragment>
@@ -43,6 +62,7 @@ const Layout: FC = () => {
           </Tabbar.Item>
         ))}
       </Tabbar>
+
       <QueryErrorResetBoundary>
         {({ reset }) => (
           <ErrorBoundary
@@ -80,6 +100,7 @@ const Layout: FC = () => {
             onReset={reset}
           >
             <Outlet />
+            <div className="h-[82px]" />
           </ErrorBoundary>
         )}
       </QueryErrorResetBoundary>

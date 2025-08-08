@@ -12,8 +12,6 @@ import typeDefs from '@/graphql/types';
 import { createContext } from '@/context';
 import { createYoga } from 'graphql-yoga';
 import configure from '@/routers';
-import { bot } from '@/services/grammy';
-import { GrammyError, HttpError } from 'grammy';
 
 const schema = makeExecutableSchema({
   typeDefs,

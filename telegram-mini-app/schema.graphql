@@ -162,7 +162,8 @@ input LoginInput {
 }
 
 type Mutation {
-  authenticateWithTelegram(input: TelegramAuthInput!): TelegramAuthPayload!
+  authenticateWithTelegramLogin(input: TelegramLoginAuthInput!): TelegramLoginAuthPayload!
+  authenticateWithTma(input: TMAAuthInput!): TelegramLoginAuthPayload!
   createBooking(input: CreateBookingInput!): Booking!
   createCity(name: String!): City!
   createFeedback(input: CreateFeedbackInput!): Feedback!
@@ -291,21 +292,8 @@ type Subscription {
   createdRoute: Route!
 }
 
-input TelegramAuthInput {
-  auth_date: Date!
-  first_name: String!
-  hash: String!
-  id: BigInt!
-  last_name: String
-  photo_url: String
-  username: String
-}
-
-type TelegramAuthPayload {
-  accessToken: String!
-  isNewUser: Boolean!
-  refreshToken: String!
-  user: User!
+input TMAAuthInput {
+  initDataRaw: String!
 }
 
 type TelegramChat {
@@ -316,12 +304,32 @@ type TelegramChat {
   user: User!
 }
 
-type TelegramUser {
+input TelegramLoginAuthInput {
+  auth_date: Date!
+  first_name: String!
+  hash: String!
+  id: BigInt!
+  last_name: String
+  photo_url: String
+  username: String
+}
+
+type TelegramLoginAuthPayload {
+  accessToken: String!
+  isNewUser: Boolean!
+  refreshToken: String!
+  user: User!
+}
+
+type TelegramLoginUser {
+  allowsWriteToPm: Boolean!
   authDate: Date!
+  chatInstance: BigInt
+  chatType: String
   createdAt: Date!
   firstName: String!
-  hash: String!
   id: ID!
+  languageCode: String
   lastName: String
   photoUrl: String
   telegramId: BigInt!
@@ -370,5 +378,5 @@ type User {
   id: ID!
   name: String!
   roles: [Role!]!
-  telegram: TelegramUser
+  telegram: TelegramLoginUser
 }

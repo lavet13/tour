@@ -186,7 +186,7 @@ const resolvers: Resolvers = {
         refreshToken: transactionResult.refreshToken,
       };
     },
-    async authenticateWithTelegram(_, args, ctx) {
+    async authenticateWithTelegramLogin(_, args, ctx) {
       const { hash, ...dataToCheck } = args.input;
       console.log({ input: args.input });
 
@@ -267,7 +267,6 @@ const resolvers: Resolvers = {
         );
       }
 
-      // Convert string to BigInt for database operations
       const telegramId = dataToCheck.id;
       const authDate = new Date(authTimestamp);
 
@@ -295,7 +294,6 @@ const resolvers: Resolvers = {
                 username: dataToCheck.username,
                 photoUrl: dataToCheck.photo_url,
                 authDate,
-                hash,
               },
               include: { user: { include: { roles: true } } },
             });
@@ -360,7 +358,6 @@ const resolvers: Resolvers = {
                 username: dataToCheck.username,
                 photoUrl: dataToCheck.photo_url,
                 authDate,
-                hash,
                 userId: user.id,
               },
             });
@@ -379,6 +376,264 @@ const resolvers: Resolvers = {
             'Telegram authentication successful for user:',
             user.name,
           );
+          return { user, isNewUser, accessToken, refreshToken };
+        });
+      } catch (error) {
+        console.error('Telegram authentication transaction error:', error);
+        throw new GraphQLError('Failed to authenticate with Telegram');
+      }
+
+      // Set cookies
+      try {
+        await ctx.request.cookieStore?.set({
+          name: 'accessToken',
+          value: transactionResult.accessToken,
+          ...cookieOpts,
+        });
+        await ctx.request.cookieStore?.set({
+          name: 'refreshToken',
+          value: transactionResult.refreshToken,
+          ...cookieOpts,
+        });
+        console.log('Telegram authentication cookies set successfully');
+      } catch (reason) {
+        console.error(`Failed to set cookies: ${reason}`);
+
+        try {
+          await ctx.prisma.refreshToken.delete({
+            where: { token: transactionResult.refreshToken },
+          });
+        } catch (cleanupError) {
+          console.error('Failed to cleanup refresh token:', cleanupError);
+        }
+
+        throw new GraphQLError(
+          'Failed while setting the authentication cookie',
+        );
+      }
+
+      return {
+        user: transactionResult.user,
+        isNewUser: transactionResult.isNewUser,
+        accessToken: transactionResult.accessToken,
+        refreshToken: transactionResult.refreshToken,
+      };
+    },
+    async authenticateWithTma(_, args, ctx) {
+      const { initDataRaw } = args.input;
+
+      const botToken = ctx.bot.token;
+
+      if (!botToken) {
+        throw new GraphQLError('Telegram bot token not configured');
+      }
+
+      const urlParams = new URLSearchParams(initDataRaw);
+      const hash = urlParams.get('hash');
+      const _signature = urlParams.get('signature');
+
+      if (!hash) {
+        throw new GraphQLError('Missing hash in init data');
+      }
+
+      // Remove hash and signature from validation data
+      urlParams.delete('hash');
+      urlParams.delete('signature');
+
+      // Create data check string exactly as Telegram specifies
+      const dataCheckString = Array.from(urlParams.entries())
+        .sort(([a], [b]) => a.localeCompare(b)) // Sort by key
+        .map(([key, value]) => `${key}=${value}`)
+        .join('\n');
+
+      // Create HMAC signature
+      // Step 1: Create HMAC-SHA256 of bot token using "WebAppData" as key
+      const secretKey = crypto
+        .createHmac('sha256', 'WebAppData')
+        .update(botToken)
+        .digest();
+
+      // Step 2: Create HMAC-SHA256 of data check string using the result
+      // from step 1 as key
+      const hmac = crypto.createHmac('sha256', secretKey);
+      hmac.update(dataCheckString);
+      const calculatedHash = hmac.digest('hex');
+
+      // Add this after creating dataCheckString for debugging
+      console.log('Debug info:', {
+        botToken: botToken.substring(0, 10) + '...', // Don't log full token
+        dataCheckString,
+        secretKeyHex: secretKey.toString('hex'),
+        calculatedHash,
+        providedHash: hash,
+        argsInput: args.input,
+      });
+
+      // Verify the Telegram authentication data
+      const isValidTelegramAuth = calculatedHash === hash;
+
+      if (!isValidTelegramAuth) {
+        console.error('Hash verification failed:', {
+          provided: hash,
+          calculated: calculatedHash,
+          dataString: dataCheckString,
+        });
+        throw new GraphQLError('Invalid Telegram authentication data');
+      }
+
+      const authDate = parseInt(urlParams.get('auth_date') || '0');
+      const chatInstance = BigInt(urlParams.get('chat_instance') || "0");
+      const chatType = urlParams.get('chat_type');
+      const userJson = urlParams.get('user');
+
+      if (!userJson) {
+        throw new GraphQLError('Missing user data');
+      }
+
+      let userObject: Record<string, any>;
+      try {
+        userObject = JSON.parse(userJson);
+      } catch (error) {
+        throw new GraphQLError('Invalid user JSON format');
+      }
+
+      // Check auth data freshness
+      const authTimestamp = authDate * 1000; // Convert to milliseconds
+      const now = Date.now();
+      const maxAgeMinutes = 60;
+      const maxAge = maxAgeMinutes * 60 * 1000;
+
+      if (now - authTimestamp > maxAge) {
+        console.error('Auth data too old:', {
+          authTimestamp: new Date(authTimestamp),
+          now: new Date(now),
+          ageMinutes: (now - authTimestamp) / (60 * 1000),
+          maxAgeMinutes,
+        });
+        throw new GraphQLError(
+          'Telegram authentication data is too old. Please try logging in again.',
+        );
+      }
+
+      // Convert string to BigInt for database operations
+      const telegramId = BigInt(userObject.id);
+      const authDateObj = new Date(authTimestamp);
+
+      let transactionResult;
+
+      try {
+        transactionResult = await ctx.prisma.$transaction(async tx => {
+          let telegramUser = await tx.telegramUser.findUnique({
+            where: { telegramId },
+          });
+
+          let user;
+          let isNewUser = false;
+          const displayName = userObject.last_name
+            ? `${userObject.first_name.toLowerCase()} ${userObject.last_name.toLowerCase()}`
+            : userObject.first_name.toLowerCase();
+
+          if (telegramUser) {
+            // Update existing Telegram user data
+            telegramUser = await tx.telegramUser.update({
+              where: { telegramId },
+              data: {
+                firstName: userObject.first_name,
+                lastName: userObject.last_name,
+                username: userObject.username,
+                photoUrl: userObject.photo_url,
+                authDate: authDateObj,
+                allowsWriteToPm: userObject.allows_write_to_pm,
+                chatInstance,
+                chatType,
+                languageCode: userObject.language_code,
+              },
+              include: { user: { include: { roles: true } } },
+            });
+
+            if (telegramUser.userId) {
+              user = await tx.user.findUniqueOrThrow({
+                where: { id: telegramUser.userId },
+                include: { roles: true },
+              });
+            } else {
+              // Create new User and link to existing TelegramUser
+              user = await tx.user.create({
+                data: {
+                  name: displayName,
+                  roles: {
+                    create: {
+                      role: 'USER',
+                    },
+                  },
+                },
+                include: { roles: true },
+              });
+
+              telegramUser = await tx.telegramUser.update({
+                where: { telegramId },
+                data: { userId: user.id },
+              });
+
+              isNewUser = true;
+            }
+          } else {
+            user = await tx.user.findUnique({
+              where: {
+                id: ctx.me!.id,
+              },
+              include: { roles: true },
+            });
+
+            if (user) isNewUser = false;
+
+            if (!user) {
+              isNewUser = true;
+              // Create new User and TelegramUser
+              user = await tx.user.create({
+                data: {
+                  name: displayName,
+                  roles: {
+                    create: {
+                      role: 'USER',
+                    },
+                  },
+                },
+                include: { roles: true },
+              });
+            }
+
+            telegramUser = await tx.telegramUser.create({
+              data: {
+                userId: user.id,
+                telegramId,
+                firstName: userObject.first_name,
+                lastName: userObject.last_name,
+                username: userObject.username,
+                photoUrl: userObject.photo_url,
+                authDate: authDateObj,
+                allowsWriteToPm: userObject.allows_write_to_pm,
+                chatInstance,
+                chatType,
+                languageCode: userObject.language_code,
+              },
+            });
+          }
+
+          const { accessToken, refreshToken } = createTokens(user);
+
+          await tx.refreshToken.create({
+            data: {
+              token: refreshToken,
+              userId: user.id,
+            },
+          });
+
+          console.log(
+            'Telegram authentication successful for user:',
+            user.name,
+          );
+
           return { user, isNewUser, accessToken, refreshToken };
         });
       } catch (error) {
@@ -448,13 +703,13 @@ const resolvers: Resolvers = {
             throw new GraphQLError('Такого пользователя не существует!');
           }
 
-          let isValid = false;
-
           if (!user.password) {
             throw new GraphQLError(
               'У пользователя нет пароля. Вход только через Telegram',
             );
           }
+
+          let isValid = false;
           if (user.password) {
             isValid = await validatePassword(password, user.password);
           }
@@ -496,7 +751,7 @@ const resolvers: Resolvers = {
       } catch (reason) {
         console.error(`Failed to set cookies: ${reason}`);
 
-        // Attempt to roll back the token update if cookie setting fails
+        // Attempt to delete a token if cookie setting fails
         try {
           await ctx.prisma.refreshToken.delete({
             where: {

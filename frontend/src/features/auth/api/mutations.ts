@@ -6,8 +6,8 @@ import {
   LoginMutationVariables,
   UpdateTelegramChatIdsMutation,
   UpdateTelegramChatIdsMutationVariables,
-  AuthenticateWithTelegramMutation,
-  AuthenticateWithTelegramMutationVariables,
+  AuthenticateWithTelegramLoginMutation,
+  AuthenticateWithTelegramLoginMutationVariables,
 } from '@/gql/graphql';
 import { graphql } from '@/gql';
 import { client } from '@/graphql/graphql-request';
@@ -68,16 +68,16 @@ export const useLogin = (
   });
 };
 
-export const useAuthenticateTelegram = (
+export const useAuthenticateTelegramLogin = (
   options?: UseMutationOptions<
-    AuthenticateWithTelegramMutation,
+    AuthenticateWithTelegramLoginMutation,
     Error,
-    AuthenticateWithTelegramMutationVariables
+    AuthenticateWithTelegramLoginMutationVariables
   >,
 ) => {
-  const authenticateWithTelegram = graphql(`
-    mutation AuthenticateWithTelegram($input: TelegramAuthInput!) {
-      authenticateWithTelegram(input: $input) {
+  const authenticateWithTelegramLogin = graphql(`
+    mutation AuthenticateWithTelegramLogin($input: TelegramLoginAuthInput!) {
+      authenticateWithTelegramLogin(input: $input) {
         isNewUser
         accessToken
         refreshToken
@@ -87,7 +87,7 @@ export const useAuthenticateTelegram = (
 
   return useMutation({
     mutationFn: variables => {
-      return client.request(authenticateWithTelegram, variables);
+      return client.request(authenticateWithTelegramLogin, variables);
     },
     retry: false,
     ...options,

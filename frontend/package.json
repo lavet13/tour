@@ -78,6 +78,7 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
     "vite-plugin-commonjs": "^0.10.3",
+    "vite-tsconfig-paths": "^5.1.4",
     "zod": "^3.23.8"
   },
   "devDependencies": {

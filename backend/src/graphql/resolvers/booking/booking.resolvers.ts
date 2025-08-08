@@ -1,4 +1,4 @@
-import { Resolvers } from '@/graphql/__generated__/types';
+import { CreateBookingInput, Resolvers } from '@/graphql/__generated__/types';
 import { Prisma, Role } from '@prisma/client';
 
 import {
@@ -10,6 +10,7 @@ import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { applyConstraints } from '@/helpers/apply-constraints';
 import { hasRoles, isAuthenticated } from '@/graphql/composition/authorization';
 import { parseIntSafe } from '@/helpers/parse-int-safe';
+import { isBookingValid } from './booking.validation';
 
 const resolvers: Resolvers = {
   Query: {
@@ -237,6 +238,12 @@ const resolvers: Resolvers = {
   },
   Mutation: {
     async createBooking(_, args, ctx) {
+      const [isValid, reason] = isBookingValid(args.input);
+
+      if (!isValid) {
+        throw new GraphQLError(reason);
+      }
+
       const { departureCityId, arrivalCityId, telegramId, ...rest } =
         args.input;
 

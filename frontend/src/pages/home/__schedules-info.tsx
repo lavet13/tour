@@ -243,7 +243,7 @@ const SchedulesInfo: FC = () => {
                                     <>Телефон</>
                                   )}
                                 </span>
-                                {index === 0 ? (
+                                {index === 0 && (
                                   <Button
                                     onClick={() => {
                                       fields.length < 2 &&
@@ -260,7 +260,7 @@ const SchedulesInfo: FC = () => {
                                   >
                                     Добавить доп. телефон
                                   </Button>
-                                ) : null}
+                                )}
                               </FormLabel>
 
                               <div className='relative'>

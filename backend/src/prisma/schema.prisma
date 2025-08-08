@@ -32,18 +32,21 @@ model Feedback {
 }
 
 model TelegramUser {
-  id         String   @id @default(cuid())
-  telegramId BigInt   @unique
-  firstName  String
-  lastName   String?
-  username   String?
-  photoUrl   String?
-  authDate   DateTime
-  hash       String
-  userId     String?  @unique
-  user       User?    @relation(fields: [userId], references: [id]) // onDelete: SetNull
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                    String   @id @default(cuid())
+  telegramId            BigInt   @unique
+  firstName             String
+  lastName              String?
+  username              String?
+  photoUrl              String?
+  authDate              DateTime
+  languageCode          String?
+  allowsWriteToPm       Boolean?
+  chatInstance          BigInt?
+  chatType              String?
+  userId                String?  @unique
+  user                  User?    @relation(fields: [userId], references: [id]) // onDelete: SetNull
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
 
   @@index([telegramId])
   @@map("telegram_users")

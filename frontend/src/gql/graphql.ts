@@ -152,7 +152,8 @@ export type LoginInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  authenticateWithTelegram: TelegramAuthPayload;
+  authenticateWithTMA: TelegramLoginAuthPayload;
+  authenticateWithTelegramLogin: TelegramLoginAuthPayload;
   createBooking: Booking;
   createCity: City;
   createFeedback: Feedback;
@@ -170,8 +171,13 @@ export type Mutation = {
 };
 
 
-export type MutationAuthenticateWithTelegramArgs = {
-  input: TelegramAuthInput;
+export type MutationAuthenticateWithTmaArgs = {
+  input: TmaAuthInput;
+};
+
+
+export type MutationAuthenticateWithTelegramLoginArgs = {
+  input: TelegramLoginAuthInput;
 };
 
 
@@ -432,22 +438,23 @@ export type Subscription = {
   createdRoute: Route;
 };
 
-export type TelegramAuthInput = {
+export type TmaAuthInput = {
   auth_date: Scalars['Date']['input'];
-  first_name: Scalars['String']['input'];
+  chat_instance: Scalars['BigInt']['input'];
+  chat_type: Scalars['String']['input'];
   hash: Scalars['String']['input'];
-  id: Scalars['BigInt']['input'];
+  signature: Scalars['String']['input'];
+  user: TmaUserInput;
+};
+
+export type TmaUserInput = {
+  allows_write_to_pm: Scalars['Boolean']['input'];
+  first_name: Scalars['String']['input'];
+  id: Scalars['ID']['input'];
+  language_code?: InputMaybe<Scalars['String']['input']>;
   last_name?: InputMaybe<Scalars['String']['input']>;
   photo_url?: InputMaybe<Scalars['String']['input']>;
   username?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type TelegramAuthPayload = {
-  __typename?: 'TelegramAuthPayload';
-  accessToken: Scalars['String']['output'];
-  isNewUser: Scalars['Boolean']['output'];
-  refreshToken: Scalars['String']['output'];
-  user: User;
 };
 
 export type TelegramChat = {
@@ -459,13 +466,34 @@ export type TelegramChat = {
   user: User;
 };
 
-export type TelegramUser = {
-  __typename?: 'TelegramUser';
+export type TelegramLoginAuthInput = {
+  auth_date: Scalars['Date']['input'];
+  first_name: Scalars['String']['input'];
+  hash: Scalars['String']['input'];
+  id: Scalars['BigInt']['input'];
+  last_name?: InputMaybe<Scalars['String']['input']>;
+  photo_url?: InputMaybe<Scalars['String']['input']>;
+  username?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type TelegramLoginAuthPayload = {
+  __typename?: 'TelegramLoginAuthPayload';
+  accessToken: Scalars['String']['output'];
+  isNewUser: Scalars['Boolean']['output'];
+  refreshToken: Scalars['String']['output'];
+  user: User;
+};
+
+export type TelegramLoginUser = {
+  __typename?: 'TelegramLoginUser';
+  allowsWriteToPm: Scalars['Boolean']['output'];
   authDate: Scalars['Date']['output'];
+  chatInstance?: Maybe<Scalars['BigInt']['output']>;
+  chatType?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Date']['output'];
   firstName: Scalars['String']['output'];
-  hash: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  languageCode?: Maybe<Scalars['String']['output']>;
   lastName?: Maybe<Scalars['String']['output']>;
   photoUrl?: Maybe<Scalars['String']['output']>;
   telegramId: Scalars['BigInt']['output'];
@@ -513,7 +541,7 @@ export type User = {
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   roles: Array<Role>;
-  telegram?: Maybe<TelegramUser>;
+  telegram?: Maybe<TelegramLoginUser>;
 };
 
 export type LogoutMutationVariables = Exact<{ [key: string]: never; }>;
@@ -533,12 +561,12 @@ export type LoginMutationVariables = Exact<{
 
 export type LoginMutation = { __typename?: 'Mutation', login: { __typename?: 'AuthPayload', accessToken: string, refreshToken: string } };
 
-export type AuthenticateWithTelegramMutationVariables = Exact<{
-  input: TelegramAuthInput;
+export type AuthenticateWithTelegramLoginMutationVariables = Exact<{
+  input: TelegramLoginAuthInput;
 }>;
 
 
-export type AuthenticateWithTelegramMutation = { __typename?: 'Mutation', authenticateWithTelegram: { __typename?: 'TelegramAuthPayload', isNewUser: boolean, accessToken: string, refreshToken: string } };
+export type AuthenticateWithTelegramLoginMutation = { __typename?: 'Mutation', authenticateWithTelegramLogin: { __typename?: 'TelegramLoginAuthPayload', isNewUser: boolean, accessToken: string, refreshToken: string } };
 
 export type UpdateTelegramChatIdsMutationVariables = Exact<{
   input: UpdateTelegramChatIdsInput;
@@ -550,7 +578,7 @@ export type UpdateTelegramChatIdsMutation = { __typename?: 'Mutation', updateTel
 export type MeQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MeQuery = { __typename?: 'Query', me?: { __typename?: 'User', id: string, email: string, name: string, roles: Array<Role>, telegram?: { __typename?: 'TelegramUser', telegramId: any, firstName: string, lastName?: string | null, username?: string | null, photoUrl?: string | null, authDate: any, hash: string } | null } | null };
+export type MeQuery = { __typename?: 'Query', me?: { __typename?: 'User', id: string, email: string, name: string, roles: Array<Role>, telegram?: { __typename?: 'TelegramLoginUser', telegramId: any, firstName: string, lastName?: string | null, username?: string | null, photoUrl?: string | null, authDate: any } | null } | null };
 
 export type TelegramChatIdsQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -739,9 +767,9 @@ export type GetSchedulesByIdsQuery = { __typename?: 'Query', schedulesByIds: Arr
 export const LogoutDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Logout"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"logout"}}]}}]} as unknown as DocumentNode<LogoutMutation, LogoutMutationVariables>;
 export const RefreshTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RefreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"refreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}}]}}]}}]} as unknown as DocumentNode<RefreshTokenMutation, RefreshTokenMutationVariables>;
 export const LoginDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Login"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"loginInput"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"LoginInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"login"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"loginInput"},"value":{"kind":"Variable","name":{"kind":"Name","value":"loginInput"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}}]}}]}}]} as unknown as DocumentNode<LoginMutation, LoginMutationVariables>;
-export const AuthenticateWithTelegramDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AuthenticateWithTelegram"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"TelegramAuthInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"authenticateWithTelegram"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"isNewUser"}},{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}}]}}]}}]} as unknown as DocumentNode<AuthenticateWithTelegramMutation, AuthenticateWithTelegramMutationVariables>;
+export const AuthenticateWithTelegramLoginDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AuthenticateWithTelegramLogin"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"TelegramLoginAuthInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"authenticateWithTelegramLogin"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"isNewUser"}},{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}}]}}]}}]} as unknown as DocumentNode<AuthenticateWithTelegramLoginMutation, AuthenticateWithTelegramLoginMutationVariables>;
 export const UpdateTelegramChatIdsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateTelegramChatIds"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateTelegramChatIdsInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateTelegramChatIds"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}]}]}}]} as unknown as DocumentNode<UpdateTelegramChatIdsMutation, UpdateTelegramChatIdsMutationVariables>;
-export const MeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"roles"}},{"kind":"Field","name":{"kind":"Name","value":"telegram"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"telegramId"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"photoUrl"}},{"kind":"Field","name":{"kind":"Name","value":"authDate"}},{"kind":"Field","name":{"kind":"Name","value":"hash"}}]}}]}}]}}]} as unknown as DocumentNode<MeQuery, MeQueryVariables>;
+export const MeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"roles"}},{"kind":"Field","name":{"kind":"Name","value":"telegram"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"telegramId"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"photoUrl"}},{"kind":"Field","name":{"kind":"Name","value":"authDate"}}]}}]}}]}}]} as unknown as DocumentNode<MeQuery, MeQueryVariables>;
 export const TelegramChatIdsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"TelegramChatIds"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"telegramChats"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"chatId"}}]}}]}}]} as unknown as DocumentNode<TelegramChatIdsQuery, TelegramChatIdsQueryVariables>;
 export const UpdateBookingDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateBooking"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"UpdateBookingInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateBooking"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"phoneNumber"}},{"kind":"Field","name":{"kind":"Name","value":"travelDate"}},{"kind":"Field","name":{"kind":"Name","value":"seatsCount"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}}]}}]}}]} as unknown as DocumentNode<UpdateBookingMutation, UpdateBookingMutationVariables>;
 export const CreateBookingDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateBooking"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateBookingInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createBooking"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"phoneNumber"}},{"kind":"Field","name":{"kind":"Name","value":"telegram"}},{"kind":"Field","name":{"kind":"Name","value":"whatsapp"}},{"kind":"Field","name":{"kind":"Name","value":"extraPhoneNumber"}},{"kind":"Field","name":{"kind":"Name","value":"extraTelegram"}},{"kind":"Field","name":{"kind":"Name","value":"extraWhatsapp"}},{"kind":"Field","name":{"kind":"Name","value":"travelDate"}},{"kind":"Field","name":{"kind":"Name","value":"seatsCount"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"direction"}},{"kind":"Field","name":{"kind":"Name","value":"route"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"departureCity"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"arrivalCity"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]}}]} as unknown as DocumentNode<CreateBookingMutation, CreateBookingMutationVariables>;

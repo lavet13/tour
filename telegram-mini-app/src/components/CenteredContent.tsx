@@ -11,7 +11,7 @@ export const CenteredContent: FC<CenteredContentProps> = ({
 }) => {
   return (
     <div
-      className={cn("flex items-center justify-center", className)}
+      className={cn("flex items-center justify-center px-[22px]", className)}
       {...props}
     >
       {children}

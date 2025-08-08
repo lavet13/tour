@@ -26,7 +26,6 @@ export const useGetMe = (options?: InitialDataOptions<MeQuery>) => {
           username
           photoUrl
           authDate
-          hash
         }
       }
     }

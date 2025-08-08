@@ -1,6 +1,7 @@
 import { graphql } from "@/gql";
 import {
   GetArrivalCitiesQuery,
+  GetRouteByIdsQuery,
   GetCitiesQuery,
   GetDepartureCitiesQuery,
 } from "@/gql/graphql";
@@ -103,3 +104,64 @@ export const useDepartureCities = (props: UseDepartureCitiesProps = {}) => {
     ...options,
   });
 };
+
+type UseRouteByIdsProps = {
+  departureCityId?: string;
+  arrivalCityId?: string;
+  options?: InitialDataOptions<GetRouteByIdsQuery>;
+};
+
+export const useRouteByIds = ({
+  departureCityId,
+  arrivalCityId,
+  options = {},
+}: UseRouteByIdsProps) => {
+  const routeByIds = graphql(`
+    query GetRouteByIds($departureCityId: ID, $arrivalCityId: ID) {
+      routeByIds(
+        departureCityId: $departureCityId
+        arrivalCityId: $arrivalCityId
+      ) {
+        id
+        departureCity {
+          id
+          name
+          description
+        }
+        arrivalCity {
+          id
+          name
+          description
+        }
+        region {
+          id
+          name
+        }
+        isActive
+        departureDate
+        price
+        photoName
+        direction
+      }
+    }
+  `);
+
+  return useQuery({
+    queryKey: [
+      (routeByIds.definitions[0] as any).name.value,
+      { departureCityId, arrivalCityId },
+    ],
+    queryFn: async () => {
+      return await client.request(routeByIds, {
+        departureCityId,
+        arrivalCityId,
+      });
+    },
+    meta: {
+      toastEnabled: false,
+    },
+    retry: false,
+    ...options,
+  });
+};
+

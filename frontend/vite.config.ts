@@ -4,6 +4,7 @@ import path from 'path';
 import codegen from 'vite-plugin-graphql-codegen';
 import dynamicImport from 'vite-plugin-dynamic-import';
 import commonjs from 'vite-plugin-commonjs';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -18,6 +19,9 @@ export default defineConfig(({ mode }) => {
     },
     plugins: [
       react(),
+      // Allows using the compilerOptions.paths property in tsconfig.json.
+      // https://www.npmjs.com/package/vite-tsconfig-paths
+      tsconfigPaths(),
       codegen({ matchOnSchemas: true, debug: true, throwOnBuild: false }),
       dynamicImport(),
       commonjs(),

@@ -27,17 +27,23 @@ export default gql`
     logout: Boolean!
     refreshToken: AuthPayload!
     updateTelegramChatIds(input: UpdateTelegramChatIdsInput!): Boolean!
-    authenticateWithTelegram(input: TelegramAuthInput!): TelegramAuthPayload!
+    authenticateWithTelegramLogin(input: TelegramLoginAuthInput!): TelegramLoginAuthPayload!
+    authenticateWithTma(input: TMAAuthInput!): TelegramLoginAuthPayload!
   }
 
-  type TelegramAuthPayload {
+  type TelegramLoginAuthPayload {
     accessToken: String!
     refreshToken: String!
     user: User!
     isNewUser: Boolean!
   }
 
-  input TelegramAuthInput {
+  # TMA (Telegram Mini App)
+  input TMAAuthInput {
+    initDataRaw: String!
+  }
+
+  input TelegramLoginAuthInput {
     id: BigInt!
     first_name: String!
     last_name: String
@@ -57,7 +63,7 @@ export default gql`
     email: String!
     name: String!
     roles: [Role!]!
-    telegram: TelegramUser
+    telegram: TelegramLoginUser
   }
 
   type TelegramChat {
@@ -68,7 +74,7 @@ export default gql`
     updatedAt: Date!
   }
 
-  type TelegramUser {
+  type TelegramLoginUser {
     id: ID!
     telegramId: BigInt!
     firstName: String!
@@ -76,7 +82,10 @@ export default gql`
     username: String
     photoUrl: String
     authDate: Date!
-    hash: String!
+    languageCode: String
+    allowsWriteToPm: Boolean!
+    chatInstance: BigInt
+    chatType: String
     user: User
     createdAt: Date!
     updatedAt: Date!

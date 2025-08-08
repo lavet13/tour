@@ -18,7 +18,7 @@ const config: CodegenConfig = {
       User: '../../../node_modules/.prisma/client#User as UserModel',
       TelegramChat:
         '../../../node_modules/.prisma/client#TelegramChat as TelegramChatModel',
-      TelegramUser:
+      TelegramLoginUser:
         '../../../node_modules/.prisma/client#TelegramUser as TelegramUserModel',
       Booking: '../../../node_modules/.prisma/client#Booking as BookingModel',
       Feedback: '../../../node_modules/.prisma/client#Feedback as FeedbackModel',

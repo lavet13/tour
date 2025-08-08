@@ -152,7 +152,8 @@ export type LoginInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  authenticateWithTelegram: TelegramAuthPayload;
+  authenticateWithTelegramLogin: TelegramLoginAuthPayload;
+  authenticateWithTma: TelegramLoginAuthPayload;
   createBooking: Booking;
   createCity: City;
   createFeedback: Feedback;
@@ -170,8 +171,13 @@ export type Mutation = {
 };
 
 
-export type MutationAuthenticateWithTelegramArgs = {
-  input: TelegramAuthInput;
+export type MutationAuthenticateWithTelegramLoginArgs = {
+  input: TelegramLoginAuthInput;
+};
+
+
+export type MutationAuthenticateWithTmaArgs = {
+  input: TmaAuthInput;
 };
 
 
@@ -432,22 +438,8 @@ export type Subscription = {
   createdRoute: Route;
 };
 
-export type TelegramAuthInput = {
-  auth_date: Scalars['Date']['input'];
-  first_name: Scalars['String']['input'];
-  hash: Scalars['String']['input'];
-  id: Scalars['BigInt']['input'];
-  last_name?: InputMaybe<Scalars['String']['input']>;
-  photo_url?: InputMaybe<Scalars['String']['input']>;
-  username?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type TelegramAuthPayload = {
-  __typename?: 'TelegramAuthPayload';
-  accessToken: Scalars['String']['output'];
-  isNewUser: Scalars['Boolean']['output'];
-  refreshToken: Scalars['String']['output'];
-  user: User;
+export type TmaAuthInput = {
+  initDataRaw: Scalars['String']['input'];
 };
 
 export type TelegramChat = {
@@ -459,13 +451,34 @@ export type TelegramChat = {
   user: User;
 };
 
-export type TelegramUser = {
-  __typename?: 'TelegramUser';
+export type TelegramLoginAuthInput = {
+  auth_date: Scalars['Date']['input'];
+  first_name: Scalars['String']['input'];
+  hash: Scalars['String']['input'];
+  id: Scalars['BigInt']['input'];
+  last_name?: InputMaybe<Scalars['String']['input']>;
+  photo_url?: InputMaybe<Scalars['String']['input']>;
+  username?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type TelegramLoginAuthPayload = {
+  __typename?: 'TelegramLoginAuthPayload';
+  accessToken: Scalars['String']['output'];
+  isNewUser: Scalars['Boolean']['output'];
+  refreshToken: Scalars['String']['output'];
+  user: User;
+};
+
+export type TelegramLoginUser = {
+  __typename?: 'TelegramLoginUser';
+  allowsWriteToPm: Scalars['Boolean']['output'];
   authDate: Scalars['Date']['output'];
+  chatInstance?: Maybe<Scalars['BigInt']['output']>;
+  chatType?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Date']['output'];
   firstName: Scalars['String']['output'];
-  hash: Scalars['String']['output'];
   id: Scalars['ID']['output'];
+  languageCode?: Maybe<Scalars['String']['output']>;
   lastName?: Maybe<Scalars['String']['output']>;
   photoUrl?: Maybe<Scalars['String']['output']>;
   telegramId: Scalars['BigInt']['output'];
@@ -513,8 +526,27 @@ export type User = {
   id: Scalars['ID']['output'];
   name: Scalars['String']['output'];
   roles: Array<Role>;
-  telegram?: Maybe<TelegramUser>;
+  telegram?: Maybe<TelegramLoginUser>;
 };
+
+export type AuthenticateWithTmaMutationVariables = Exact<{
+  input: TmaAuthInput;
+}>;
+
+
+export type AuthenticateWithTmaMutation = { __typename?: 'Mutation', authenticateWithTma: { __typename?: 'TelegramLoginAuthPayload', isNewUser: boolean, accessToken: string, refreshToken: string } };
+
+export type MeQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type MeQuery = { __typename?: 'Query', me?: { __typename?: 'User', id: string, email: string, name: string, roles: Array<Role>, telegram?: { __typename?: 'TelegramLoginUser', telegramId: any, firstName: string, lastName?: string | null, username?: string | null, photoUrl?: string | null, authDate: any } | null } | null };
+
+export type CreateBookingMutationVariables = Exact<{
+  input: CreateBookingInput;
+}>;
+
+
+export type CreateBookingMutation = { __typename?: 'Mutation', createBooking: { __typename?: 'Booking', id: string, firstName: string, lastName: string, phoneNumber: string, telegram: boolean, whatsapp: boolean, extraPhoneNumber?: string | null, extraTelegram: boolean, extraWhatsapp: boolean, travelDate: any, seatsCount: number, status: BookingStatus, createdAt: any, updatedAt: any, direction: RouteDirection, route?: { __typename?: 'Route', price: number, departureCity?: { __typename?: 'City', name: string } | null, arrivalCity?: { __typename?: 'City', name: string } | null } | null } };
 
 export type GetArrivalCitiesQueryVariables = Exact<{
   cityId?: InputMaybe<Scalars['ID']['input']>;
@@ -536,13 +568,25 @@ export type GetDepartureCitiesQueryVariables = Exact<{
 
 export type GetDepartureCitiesQuery = { __typename?: 'Query', departureCities: Array<{ __typename?: 'City', id: string, name: string }> };
 
+export type GetRouteByIdsQueryVariables = Exact<{
+  departureCityId?: InputMaybe<Scalars['ID']['input']>;
+  arrivalCityId?: InputMaybe<Scalars['ID']['input']>;
+}>;
+
+
+export type GetRouteByIdsQuery = { __typename?: 'Query', routeByIds?: { __typename?: 'Route', id: string, isActive: boolean, departureDate?: any | null, price: number, photoName?: string | null, direction?: RouteDirection | null, departureCity?: { __typename?: 'City', id: string, name: string, description?: string | null } | null, arrivalCity?: { __typename?: 'City', id: string, name: string, description?: string | null } | null, region?: { __typename?: 'Region', id: string, name: string } | null } | null };
+
 export type RefreshTokenMutationVariables = Exact<{ [key: string]: never; }>;
 
 
 export type RefreshTokenMutation = { __typename?: 'Mutation', refreshToken: { __typename?: 'AuthPayload', accessToken: string, refreshToken: string } };
 
 
+export const AuthenticateWithTmaDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AuthenticateWithTma"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"TMAAuthInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"authenticateWithTma"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"isNewUser"}},{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}}]}}]}}]} as unknown as DocumentNode<AuthenticateWithTmaMutation, AuthenticateWithTmaMutationVariables>;
+export const MeDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"me"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"roles"}},{"kind":"Field","name":{"kind":"Name","value":"telegram"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"telegramId"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"photoUrl"}},{"kind":"Field","name":{"kind":"Name","value":"authDate"}}]}}]}}]}}]} as unknown as DocumentNode<MeQuery, MeQueryVariables>;
+export const CreateBookingDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CreateBooking"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"input"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"CreateBookingInput"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"createBooking"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"input"},"value":{"kind":"Variable","name":{"kind":"Name","value":"input"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"phoneNumber"}},{"kind":"Field","name":{"kind":"Name","value":"telegram"}},{"kind":"Field","name":{"kind":"Name","value":"whatsapp"}},{"kind":"Field","name":{"kind":"Name","value":"extraPhoneNumber"}},{"kind":"Field","name":{"kind":"Name","value":"extraTelegram"}},{"kind":"Field","name":{"kind":"Name","value":"extraWhatsapp"}},{"kind":"Field","name":{"kind":"Name","value":"travelDate"}},{"kind":"Field","name":{"kind":"Name","value":"seatsCount"}},{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"createdAt"}},{"kind":"Field","name":{"kind":"Name","value":"updatedAt"}},{"kind":"Field","name":{"kind":"Name","value":"direction"}},{"kind":"Field","name":{"kind":"Name","value":"route"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"departureCity"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"arrivalCity"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]}}]}}]} as unknown as DocumentNode<CreateBookingMutation, CreateBookingMutationVariables>;
 export const GetArrivalCitiesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetArrivalCities"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"cityId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"includeInactiveCities"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"arrivalCities"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"cityId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"cityId"}}},{"kind":"Argument","name":{"kind":"Name","value":"includeInactiveCities"},"value":{"kind":"Variable","name":{"kind":"Name","value":"includeInactiveCities"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<GetArrivalCitiesQuery, GetArrivalCitiesQueryVariables>;
 export const GetCitiesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetCities"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"cities"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<GetCitiesQuery, GetCitiesQueryVariables>;
 export const GetDepartureCitiesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetDepartureCities"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"includeInactiveCities"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"departureCities"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"includeInactiveCities"},"value":{"kind":"Variable","name":{"kind":"Name","value":"includeInactiveCities"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}}]}}]} as unknown as DocumentNode<GetDepartureCitiesQuery, GetDepartureCitiesQueryVariables>;
+export const GetRouteByIdsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetRouteByIds"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"departureCityId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"arrivalCityId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"routeByIds"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"departureCityId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"departureCityId"}}},{"kind":"Argument","name":{"kind":"Name","value":"arrivalCityId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"arrivalCityId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"departureCity"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}}]}},{"kind":"Field","name":{"kind":"Name","value":"arrivalCity"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"description"}}]}},{"kind":"Field","name":{"kind":"Name","value":"region"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"isActive"}},{"kind":"Field","name":{"kind":"Name","value":"departureDate"}},{"kind":"Field","name":{"kind":"Name","value":"price"}},{"kind":"Field","name":{"kind":"Name","value":"photoName"}},{"kind":"Field","name":{"kind":"Name","value":"direction"}}]}}]}}]} as unknown as DocumentNode<GetRouteByIdsQuery, GetRouteByIdsQueryVariables>;
 export const RefreshTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RefreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"refreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"accessToken"}},{"kind":"Field","name":{"kind":"Name","value":"refreshToken"}}]}}]}}]} as unknown as DocumentNode<RefreshTokenMutation, RefreshTokenMutationVariables>;
