@@ -430,7 +430,6 @@ const resolvers: Resolvers = {
 
       const urlParams = new URLSearchParams(initDataRaw);
       const hash = urlParams.get('hash');
-      const _signature = urlParams.get('signature');
 
       if (!hash) {
         throw new GraphQLError('Missing hash in init data');
@@ -438,11 +437,12 @@ const resolvers: Resolvers = {
 
       // Remove hash and signature from validation data
       urlParams.delete('hash');
-      urlParams.delete('signature');
 
       // Create data check string exactly as Telegram specifies
       const dataCheckString = Array.from(urlParams.entries())
-        .sort(([a], [b]) => a.localeCompare(b)) // Sort by key
+        .sort(([a], [b]) => {
+          return a.localeCompare(b);
+        }) // Sort by key
         .map(([key, value]) => `${key}=${value}`)
         .join('\n');
 
@@ -455,9 +455,10 @@ const resolvers: Resolvers = {
 
       // Step 2: Create HMAC-SHA256 of data check string using the result
       // from step 1 as key
-      const hmac = crypto.createHmac('sha256', secretKey);
-      hmac.update(dataCheckString);
-      const calculatedHash = hmac.digest('hex');
+      const calculatedHash = crypto
+        .createHmac('sha256', secretKey)
+        .update(dataCheckString)
+        .digest('hex');
 
       // Add this after creating dataCheckString for debugging
       console.log('Debug info:', {
@@ -482,7 +483,7 @@ const resolvers: Resolvers = {
       }
 
       const authDate = parseInt(urlParams.get('auth_date') || '0');
-      const chatInstance = BigInt(urlParams.get('chat_instance') || "0");
+      const chatInstance = BigInt(urlParams.get('chat_instance') || '0');
       const chatType = urlParams.get('chat_type');
       const userJson = urlParams.get('user');
 

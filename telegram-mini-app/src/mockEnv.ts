@@ -62,32 +62,7 @@ if (import.meta.env.DEV) {
         // But in case you don't really need a valid init data, use this one:
         [
           "tgWebAppData",
-          new URLSearchParams([
-            ["auth_date", "1754660267"],
-            ["chat_instance", "2460704053104218139"],
-            ["chat_type", "sender"],
-            [
-              "hash",
-              "699524e8492978718345a5df443b2888dab1dcbea8e6b918bc3a0516418fe574",
-            ],
-            [
-              "signature",
-              "zw4FO0t0vX63GL9g6rrO45QZP67nxLSln_WELQUk-_9Xm41A6iEqqolWEnPyZUZtUfG4YNnyIly1NcWgHZzLDQ",
-            ],
-            [
-              "user",
-              JSON.stringify({
-                id: 750593481,
-                first_name: "Ivan",
-                last_name: "",
-                username: "opezdal1488228",
-                language_code: "ru",
-                allows_write_to_pm: true,
-                photo_url:
-                  "https://t.me/i/userpic/320/VGbD3XilczM5Ak7ryZ_L-GLx9Ero5Lybfw0mSw35m7Y.svg",
-              }),
-            ],
-          ]).toString(),
+          "user=%7B%22id%22%3A750593481%2C%22first_name%22%3A%22Ivan%22%2C%22last_name%22%3A%22%22%2C%22username%22%3A%22opezdal1488228%22%2C%22language_code%22%3A%22ru%22%2C%22allows_write_to_pm%22%3Atrue%2C%22photo_url%22%3A%22https%3A%5C%2F%5C%2Ft.me%5C%2Fi%5C%2Fuserpic%5C%2F320%5C%2FVGbD3XilczM5Ak7ryZ_L-GLx9Ero5Lybfw0mSw35m7Y.svg%22%7D&chat_instance=2460704053104218139&chat_type=sender&auth_date=1754660267&signature=zw4FO0t0vX63GL9g6rrO45QZP67nxLSln_WELQUk-_9Xm41A6iEqqolWEnPyZUZtUfG4YNnyIly1NcWgHZzLDQ&hash=699524e8492978718345a5df443b2888dab1dcbea8e6b918bc3a0516418fe574",
         ],
         ["tgWebAppVersion", "8.4"],
         ["tgWebAppPlatform", "tdesktop"],
