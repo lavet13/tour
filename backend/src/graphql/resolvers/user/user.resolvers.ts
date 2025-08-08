@@ -358,6 +358,7 @@ const resolvers: Resolvers = {
                 username: dataToCheck.username,
                 photoUrl: dataToCheck.photo_url,
                 authDate,
+                hash,
                 userId: user.id,
               },
             });
@@ -580,19 +581,34 @@ const resolvers: Resolvers = {
               isNewUser = true;
             }
           } else {
-            isNewUser = true;
-            // Create new User and TelegramUser
-            user = await tx.user.create({
-              data: {
-                name: displayName,
-                roles: {
-                  create: {
-                    role: 'USER',
-                  },
+            user = await tx.user.findFirst({
+              where: {
+                telegramUser: {
+                  telegramId,
                 },
               },
-              include: { roles: true },
+              include: {
+                roles: true,
+              },
             });
+
+            if (user) isNewUser = false;
+
+            if (!user) {
+              isNewUser = true;
+              // Create new User and TelegramUser
+              user = await tx.user.create({
+                data: {
+                  name: displayName,
+                  roles: {
+                    create: {
+                      role: 'USER',
+                    },
+                  },
+                },
+                include: { roles: true },
+              });
+            }
 
             telegramUser = await tx.telegramUser.create({
               data: {
