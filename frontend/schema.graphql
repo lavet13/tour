@@ -162,8 +162,8 @@ input LoginInput {
 }
 
 type Mutation {
-  authenticateWithTMA(input: TMAAuthInput!): TelegramLoginAuthPayload!
   authenticateWithTelegramLogin(input: TelegramLoginAuthInput!): TelegramLoginAuthPayload!
+  authenticateWithTma(input: TMAAuthInput!): TelegramLoginAuthPayload!
   createBooking(input: CreateBookingInput!): Booking!
   createCity(name: String!): City!
   createFeedback(input: CreateFeedbackInput!): Feedback!
@@ -293,22 +293,7 @@ type Subscription {
 }
 
 input TMAAuthInput {
-  auth_date: Date!
-  chat_instance: BigInt!
-  chat_type: String!
-  hash: String!
-  signature: String!
-  user: TMAUserInput!
-}
-
-input TMAUserInput {
-  allows_write_to_pm: Boolean!
-  first_name: String!
-  id: ID!
-  language_code: String
-  last_name: String
-  photo_url: String
-  username: String
+  initDataRaw: String!
 }
 
 type TelegramChat {

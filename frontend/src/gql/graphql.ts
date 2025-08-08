@@ -152,8 +152,8 @@ export type LoginInput = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  authenticateWithTMA: TelegramLoginAuthPayload;
   authenticateWithTelegramLogin: TelegramLoginAuthPayload;
+  authenticateWithTma: TelegramLoginAuthPayload;
   createBooking: Booking;
   createCity: City;
   createFeedback: Feedback;
@@ -171,13 +171,13 @@ export type Mutation = {
 };
 
 
-export type MutationAuthenticateWithTmaArgs = {
-  input: TmaAuthInput;
+export type MutationAuthenticateWithTelegramLoginArgs = {
+  input: TelegramLoginAuthInput;
 };
 
 
-export type MutationAuthenticateWithTelegramLoginArgs = {
-  input: TelegramLoginAuthInput;
+export type MutationAuthenticateWithTmaArgs = {
+  input: TmaAuthInput;
 };
 
 
@@ -439,22 +439,7 @@ export type Subscription = {
 };
 
 export type TmaAuthInput = {
-  auth_date: Scalars['Date']['input'];
-  chat_instance: Scalars['BigInt']['input'];
-  chat_type: Scalars['String']['input'];
-  hash: Scalars['String']['input'];
-  signature: Scalars['String']['input'];
-  user: TmaUserInput;
-};
-
-export type TmaUserInput = {
-  allows_write_to_pm: Scalars['Boolean']['input'];
-  first_name: Scalars['String']['input'];
-  id: Scalars['ID']['input'];
-  language_code?: InputMaybe<Scalars['String']['input']>;
-  last_name?: InputMaybe<Scalars['String']['input']>;
-  photo_url?: InputMaybe<Scalars['String']['input']>;
-  username?: InputMaybe<Scalars['String']['input']>;
+  initDataRaw: Scalars['String']['input'];
 };
 
 export type TelegramChat = {

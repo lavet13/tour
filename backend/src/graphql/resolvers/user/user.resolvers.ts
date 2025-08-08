@@ -358,7 +358,6 @@ const resolvers: Resolvers = {
                 username: dataToCheck.username,
                 photoUrl: dataToCheck.photo_url,
                 authDate,
-                hash,
                 userId: user.id,
               },
             });
@@ -548,7 +547,6 @@ const resolvers: Resolvers = {
                 allowsWriteToPm: userObject.allows_write_to_pm,
                 chatInstance,
                 chatType,
-                hash,
                 languageCode: userObject.language_code,
               },
               include: { user: { include: { roles: true } } },
@@ -620,7 +618,6 @@ const resolvers: Resolvers = {
                 photoUrl: userObject.photo_url,
                 authDate: authDateObj,
                 allowsWriteToPm: userObject.allows_write_to_pm,
-                hash,
                 chatInstance,
                 chatType,
                 languageCode: userObject.language_code,

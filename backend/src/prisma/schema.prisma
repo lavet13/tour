@@ -39,7 +39,6 @@ model TelegramUser {
   username        String?
   photoUrl        String?
   authDate        DateTime
-  hash            String
   languageCode    String?
   allowsWriteToPm Boolean @default(false)
   chatInstance    BigInt?
