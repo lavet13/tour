@@ -5,7 +5,8 @@
 
 */
 -- AlterTable
-ALTER TABLE "telegram_users" ADD COLUMN     "allowsWriteToPm" BOOLEAN NOT NULL,
-ADD COLUMN     "chatInstance" BIGINT,
-ADD COLUMN     "chatType" TEXT,
-ADD COLUMN     "languageCode" TEXT;
+ALTER TABLE "telegram_users"
+ADD COLUMN "allowsWriteToPm" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN "chatInstance" BIGINT,
+ADD COLUMN "chatType" TEXT,
+ADD COLUMN "languageCode" TEXT;
