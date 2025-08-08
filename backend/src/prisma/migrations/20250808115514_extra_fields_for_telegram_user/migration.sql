@@ -6,7 +6,7 @@
 
 */
 -- AlterTable
-ALTER TABLE "telegram_users" DROP COLUMN "hash",
+ALTER TABLE "telegram_users"
 ADD COLUMN     "allowsWriteToPm" BOOLEAN NOT NULL,
 ADD COLUMN     "chatInstance" BIGINT,
 ADD COLUMN     "chatType" TEXT,
