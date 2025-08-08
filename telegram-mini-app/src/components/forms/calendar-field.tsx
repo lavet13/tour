@@ -13,7 +13,7 @@ const CalendarField: FC<CalendarFieldProps> = ({ label, ...props }) => {
   const field = useFieldContext<Date>();
 
   return (
-    <div className="w-full text-center px-3 flex flex-col items-center gap-0.5">
+    <div className="px-3 flex flex-col items-center gap-0.5">
       <FormLabel className="justify-center">{label}</FormLabel>
       <Calendar
         {...props}

@@ -41,7 +41,11 @@ const Layout: FC = () => {
         setHasAuthenticated(true);
       };
 
-      authenticate();
+      try {
+        authenticate();
+      } catch(error) {
+        console.error(error);
+      }
     }
   }, [hasAuthenticated, initDataRaw]);
 
