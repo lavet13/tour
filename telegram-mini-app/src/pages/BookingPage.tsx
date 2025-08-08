@@ -32,6 +32,7 @@ import {
   hapticFeedback,
   useSignal,
 } from "@telegram-apps/sdk-react";
+import { Label } from "@/components/ui/label";
 
 type Route = GetRouteByIdsQuery["routeByIds"];
 
@@ -200,7 +201,7 @@ export const BookingPage: FC = () => {
 
             {/* Consider to use form.Subscribe for checking
               `disabled={!departureCityId || !arrivalCityId}`*/}
-            <div className="flex justify-center py-2">
+            <div className="flex justify-center p-4">
               <Button
                 before={<ArrowRightLeft className="h-4 w-4" />}
                 type="button"
@@ -256,7 +257,13 @@ export const BookingPage: FC = () => {
           </Section>
 
           {/* Price Banner */}
-          {route && <Banner type="section" className="text-center" header={`Цена: ${route.price} ₽`} />}
+          {route && (
+            <Banner
+              type="section"
+              className="text-center mt-2"
+              header={`Цена: ${route.price} ₽`}
+            />
+          )}
 
           <Divider />
 
@@ -382,54 +389,66 @@ export const BookingPage: FC = () => {
                                       </span>
                                     </IconButton>
                                   )}
+
+                                  <div className="flex justify-center flex-wrap gap-4 py-2 pb-4">
+                                    <form.Field
+                                      name={`phones[${i}].telegram`}
+                                      children={(telegramField) => {
+                                        return (
+                                          <div className="flex items-center gap-2 min-w-0">
+                                            <Checkbox
+                                              id={telegramField.name}
+                                              checked={
+                                                telegramField.state.value
+                                              }
+                                              onChange={(e) =>
+                                                telegramField.handleChange(
+                                                  e.target.checked,
+                                                )
+                                              }
+                                            />
+                                            <Label
+                                              className="cursor-pointer"
+                                              htmlFor={telegramField.name}
+                                            >
+                                              Telegram
+                                            </Label>
+                                          </div>
+                                        );
+                                      }}
+                                    />
+
+                                    <form.Field
+                                      name={`phones[${i}].whatsapp`}
+                                      children={(whatsappField) => {
+                                        return (
+                                          <div className="flex items-center gap-2 min-w-0">
+                                            <Checkbox
+                                              id={whatsappField.name}
+                                              checked={
+                                                whatsappField.state.value
+                                              }
+                                              onChange={(e) =>
+                                                whatsappField.handleChange(
+                                                  e.target.checked,
+                                                )
+                                              }
+                                            />
+                                            <Label
+                                              className="cursor-pointer"
+                                              htmlFor={whatsappField.name}
+                                            >
+                                              WhatsApp
+                                            </Label>
+                                          </div>
+                                        );
+                                      }}
+                                    />
+                                  </div>
                                 </div>
                               );
                             }}
                           />
-
-                          <div className="flex justify-center flex-wrap gap-4 py-2">
-                            <form.Field
-                              name={`phones[${i}].telegram`}
-                              children={(telegramField) => {
-                                return (
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <Checkbox
-                                      checked={telegramField.state.value}
-                                      onChange={(e) =>
-                                        telegramField.handleChange(
-                                          e.target.checked,
-                                        )
-                                      }
-                                    />
-                                    <Subheadline level="2" weight="2">
-                                      Telegram
-                                    </Subheadline>
-                                  </div>
-                                );
-                              }}
-                            />
-
-                            <form.Field
-                              name={`phones[${i}].whatsapp`}
-                              children={(whatsappField) => {
-                                return (
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <Checkbox
-                                      checked={whatsappField.state.value}
-                                      onChange={(e) =>
-                                        whatsappField.handleChange(
-                                          e.target.checked,
-                                        )
-                                      }
-                                    />
-                                    <Subheadline level="2" weight="2">
-                                      WhatsApp
-                                    </Subheadline>
-                                  </div>
-                                );
-                              }}
-                            />
-                          </div>
                         </Fragment>
                       );
                     })}
@@ -477,7 +496,7 @@ export const BookingPage: FC = () => {
                 },
               }}
               children={(field) => (
-                <div className="mt-4">
+                <div className="mt-4 p-4">
                   <field.CalendarField label="Желаемая дата поездки" />
                 </div>
               )}
@@ -543,7 +562,7 @@ export const BookingPage: FC = () => {
             />
           </Section>
 
-          <Section>
+          <Section className="p-4 bg-background">
             <form.AppForm>
               <form.SubscribeButton
                 className="w-full"
