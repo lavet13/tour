@@ -547,6 +547,7 @@ const resolvers: Resolvers = {
                 allowsWriteToPm: userObject.allows_write_to_pm,
                 chatInstance,
                 chatType,
+                hash,
                 languageCode: userObject.language_code,
               },
               include: { user: { include: { roles: true } } },
@@ -579,30 +580,19 @@ const resolvers: Resolvers = {
               isNewUser = true;
             }
           } else {
-            user = await tx.user.findUnique({
-              where: {
-                id: ctx.me!.id,
+            isNewUser = true;
+            // Create new User and TelegramUser
+            user = await tx.user.create({
+              data: {
+                name: displayName,
+                roles: {
+                  create: {
+                    role: 'USER',
+                  },
+                },
               },
               include: { roles: true },
             });
-
-            if (user) isNewUser = false;
-
-            if (!user) {
-              isNewUser = true;
-              // Create new User and TelegramUser
-              user = await tx.user.create({
-                data: {
-                  name: displayName,
-                  roles: {
-                    create: {
-                      role: 'USER',
-                    },
-                  },
-                },
-                include: { roles: true },
-              });
-            }
 
             telegramUser = await tx.telegramUser.create({
               data: {
@@ -614,6 +604,7 @@ const resolvers: Resolvers = {
                 photoUrl: userObject.photo_url,
                 authDate: authDateObj,
                 allowsWriteToPm: userObject.allows_write_to_pm,
+                hash,
                 chatInstance,
                 chatType,
                 languageCode: userObject.language_code,
