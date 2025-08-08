@@ -238,12 +238,6 @@ const resolvers: Resolvers = {
   },
   Mutation: {
     async createBooking(_, args, ctx) {
-      const [isValid, reason] = isBookingValid(args.input);
-
-      if (!isValid) {
-        throw new GraphQLError(reason);
-      }
-
       const { departureCityId, arrivalCityId, telegramId, ...rest } =
         args.input;
 
