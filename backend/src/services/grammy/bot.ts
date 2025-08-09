@@ -4,6 +4,7 @@ import { createEnhancedBot } from '@/services/grammy/types';
 import { api } from '@/services/grammy/api';
 import { GrammyError, HttpError } from 'grammy';
 import { formatRussianDateTime } from '@/helpers/format-russian-date';
+import { handleBookingSendMessage } from './api/bookings';
 
 const bot = createEnhancedBot(import.meta.env.VITE_TELEGRAM_BOT_TOKEN);
 

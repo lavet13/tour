@@ -13,7 +13,6 @@ import {
   IconButton,
   List,
   Section,
-  Subheadline,
 } from "@telegram-apps/telegram-ui";
 import { ArrowRightLeft, Loader2, Minus, Plus, X } from "lucide-react";
 import { FC, Fragment, useMemo } from "react";
