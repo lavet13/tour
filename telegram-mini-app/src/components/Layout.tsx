@@ -1,7 +1,8 @@
 import { useAuthenticateTMA } from "@/features/auth/mutations";
+import useGetMe from "@/features/auth/queries";
 import { isGraphQLRequestError } from "@/react-query/types/is-graphql-request-error";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
-import { retrieveRawInitData, useRawInitData } from "@telegram-apps/sdk-react";
+import { useSignal, initDataRaw as _initDataRaw } from "@telegram-apps/sdk-react";
 import { Button, Tabbar } from "@telegram-apps/telegram-ui";
 import { BusIcon, MessageCircleQuestionMark } from "lucide-react";
 import { FC, Fragment, useEffect, useRef, useState } from "react";
@@ -14,6 +15,8 @@ const tabs = [
 ];
 
 const Layout: FC = () => {
+  const { data } = useGetMe();
+  console.log({ data });
   const location = useLocation();
   const navigate = useNavigate();
   const errorLocation = useRef(location.pathname);
@@ -24,11 +27,9 @@ const Layout: FC = () => {
     setCurrentTab(location.pathname);
   }
 
-  const { mutateAsync: authenticateUser, data: userData } = useAuthenticateTMA();
-  console.log({ userData });
+  const { mutateAsync: authenticateUser } = useAuthenticateTMA();
   const [hasAuthenticated, setHasAuthenticated] = useState(false);
-  const initDataRaw = useRawInitData();
-  console.log({ initDataRaw });
+  const initDataRaw = useSignal(_initDataRaw);
 
   useEffect(() => {
     if (!hasAuthenticated && initDataRaw) {

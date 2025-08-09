@@ -32,10 +32,8 @@ export const useGetMe = (options?: InitialDataOptions<MeQuery>) => {
       try {
         return await graphqlClient.request(me);
       } catch (error) {
-        import.meta.env.DEV && console.error("HELP?", error);
         if (isGraphQLRequestError(error)) {
           const errorCode = error.response.errors[0].extensions.code;
-          console.log({ errorCode });
 
           if (errorCode === "AUTHENTICATION_REQUIRED") {
             queryClient.setQueryData(["Me"], null);

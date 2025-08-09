@@ -21,6 +21,7 @@ type Documents = {
     "\n    query GetCities {\n      cities {\n        id\n        name\n      }\n    }\n  ": typeof types.GetCitiesDocument,
     "\n    query GetDepartureCities($includeInactiveCities: Boolean) {\n      departureCities(includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  ": typeof types.GetDepartureCitiesDocument,
     "\n    query GetRouteByIds($departureCityId: ID, $arrivalCityId: ID) {\n      routeByIds(\n        departureCityId: $departureCityId\n        arrivalCityId: $arrivalCityId\n      ) {\n        id\n        departureCity {\n          id\n          name\n          description\n        }\n        arrivalCity {\n          id\n          name\n          description\n        }\n        region {\n          id\n          name\n        }\n        isActive\n        departureDate\n        price\n        photoName\n        direction\n      }\n    }\n  ": typeof types.GetRouteByIdsDocument,
+    "\n    mutation CreateFeedback($input: CreateFeedbackInput!) {\n      createFeedback(input: $input) {\n        reason\n        replyTo\n        message\n      }\n    }\n  ": typeof types.CreateFeedbackDocument,
     "\n        mutation RefreshToken {\n          refreshToken {\n            accessToken\n            refreshToken\n          }\n        }\n      ": typeof types.RefreshTokenDocument,
 };
 const documents: Documents = {
@@ -31,6 +32,7 @@ const documents: Documents = {
     "\n    query GetCities {\n      cities {\n        id\n        name\n      }\n    }\n  ": types.GetCitiesDocument,
     "\n    query GetDepartureCities($includeInactiveCities: Boolean) {\n      departureCities(includeInactiveCities: $includeInactiveCities) {\n        id\n        name\n      }\n    }\n  ": types.GetDepartureCitiesDocument,
     "\n    query GetRouteByIds($departureCityId: ID, $arrivalCityId: ID) {\n      routeByIds(\n        departureCityId: $departureCityId\n        arrivalCityId: $arrivalCityId\n      ) {\n        id\n        departureCity {\n          id\n          name\n          description\n        }\n        arrivalCity {\n          id\n          name\n          description\n        }\n        region {\n          id\n          name\n        }\n        isActive\n        departureDate\n        price\n        photoName\n        direction\n      }\n    }\n  ": types.GetRouteByIdsDocument,
+    "\n    mutation CreateFeedback($input: CreateFeedbackInput!) {\n      createFeedback(input: $input) {\n        reason\n        replyTo\n        message\n      }\n    }\n  ": types.CreateFeedbackDocument,
     "\n        mutation RefreshToken {\n          refreshToken {\n            accessToken\n            refreshToken\n          }\n        }\n      ": types.RefreshTokenDocument,
 };
 
@@ -76,6 +78,10 @@ export function graphql(source: "\n    query GetDepartureCities($includeInactive
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n    query GetRouteByIds($departureCityId: ID, $arrivalCityId: ID) {\n      routeByIds(\n        departureCityId: $departureCityId\n        arrivalCityId: $arrivalCityId\n      ) {\n        id\n        departureCity {\n          id\n          name\n          description\n        }\n        arrivalCity {\n          id\n          name\n          description\n        }\n        region {\n          id\n          name\n        }\n        isActive\n        departureDate\n        price\n        photoName\n        direction\n      }\n    }\n  "): (typeof documents)["\n    query GetRouteByIds($departureCityId: ID, $arrivalCityId: ID) {\n      routeByIds(\n        departureCityId: $departureCityId\n        arrivalCityId: $arrivalCityId\n      ) {\n        id\n        departureCity {\n          id\n          name\n          description\n        }\n        arrivalCity {\n          id\n          name\n          description\n        }\n        region {\n          id\n          name\n        }\n        isActive\n        departureDate\n        price\n        photoName\n        direction\n      }\n    }\n  "];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n    mutation CreateFeedback($input: CreateFeedbackInput!) {\n      createFeedback(input: $input) {\n        reason\n        replyTo\n        message\n      }\n    }\n  "): (typeof documents)["\n    mutation CreateFeedback($input: CreateFeedbackInput!) {\n      createFeedback(input: $input) {\n        reason\n        replyTo\n        message\n      }\n    }\n  "];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

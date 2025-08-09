@@ -38,7 +38,8 @@
     "react-router-dom": "^6.23.0",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",
-    "vite-plugin-top-level-await": "^1.6.0"
+    "vite-plugin-top-level-await": "^1.6.0",
+    "zod": "^4.0.16"
   },
   "devDependencies": {
     "@0no-co/graphqlsp": "^1.14.0",
