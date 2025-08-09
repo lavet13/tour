@@ -198,6 +198,14 @@ const QuestionPage: FC = () => {
 
               <form.AppField
                 name="contactType"
+                validators={{
+                  onChange: ({ value }) => {
+                    if (!value.length) {
+                      return "Выберите способ связи";
+                    }
+                    return undefined;
+                  },
+                }}
                 children={(field) => {
                   return (
                     <field.SelectField
@@ -205,7 +213,7 @@ const QuestionPage: FC = () => {
                       value={field.state.value}
                       header="Способ связи"
                     >
-                      <option>Выберите способ связи</option>
+                      <option value="">Выберите способ связи</option>
                       <option value="email">E-mail</option>
                       <option value="telegram">Telegram</option>
                       <option value="phone">Телефон</option>
