@@ -228,7 +228,7 @@ export const getInlineKeyboardForBookings = ({
   inlineKeyboard.text(text, `booking:status_${bookingId}`).row();
 
   if (bookingDetailsCopyMessage && status === 'CONFIRMED') {
-    inlineKeyboard.copyText('📝 Бронь', bookingDetailsCopyMessage).row();
+    inlineKeyboard.copyText('📝 Бронь', bookingDetailsCopyMessage);
   }
 
   if (noAvailabilityCopyMessage && status === 'CONFIRMED') {
@@ -236,7 +236,7 @@ export const getInlineKeyboardForBookings = ({
   }
 
   if (canSendBookingDetailsMessage) {
-    inlineKeyboard.text('📩 Бронь', `booking:send-message_${bookingId}`).row();
+    inlineKeyboard.text('📩 Бронь', `booking:send-message_${bookingId}`);
   }
 
   if (canSendNoAvailabilityMessage) {
