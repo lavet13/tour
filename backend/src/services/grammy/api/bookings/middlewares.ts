@@ -5,7 +5,8 @@ import {
   confirmedBookingMessage,
   getBookingStatus,
   getInlineKeyboardForBookings,
-  formatBookingMessage,
+  bookingMessage,
+  noAvailabilityBookingMessage,
 } from '@/services/grammy/api/bookings/formatters';
 import { CallbackQueryMiddleware } from 'grammy';
 import { CustomContext } from '../..';
@@ -62,7 +63,7 @@ export const handleBookingStatus: CallbackQueryMiddleware<
       },
     });
 
-    const msgToManager = await formatBookingMessage(updatedBooking);
+    const msgToManager = await bookingMessage(updatedBooking);
     let message = msgToManager;
 
     if (newStatus === 'CONFIRMED') {
@@ -74,7 +75,8 @@ export const handleBookingStatus: CallbackQueryMiddleware<
         const inlineKeyboard = getInlineKeyboardForBookings({
           bookingId: updatedBooking.id,
           status: newStatus,
-          canSendMessage: true,
+          canSendBookingDetailsMessage: true,
+          canSendNoAvailabilityMessage: true,
         });
 
         await ctx.editMessageText(message, {
@@ -94,7 +96,8 @@ export const handleBookingStatus: CallbackQueryMiddleware<
     const inlineKeyboard = getInlineKeyboardForBookings({
       bookingId: updatedBooking.id,
       status: newStatus,
-      copiedText: confirmedBookingMessage(updatedBooking),
+      bookingDetailsCopyMessage: confirmedBookingMessage(updatedBooking),
+      noAvailabilityCopyMessage: noAvailabilityBookingMessage(updatedBooking),
     });
 
     await ctx.editMessageText(message, {
@@ -169,6 +172,72 @@ export const handleBookingSendMessage: CallbackQueryMiddleware<
     await ctx.api.sendMessage(
       booking.telegramId!.toString(),
       confirmedBookingMessage(booking, { richText: true }),
+      { parse_mode: 'HTML' },
+    );
+
+    await ctx.answerCallbackQuery('✅ Сообщение отправлено пользователю!');
+  } catch (error) {
+    // Check if it's a not found error
+    if (error instanceof PrismaClientKnownRequestError) {
+      switch (error.code) {
+        case 'P2025':
+          // Record not found
+          await ctx.reply(`❌ Бронирование с ID ${bookingId} не существует.`);
+          return;
+        case 'P2003':
+          // Foreign key constraint violation
+          await ctx.reply(
+            `❌ Ошибка: маршрут, связанный с бронированием, недействителен.`,
+          );
+          return;
+        case 'P2002':
+          // Unique constraint violation (unlikely in this case, but included for completeness)
+          await ctx.reply(
+            `❌ Ошибка: нарушение уникальности данных бронирования.`,
+          );
+          return;
+      }
+    }
+    throw error;
+  }
+};
+
+export const handleBookingSendNoAvailabilityMessage: CallbackQueryMiddleware<
+  CustomContext
+> = async ctx => {
+  const bookingId = ctx.match[1];
+
+  try {
+    const booking = await prisma.booking.findUniqueOrThrow({
+      where: {
+        id: bookingId,
+      },
+      include: {
+        route: {
+          include: {
+            departureCity: {
+              select: {
+                name: true,
+              },
+            },
+            arrivalCity: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!booking.telegramId) {
+      await ctx.answerCallbackQuery('❌ У пользователя нет Telegram ID');
+      return;
+    }
+
+    await ctx.api.sendMessage(
+      booking.telegramId!.toString(),
+      noAvailabilityBookingMessage(booking, { richText: true }),
       { parse_mode: 'HTML' },
     );
 

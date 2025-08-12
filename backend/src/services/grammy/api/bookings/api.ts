@@ -3,14 +3,14 @@ import { Role } from '@prisma/client';
 import { TCustomBot } from '@/services/grammy';
 import {
   getInlineKeyboardForBookings,
-  formatBookingMessage,
-} from './formatters';
+  bookingMessage,
+} from '@/services/grammy/api/bookings/formatters';
 import { NotifyNewBookingType } from './types';
 
 export const notifyNewBooking: (bot: TCustomBot) => NotifyNewBookingType =
   (bot: TCustomBot) => async booking => {
     try {
-      const message = await formatBookingMessage(booking);
+      const message = await bookingMessage(booking);
 
       const chatIds = await prisma.telegramChat.findMany({
         distinct: 'chatId',

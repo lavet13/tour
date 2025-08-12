@@ -5,7 +5,7 @@ import {
 import { $Enums, BookingStatus, Prisma } from '@prisma/client';
 import { InlineKeyboard } from 'grammy';
 
-export const formatBookingMessage = async (
+export const bookingMessage = async (
   booking: Prisma.BookingGetPayload<{
     include: {
       route: {
@@ -82,6 +82,56 @@ export const formatBookingMessage = async (
   return content;
 };
 
+export const noAvailabilityBookingMessage = (
+  booking: Prisma.BookingGetPayload<{
+    include: {
+      route: {
+        include: {
+          departureCity: {
+            select: {
+              name: true;
+            };
+          };
+          arrivalCity: {
+            select: {
+              name: true;
+            };
+          };
+        };
+      };
+    };
+  }>,
+  { richText = false } = {},
+) => {
+  let routeName = '';
+  const isForward = booking.direction === 'FORWARD';
+  const isBackward = booking.direction === 'BACKWARD';
+
+  if (isForward) {
+    routeName += `${booking.route?.departureCity.name} → ${booking.route?.arrivalCity.name}`;
+  }
+
+  if (isBackward) {
+    routeName += `${booking.route?.arrivalCity.name} → ${booking.route?.departureCity.name}`;
+  }
+
+  let message = '';
+
+  if (richText) {
+    message += `😔 <b>Извините, на выбранную Вами дату мест НЕТ.</b>\n\n`;
+    message += `🚌 <b>Маршрут:</b> ${routeName}\n`;
+    message += `📅 <b>Дата поездки:</b> ${formatRussianDate(booking.travelDate)}\n`;
+    message += `🪑 <b>Запрошено мест:</b> ${booking.seatsCount}`;
+  } else {
+    message += `Извините, на выбранную Вами дату мест НЕТ.\n\n`;
+    message += `Маршрут: ${routeName}\n`;
+    message += `Дата: ${formatRussianDate(booking.travelDate)}\n`;
+    message += `Запрошено мест: ${booking.seatsCount}`;
+  }
+
+  return message;
+};
+
 export const confirmedBookingMessage = (
   updatedBooking: Prisma.BookingGetPayload<{
     include: {
@@ -152,13 +202,17 @@ export const getBookingStatus = (status: $Enums.BookingStatus): string => {
 export const getInlineKeyboardForBookings = ({
   bookingId,
   status,
-  copiedText,
-  canSendMessage = false,
+  bookingDetailsCopyMessage,
+  noAvailabilityCopyMessage,
+  canSendBookingDetailsMessage = false,
+  canSendNoAvailabilityMessage = false,
 }: {
   bookingId: string;
   status: BookingStatus;
-  copiedText?: string;
-  canSendMessage?: boolean;
+  bookingDetailsCopyMessage?: string;
+  noAvailabilityCopyMessage?: string;
+  canSendBookingDetailsMessage?: boolean;
+  canSendNoAvailabilityMessage?: boolean;
 }): InlineKeyboard => {
   const inlineKeyboard = new InlineKeyboard();
 
@@ -171,15 +225,24 @@ export const getInlineKeyboardForBookings = ({
     text = '💤 Ожидать';
   }
 
-  inlineKeyboard.text(text, `booking:status_${bookingId}`);
+  inlineKeyboard.text(text, `booking:status_${bookingId}`).row();
 
-
-  if (copiedText && status === 'CONFIRMED') {
-    inlineKeyboard.copyText('📝 Копировать бронь', copiedText).row();
+  if (bookingDetailsCopyMessage && status === 'CONFIRMED') {
+    inlineKeyboard.copyText('📝 Бронь', bookingDetailsCopyMessage).row();
   }
 
-  if (canSendMessage) {
-    inlineKeyboard.text('📩 Отправить сообщение', `booking:send-message_${bookingId}`);
+  if (noAvailabilityCopyMessage && status === 'CONFIRMED') {
+    inlineKeyboard.copyText('📝 Отказ', noAvailabilityCopyMessage).row();
+  }
+
+  if (canSendBookingDetailsMessage) {
+    inlineKeyboard.text('📩 Бронь', `booking:send-message_${bookingId}`).row();
+  }
+
+  if (canSendNoAvailabilityMessage) {
+    inlineKeyboard
+      .text('📩 Отказ', `booking:send-no-availability_${bookingId}`)
+      .row();
   }
 
   return inlineKeyboard;
