@@ -52,10 +52,7 @@ type ScheduleItem = Omit<
   '__typename'
 >;
 
-import {
-  useTelegramLogin,
-  type TelegramLoginData,
-} from '@telegram-login-ultimate/react';
+import { useTelegramLogin } from '@telegram-login-ultimate/react';
 import { toast } from 'sonner';
 import { useAuthenticateTelegramLogin, useGetMe } from '@/features/auth';
 import { Icons } from '@/components/icons';
@@ -67,7 +64,7 @@ const SchedulesInfo: FC = () => {
   const arrivalCityId = searchParams.get('arrivalCityId')!;
   const { mutateAsync: authenticate, isPending: isTelegramAuthPending } =
     useAuthenticateTelegramLogin();
-  const { refetch: refetchUser, isPending: isUserPending } = useGetMe();
+  const { refetch: refetchUser, data, isPending: isUserPending } = useGetMe();
 
   const {
     data: routeData,
@@ -435,7 +432,7 @@ const SchedulesInfo: FC = () => {
                                               checked={value}
                                               onCheckedChange={checked => {
                                                 onChange(checked);
-                                                if (checked === true) {
+                                                if (checked === true && !data?.me?.telegram?.telegramId) {
                                                   setTelegramAuthOpen(true);
                                                 }
                                               }}
