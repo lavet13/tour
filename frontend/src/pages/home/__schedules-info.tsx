@@ -436,7 +436,8 @@ const SchedulesInfo: FC = () => {
                                                 if (
                                                   checked === true &&
                                                   !data?.me?.telegram
-                                                    ?.telegramId
+                                                    ?.telegramId &&
+                                                  index === 0
                                                 ) {
                                                   setTelegramAuthOpen(true);
                                                 }
