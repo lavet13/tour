@@ -128,7 +128,7 @@ const SchedulesInfo: FC = () => {
 
   useEffect(() => {
     form.setValue(`phones.0.telegram`, !!data?.me?.telegram?.telegramId);
-  }, [data?.me, form]);
+  }, [data?.me?.telegram?.telegramId]);
 
   const [telegramAuthOpen, setTelegramAuthOpen] = useState(false);
   const [openTelegramPopup, { isPending: isTelegramPending }] =
