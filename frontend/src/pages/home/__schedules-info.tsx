@@ -65,8 +65,9 @@ const SchedulesInfo: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const departureCityId = searchParams.get('departureCityId')!;
   const arrivalCityId = searchParams.get('arrivalCityId')!;
-  const { mutateAsync: authenticate } = useAuthenticateTelegramLogin();
-  const { refetch: refetchUser } = useGetMe();
+  const { mutateAsync: authenticate, isPending: isTelegramAuthPending } =
+    useAuthenticateTelegramLogin();
+  const { refetch: refetchUser, isPending: isUserPending } = useGetMe();
 
   const {
     data: routeData,
@@ -395,7 +396,11 @@ const SchedulesInfo: FC = () => {
                                             </AlertDialogCancel>
                                             <AlertDialogAction
                                               className='[&_svg]:size-5'
-                                              disabled={isTelegramPending}
+                                              disabled={
+                                                isTelegramPending ||
+                                                isTelegramAuthPending ||
+                                                isUserPending
+                                              }
                                               onClick={e => {
                                                 e.preventDefault();
                                                 openTelegramPopup();
@@ -405,7 +410,9 @@ const SchedulesInfo: FC = () => {
                                                 );
                                               }}
                                             >
-                                              {isTelegramPending ? (
+                                              {isTelegramPending ||
+                                              isTelegramAuthPending ||
+                                              isUserPending ? (
                                                 <>
                                                   <SonnerSpinner />
                                                   Ожидаем ответ от Telegram
@@ -430,8 +437,6 @@ const SchedulesInfo: FC = () => {
                                                 onChange(checked);
                                                 if (checked === true) {
                                                   setTelegramAuthOpen(true);
-                                                } else if (checked === false) {
-                                                  setTelegramAuthOpen(false);
                                                 }
                                               }}
                                               {...field}
