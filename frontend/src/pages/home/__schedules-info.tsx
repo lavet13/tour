@@ -128,7 +128,6 @@ const SchedulesInfo: FC = () => {
 
   useEffect(() => {
     form.setValue(`phones.0.telegram`, !!data?.me?.telegram?.telegramId);
-    form.setValue(`phones.1.telegram`, !!data?.me?.telegram?.telegramId);
   }, [data?.me, form]);
 
   const [telegramAuthOpen, setTelegramAuthOpen] = useState(false);
@@ -351,9 +350,9 @@ const SchedulesInfo: FC = () => {
                                       ? 'Требуется Telegram'
                                       : undefined,
                                 }}
-                                render={function Render({
+                                render={({
                                   field: { value, onChange, ...field },
-                                }) {
+                                }) => {
                                   return (
                                     <>
                                       <AlertDialog
