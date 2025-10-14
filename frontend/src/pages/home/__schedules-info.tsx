@@ -431,8 +431,10 @@ const SchedulesInfo: FC = () => {
                                           <FormControl>
                                             <Checkbox
                                               checked={
-                                                value ||
-                                                data?.me?.telegram?.telegramId
+                                                index === 0
+                                                  ? data?.me?.telegram
+                                                      ?.telegramId
+                                                  : value
                                               }
                                               disabled={
                                                 data?.me?.telegram?.telegramId
