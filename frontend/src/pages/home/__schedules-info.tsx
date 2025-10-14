@@ -349,7 +349,7 @@ const SchedulesInfo: FC = () => {
                                 name={`phones.${index}.telegram`}
                                 rules={{
                                   required:
-                                    index !== 0
+                                    index === 0
                                       ? 'Требуется Telegram'
                                       : undefined,
                                 }}
@@ -428,7 +428,10 @@ const SchedulesInfo: FC = () => {
                                         <FormItem className='flex flex-row items-start space-x-3 space-y-0 px-1'>
                                           <FormControl>
                                             <Checkbox
-                                              checked={value}
+                                              checked={
+                                                value ||
+                                                data?.me?.telegram?.telegramId
+                                              }
                                               disabled={
                                                 data?.me?.telegram?.telegramId
                                               }
