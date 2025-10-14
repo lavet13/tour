@@ -129,7 +129,7 @@ const SchedulesInfo: FC = () => {
   useEffect(() => {
     form.setValue(`phones.0.telegram`, !!data?.me?.telegram?.telegramId);
     form.setValue(`phones.1.telegram`, !!data?.me?.telegram?.telegramId);
-  }, [data?.me?.telegram?.telegramId]);
+  }, [data?.me, form]);
 
   const [telegramAuthOpen, setTelegramAuthOpen] = useState(false);
   const [openTelegramPopup, { isPending: isTelegramPending }] =
@@ -426,10 +426,7 @@ const SchedulesInfo: FC = () => {
                                         <FormItem className='flex flex-row items-start space-x-3 space-y-0 px-1'>
                                           <FormControl>
                                             <Checkbox
-                                              checked={
-                                                value ||
-                                                data?.me?.telegram?.telegramId
-                                              }
+                                              checked={value}
                                               disabled={
                                                 data?.me?.telegram?.telegramId
                                               }
