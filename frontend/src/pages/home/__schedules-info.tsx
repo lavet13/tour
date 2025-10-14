@@ -13,12 +13,7 @@ import {
 } from 'lucide-react';
 import { FC, forwardRef, Fragment, useMemo, useState } from 'react';
 import { DefaultValues } from '@/pages/home';
-import {
-  useController,
-  useFieldArray,
-  useFormContext,
-  useWatch,
-} from 'react-hook-form';
+import { useController, useFieldArray, useFormContext } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { useRouteByIds } from '@/features/routes';
 import { keepPreviousData } from '@tanstack/react-query';
@@ -63,14 +58,14 @@ import {
 } from '@telegram-login-ultimate/react';
 import { toast } from 'sonner';
 import { useAuthenticateTelegramLogin, useGetMe } from '@/features/auth';
+import { Icons } from '@/components/icons';
 
 const SchedulesInfo: FC = () => {
   // Search Params syncronization
   const [searchParams, setSearchParams] = useSearchParams();
   const departureCityId = searchParams.get('departureCityId')!;
   const arrivalCityId = searchParams.get('arrivalCityId')!;
-  const { mutateAsync: authenticate, isPending } =
-    useAuthenticateTelegramLogin();
+  const { mutateAsync: authenticate } = useAuthenticateTelegramLogin();
   const { refetch: refetchUser } = useGetMe();
 
   const {
@@ -139,6 +134,35 @@ const SchedulesInfo: FC = () => {
       });
     }
   };
+
+  const [telegramAuthOpen, setTelegramAuthOpen] = useState(false);
+  const [openTelegramPopup, { isPending: isTelegramPending }] =
+    useTelegramLogin({
+      botId: import.meta.env.VITE_TELEGRAM_BOT_ID,
+      onSuccess: async user => {
+        // The auth_date should be a Unix timestamp (number of seconds since epoch)
+        await authenticate({
+          input: {
+            id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            username: user.username,
+            photo_url: user.photo_url,
+            auth_date: user.auth_date * 1000, // Keep as Unix timestamp
+            hash: user.hash,
+          },
+        });
+        await refetchUser();
+        setTelegramAuthOpen(false);
+        toast.success(
+          'Успешный вход через Telegram, бот уведомит вас об бронировании',
+        );
+      },
+      onFail: () => {
+        toast.error('Не удалось войти через Telegram. Попробуйте еще раз.');
+        setTelegramAuthOpen(false);
+      },
+    });
 
   return (
     <>
@@ -339,40 +363,11 @@ const SchedulesInfo: FC = () => {
                                 render={function Render({
                                   field: { value, onChange, ...field },
                                 }) {
-                                  const [open, setOpen] = useState(false);
-                                  const [openPopup, { isPending }] =
-                                    useTelegramLogin({
-                                      botId: import.meta.env
-                                        .VITE_TELEGRAM_BOT_ID,
-                                      onSuccess: async user => {
-                                        // The auth_date should be a Unix timestamp (number of seconds since epoch)
-                                        await authenticate({
-                                          input: {
-                                            id: user.id,
-                                            first_name: user.first_name,
-                                            last_name: user.last_name,
-                                            username: user.username,
-                                            photo_url: user.photo_url,
-                                            auth_date: user.auth_date * 1000, // Keep as Unix timestamp
-                                            hash: user.hash,
-                                          },
-                                        });
-                                        await refetchUser();
-                                        setOpen(false);
-                                        toast.success(
-                                          'Успешный вход через Telegram, бот уведомит вас об бронировании',
-                                        );
-                                      },
-                                      onFail: () => {
-                                        setOpen(false);
-                                      },
-                                    });
-
                                   return (
                                     <>
                                       <AlertDialog
-                                        open={open}
-                                        onOpenChange={setOpen}
+                                        open={telegramAuthOpen}
+                                        onOpenChange={setTelegramAuthOpen}
                                       >
                                         <AlertDialogContent>
                                           <AlertDialogHeader>
@@ -391,7 +386,9 @@ const SchedulesInfo: FC = () => {
                                           </AlertDialogHeader>
                                           <AlertDialogFooter>
                                             <AlertDialogCancel
-                                              onClick={() => {
+                                              onClick={e => {
+                                                e.preventDefault();
+                                                setTelegramAuthOpen(false);
                                                 form.setValue(
                                                   `phones.${index}.telegram`,
                                                   false,
@@ -401,19 +398,27 @@ const SchedulesInfo: FC = () => {
                                               Отмена
                                             </AlertDialogCancel>
                                             <AlertDialogAction
-                                              disabled={isPending}
+                                              className='[&_svg]:size-5'
+                                              disabled={isTelegramPending}
                                               onClick={e => {
                                                 e.preventDefault();
-                                                openPopup();
+                                                openTelegramPopup();
+                                                form.setValue(
+                                                  `phones.${index}.telegram`,
+                                                  true,
+                                                );
                                               }}
                                             >
-                                              {isPending ? (
+                                              {isTelegramPending ? (
                                                 <>
                                                   <SonnerSpinner />
                                                   Ожидаем ответ от Telegram
                                                 </>
                                               ) : (
-                                                <>Войти через Telegram</>
+                                                <>
+                                                  <Icons.telegram className='size-4 fill-background' />
+                                                  Войти через Telegram
+                                                </>
                                               )}
                                             </AlertDialogAction>
                                           </AlertDialogFooter>
@@ -428,7 +433,9 @@ const SchedulesInfo: FC = () => {
                                               onCheckedChange={checked => {
                                                 onChange(checked);
                                                 if (checked === true) {
-                                                  setOpen(true);
+                                                  setTelegramAuthOpen(true);
+                                                } else if (checked === false) {
+                                                  setTelegramAuthOpen(false);
                                                 }
                                               }}
                                               {...field}
