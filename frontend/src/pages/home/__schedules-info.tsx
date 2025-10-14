@@ -430,8 +430,13 @@ const SchedulesInfo: FC = () => {
                                         <FormItem className='flex flex-row items-start space-x-3 space-y-0 px-1'>
                                           <FormControl>
                                             <Checkbox
-                                              checked={value}
-                                              disabled={data?.me?.telegram?.telegramId}
+                                              checked={
+                                                value ||
+                                                data?.me?.telegram?.telegramId
+                                              }
+                                              disabled={
+                                                data?.me?.telegram?.telegramId
+                                              }
                                               onCheckedChange={checked => {
                                                 onChange(checked);
                                                 if (
