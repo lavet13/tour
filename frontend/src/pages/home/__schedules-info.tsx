@@ -427,7 +427,8 @@ const SchedulesInfo: FC = () => {
                                             <Checkbox
                                               checked={value}
                                               disabled={
-                                                data?.me?.telegram?.telegramId
+                                                data?.me?.telegram
+                                                  ?.telegramId && index === 0
                                               }
                                               onCheckedChange={checked => {
                                                 onChange(checked);
