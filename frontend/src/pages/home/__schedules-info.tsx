@@ -11,7 +11,7 @@ import {
   Plus,
   X,
 } from 'lucide-react';
-import { FC, forwardRef, Fragment, useMemo, useState } from 'react';
+import { FC, forwardRef, Fragment, useEffect, useMemo, useState } from 'react';
 import { DefaultValues } from '@/pages/home';
 import { useController, useFieldArray, useFormContext } from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
@@ -104,13 +104,6 @@ const SchedulesInfo: FC = () => {
 
   const form = useFormContext<DefaultValues>();
 
-  // watching
-  const [firstTelegramValue, secondTelegramValue] = form.watch([
-    'phones.0.telegram',
-    'phones.1.telegram',
-  ]);
-  console.log({ firstTelegramValue, secondTelegramValue });
-
   // Set up field array for phone numbers
   const { fields, append, remove } = useFieldArray({
     control: form.control,
@@ -132,6 +125,11 @@ const SchedulesInfo: FC = () => {
       });
     }
   };
+
+  useEffect(() => {
+    form.setValue(`phones.0.telegram`, !!data?.me?.telegram?.telegramId);
+    form.setValue(`phones.1.telegram`, !!data?.me?.telegram?.telegramId);
+  }, [data?.me?.telegram?.telegramId]);
 
   const [telegramAuthOpen, setTelegramAuthOpen] = useState(false);
   const [openTelegramPopup, { isPending: isTelegramPending }] =
