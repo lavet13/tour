@@ -348,7 +348,7 @@ const SchedulesInfo: FC = () => {
                                 control={form.control}
                                 name={`phones.${index}.telegram`}
                                 rules={
-                                  index !== 0
+                                  index !== 0 || data?.me?.telegram?.telegramId
                                     ? undefined
                                     : {
                                         required: 'Требуется телеграм',
