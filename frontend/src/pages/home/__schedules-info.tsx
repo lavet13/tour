@@ -347,13 +347,14 @@ const SchedulesInfo: FC = () => {
                               <FormField
                                 control={form.control}
                                 name={`phones.${index}.telegram`}
-                                rules={
-                                  index !== 0 || data?.me?.telegram?.telegramId
-                                    ? undefined
-                                    : {
-                                        required: 'Требуется телеграм',
-                                      }
-                                }
+                                {...(data?.me?.telegram?.telegramId ||
+                                index === 0
+                                  ? {
+                                      rules: {
+                                        required: 'Требуется Telegram',
+                                      },
+                                    }
+                                  : {})}
                                 render={function Render({
                                   field: { value, onChange, ...field },
                                 }) {
@@ -432,7 +433,11 @@ const SchedulesInfo: FC = () => {
                                               checked={value}
                                               onCheckedChange={checked => {
                                                 onChange(checked);
-                                                if (checked === true && !data?.me?.telegram?.telegramId) {
+                                                if (
+                                                  checked === true &&
+                                                  !data?.me?.telegram
+                                                    ?.telegramId
+                                                ) {
                                                   setTelegramAuthOpen(true);
                                                 }
                                               }}
