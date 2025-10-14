@@ -345,11 +345,6 @@ const SchedulesInfo: FC = () => {
                                       botId: import.meta.env
                                         .VITE_TELEGRAM_BOT_ID,
                                       onSuccess: async user => {
-                                        console.warn(
-                                          'Raw Telegram user data:',
-                                          user,
-                                        );
-
                                         // The auth_date should be a Unix timestamp (number of seconds since epoch)
                                         await authenticate({
                                           input: {
@@ -370,9 +365,6 @@ const SchedulesInfo: FC = () => {
                                       },
                                       onFail: () => {
                                         setOpen(false);
-                                        toast.error(
-                                          'Не удалось войти через Telegram',
-                                        );
                                       },
                                     });
 
