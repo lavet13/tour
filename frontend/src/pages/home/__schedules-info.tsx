@@ -347,14 +347,12 @@ const SchedulesInfo: FC = () => {
                               <FormField
                                 control={form.control}
                                 name={`phones.${index}.telegram`}
-                                {...(data?.me?.telegram?.telegramId ||
-                                index === 0
-                                  ? {
-                                      rules: {
-                                        required: 'Требуется Telegram',
-                                      },
-                                    }
-                                  : {})}
+                                rules={{
+                                  required:
+                                    index !== 0
+                                      ? 'Требуется Telegram'
+                                      : undefined,
+                                }}
                                 render={function Render({
                                   field: { value, onChange, ...field },
                                 }) {
@@ -430,12 +428,7 @@ const SchedulesInfo: FC = () => {
                                         <FormItem className='flex flex-row items-start space-x-3 space-y-0 px-1'>
                                           <FormControl>
                                             <Checkbox
-                                              checked={
-                                                index === 0
-                                                  ? data?.me?.telegram
-                                                      ?.telegramId
-                                                  : value
-                                              }
+                                              checked={value}
                                               disabled={
                                                 data?.me?.telegram?.telegramId
                                               }
