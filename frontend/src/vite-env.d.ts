@@ -1,11 +1,13 @@
 /// <reference types="vite/client" />
-interface ImportMetaEnv {
-  readonly VITE_GRAPHQL_URI: string;
-  readonly VITE_GRAPHQL_URI_DEV: string;
-}
 
 interface ImportMeta {
   readonly env: ImportMetaEnv;
+}
+
+interface ImportMetaEnv {
+  readonly VITE_GRAPHQL_URI: string;
+  readonly VITE_GRAPHQL_URI_DEV: string;
+  readonly TELEGRAM_BOT_ID: string;
 }
 
 declare module 'tailwind-config' {
@@ -18,7 +20,13 @@ import { List } from 'lucide-react';
 
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
-    filterVariant?: 'text' | 'select' | 'combobox' | 'dateRange' | 'timeRange' | 'range';
+    filterVariant?:
+      | 'text'
+      | 'select'
+      | 'combobox'
+      | 'dateRange'
+      | 'timeRange'
+      | 'range';
     items?: Array<any>;
   }
   interface FilterFns<TData extends RowData> {

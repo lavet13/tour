@@ -13,7 +13,12 @@ import {
 } from 'lucide-react';
 import { FC, forwardRef, Fragment, useMemo, useState } from 'react';
 import { DefaultValues } from '@/pages/home';
-import { useController, useFieldArray, useFormContext } from 'react-hook-form';
+import {
+  useController,
+  useFieldArray,
+  useFormContext,
+  useWatch,
+} from 'react-hook-form';
 import { useSearchParams } from 'react-router-dom';
 import { useRouteByIds } from '@/features/routes';
 import { keepPreviousData } from '@tanstack/react-query';
@@ -35,6 +40,16 @@ import { useAtom } from 'jotai';
 import { activeStepAtom, containerRefAtom } from '@/lib/atoms/ui';
 import { isPossiblePhoneNumber } from 'react-phone-number-input/input';
 import { PhoneInput } from '@/components/phone-input';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type Route = GetRouteByIdsQuery['routeByIds'];
 type ScheduleItem = Omit<
@@ -42,11 +57,21 @@ type ScheduleItem = Omit<
   '__typename'
 >;
 
+import {
+  useTelegramLogin,
+  type TelegramLoginData,
+} from '@telegram-login-ultimate/react';
+import { toast } from 'sonner';
+import { useAuthenticateTelegramLogin, useGetMe } from '@/features/auth';
+
 const SchedulesInfo: FC = () => {
   // Search Params syncronization
   const [searchParams, setSearchParams] = useSearchParams();
   const departureCityId = searchParams.get('departureCityId')!;
   const arrivalCityId = searchParams.get('arrivalCityId')!;
+  const { mutateAsync: authenticate, isPending } =
+    useAuthenticateTelegramLogin();
+  const { refetch: refetchUser } = useGetMe();
 
   const {
     data: routeData,
@@ -85,6 +110,13 @@ const SchedulesInfo: FC = () => {
   console.log({ schedules });
 
   const form = useFormContext<DefaultValues>();
+
+  // watching
+  const [firstTelegramValue, secondTelegramValue] = form.watch([
+    'phones.0.telegram',
+    'phones.1.telegram',
+  ]);
+  console.log({ firstTelegramValue, secondTelegramValue });
 
   // Set up field array for phone numbers
   const { fields, append, remove } = useFieldArray({
@@ -297,22 +329,126 @@ const SchedulesInfo: FC = () => {
                               <FormField
                                 control={form.control}
                                 name={`phones.${index}.telegram`}
-                                render={({
+                                rules={
+                                  index !== 0
+                                    ? undefined
+                                    : {
+                                        required: 'Требуется телеграм',
+                                      }
+                                }
+                                render={function Render({
                                   field: { value, onChange, ...field },
-                                }) => {
+                                }) {
+                                  const [open, setOpen] = useState(false);
+                                  const [openPopup, { isPending }] =
+                                    useTelegramLogin({
+                                      botId: import.meta.env
+                                        .VITE_TELEGRAM_BOT_ID,
+                                      onSuccess: async user => {
+                                        console.warn(
+                                          'Raw Telegram user data:',
+                                          user,
+                                        );
+
+                                        // The auth_date should be a Unix timestamp (number of seconds since epoch)
+                                        await authenticate({
+                                          input: {
+                                            id: user.id,
+                                            first_name: user.first_name,
+                                            last_name: user.last_name,
+                                            username: user.username,
+                                            photo_url: user.photo_url,
+                                            auth_date: user.auth_date * 1000, // Keep as Unix timestamp
+                                            hash: user.hash,
+                                          },
+                                        });
+                                        await refetchUser();
+                                        setOpen(false);
+                                        toast.success(
+                                          'Успешный вход через Telegram, бот уведомит вас об бронировании',
+                                        );
+                                      },
+                                      onFail: () => {
+                                        setOpen(false);
+                                        toast.error(
+                                          'Не удалось войти через Telegram',
+                                        );
+                                      },
+                                    });
+
                                   return (
-                                    <FormItem className='flex flex-row items-start space-x-3 space-y-0 px-1'>
-                                      <FormControl>
-                                        <Checkbox
-                                          checked={value}
-                                          onCheckedChange={onChange}
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <div className='space-y-1 leading-none'>
-                                        <FormLabel>Telegram</FormLabel>
+                                    <>
+                                      <AlertDialog
+                                        open={open}
+                                        onOpenChange={setOpen}
+                                      >
+                                        <AlertDialogContent>
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle>
+                                              Требуется авторизация через
+                                              Telegram
+                                            </AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                              Для уведомлений о доступных местах
+                                              и подтверждения бронирования
+                                              необходимо войти через Telegram.
+                                              Это позволит нам своевременно
+                                              информировать вас о статусе вашего
+                                              маршрута.
+                                            </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel
+                                              onClick={() => {
+                                                form.setValue(
+                                                  `phones.${index}.telegram`,
+                                                  false,
+                                                );
+                                              }}
+                                            >
+                                              Отмена
+                                            </AlertDialogCancel>
+                                            <AlertDialogAction
+                                              disabled={isPending}
+                                              onClick={e => {
+                                                e.preventDefault();
+                                                openPopup();
+                                              }}
+                                            >
+                                              {isPending ? (
+                                                <>
+                                                  <SonnerSpinner />
+                                                  Ожидаем ответ от Telegram
+                                                </>
+                                              ) : (
+                                                <>Войти через Telegram</>
+                                              )}
+                                            </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
+
+                                      <div className='flex flex-col items-center'>
+                                        <FormItem className='flex flex-row items-start space-x-3 space-y-0 px-1'>
+                                          <FormControl>
+                                            <Checkbox
+                                              checked={value}
+                                              onCheckedChange={checked => {
+                                                onChange(checked);
+                                                if (checked === true) {
+                                                  setOpen(true);
+                                                }
+                                              }}
+                                              {...field}
+                                            />
+                                          </FormControl>
+                                          <div className='space-y-1 leading-none'>
+                                            <FormLabel>Telegram</FormLabel>
+                                          </div>
+                                        </FormItem>
+                                        <FormMessage />
                                       </div>
-                                    </FormItem>
+                                    </>
                                   );
                                 }}
                               />

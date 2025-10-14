@@ -124,6 +124,7 @@ export default defineConfig(({ mode }) => {
 
             // Miscellaneous
             'misc-vendor': [
+              '@telegram-login-ultimate',
               'jotai',
               'lucide-react',
               'input-otp',

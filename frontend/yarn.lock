@@ -2742,6 +2742,11 @@
   resolved "https://registry.yarnpkg.com/@tanstack/virtual-core/-/virtual-core-3.10.9.tgz#55710c92b311fdaa8d8c66682a0dbdd684bc77c4"
   integrity sha512-kBknKOKzmeR7lN+vSadaKWXaLS0SZZG+oqpQ/k80Q6g9REn6zRHS/ZYdrIzHnpHgy/eWs00SujveUN/GJT2qTw==
 
+"@telegram-login-ultimate/react@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@telegram-login-ultimate/react/-/react-1.1.2.tgz#5a8822289978eec462f8ebb772cfba53652efc36"
+  integrity sha512-mh5A+TmqEHlfT/vmwL+V2jNrHYqnaK6joWl8wfXBMT47h1M+GHS+XUyXWSTgkZGMKm/sjeqPLQUimIqwW+6vMg==
+
 "@types/babel__core@^7.20.5":
   version "7.20.5"
   resolved "https://registry.yarnpkg.com/@types/babel__core/-/babel__core-7.20.5.tgz#3df15f27ba85319caa07ba08d0721889bb39c017"

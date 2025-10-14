@@ -13,13 +13,7 @@
     "moduleDetection": "force",
     "noEmit": true,
     /* Linting */
-    "strict": true,
-    "plugins": [
-      {
-        "name": "@0no-co/graphqlsp",
-        "schema": "./schema.graphql"
-      }
-    ]
+    "strict": true
   },
   "include": [
     "vite.config.ts"
