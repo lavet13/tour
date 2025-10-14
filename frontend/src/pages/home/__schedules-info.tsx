@@ -431,6 +431,7 @@ const SchedulesInfo: FC = () => {
                                           <FormControl>
                                             <Checkbox
                                               checked={value}
+                                              disabled={data?.me?.telegram?.telegramId}
                                               onCheckedChange={checked => {
                                                 onChange(checked);
                                                 if (
