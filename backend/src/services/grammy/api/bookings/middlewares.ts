@@ -136,6 +136,74 @@ export const handleBookingStatus: CallbackQueryMiddleware<
   }
 };
 
+export const handleNotificationClient: CallbackQueryMiddleware<
+  CustomContext
+> = async ctx => {
+  const bookingId = ctx.match[1];
+
+  try {
+    const booking = await prisma.booking.findUniqueOrThrow({
+      where: {
+        id: bookingId,
+      },
+      include: {
+        route: {
+          include: {
+            departureCity: {
+              select: {
+                name: true,
+              },
+            },
+            arrivalCity: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!booking.telegramId) {
+      await ctx.answerCallbackQuery('❌ У пользователя нет Telegram ID');
+      return;
+    }
+
+    const MANAGER_PHONE = '+79493180304';
+
+    await ctx.api.sendMessage(
+      booking.telegramId!.toString(),
+      `С вами хочет связаться менеджер по поводу вашей заявки.\n\nНапишите по этому номеру в телеграме или позвоните: ${MANAGER_PHONE}`,
+      { parse_mode: 'HTML' },
+    );
+
+    await ctx.answerCallbackQuery('✅ Уведомление отправлено клиенту');
+  } catch (error) {
+    // Check if it's a not found error
+    if (error instanceof PrismaClientKnownRequestError) {
+      switch (error.code) {
+        case 'P2025':
+          // Record not found
+          await ctx.reply(`❌ Бронирование с ID ${bookingId} не существует.`);
+          return;
+        case 'P2003':
+          // Foreign key constraint violation
+          await ctx.reply(
+            `❌ Ошибка: маршрут, связанный с бронированием, недействителен.`,
+          );
+          return;
+        case 'P2002':
+          // Unique constraint violation (unlikely in this case, but included for completeness)
+          await ctx.reply(
+            `❌ Ошибка: нарушение уникальности данных бронирования.`,
+          );
+          return;
+      }
+    }
+    throw error;
+  }
+};
+
 export const handleBookingSendMessage: CallbackQueryMiddleware<
   CustomContext
 > = async ctx => {

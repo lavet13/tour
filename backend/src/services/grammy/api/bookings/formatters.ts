@@ -3,6 +3,7 @@ import {
   formatRussianDateTime,
 } from '@/helpers/format-russian-date';
 import { $Enums, BookingStatus, Prisma } from '@prisma/client';
+import prisma from '@/prisma';
 import { InlineKeyboard } from 'grammy';
 
 export const bookingMessage = async (
@@ -25,6 +26,11 @@ export const bookingMessage = async (
     };
   }>,
 ): Promise<string> => {
+  const telegramUser = await prisma.telegramUser.findUnique({
+    where: {
+      telegramId: booking.telegramId ?? undefined,
+    },
+  });
   const isForward = booking.direction === 'FORWARD';
   const isBackward = booking.direction === 'BACKWARD';
 
@@ -47,7 +53,14 @@ export const bookingMessage = async (
 
   if (booking.telegram) {
     const separator = booking.whatsapp ? `├` : `└`;
-    content += `${separator} <b><em>Telegram</em></b>\n<a href="https://t.me/${booking.phoneNumber}">перейти к чату</a>${booking.whatsapp ? `\n` : `\n\n`}`;
+
+    if (telegramUser?.username) {
+      // Direct link available
+      content += `${separator} <b><em>Telegram</em></b>\n<a href="https://t.me/${telegramUser.username}">перейти к чату</a>${booking.whatsapp ? `\n` : `\n\n`}`;
+    } else if (telegramUser?.telegramId) {
+      // No username - show phone number as fallback contact
+      content += `${separator} <b><em>Telegram</em></b>\n${booking.phoneNumber} (нет @username)${booking.whatsapp ? `\n` : `\n\n`}`;
+    }
   }
   if (booking.whatsapp) {
     content += `└ <b><em>Whatsapp</em></b>\n<a href="https://wa.me/${booking.phoneNumber}">перейти к чату</a>\n\n`;
@@ -242,6 +255,15 @@ export const getInlineKeyboardForBookings = ({
   if (canSendNoAvailabilityMessage) {
     inlineKeyboard
       .text('📩 Отказ', `booking:send-no-availability_${bookingId}`)
+      .row();
+  }
+
+  if (canSendNoAvailabilityMessage && canSendBookingDetailsMessage) {
+    inlineKeyboard
+      .text(
+        '📨 Отправить уведомление клиенту',
+        `booking:send-notify-client_${bookingId}`,
+      )
       .row();
   }
 
