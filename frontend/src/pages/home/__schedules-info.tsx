@@ -153,6 +153,12 @@ const SchedulesInfo: FC = () => {
           'Успешный вход через Telegram, бот уведомит вас об бронировании',
         );
       },
+      onFail: () => {
+        setTelegramAuthOpen(false);
+        toast.error(
+          'Не удалось войти через Telegram. Попробуйте еще раз. У вас получится!',
+        );
+      },
     });
 
   return (
