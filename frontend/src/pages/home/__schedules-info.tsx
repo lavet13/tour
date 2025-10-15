@@ -355,71 +355,73 @@ const SchedulesInfo: FC = () => {
                                 }) => {
                                   return (
                                     <>
-                                      <AlertDialog
-                                        open={telegramAuthOpen}
-                                        onOpenChange={setTelegramAuthOpen}
-                                      >
-                                        <AlertDialogContent>
-                                          <AlertDialogHeader>
-                                            <AlertDialogTitle>
-                                              Требуется авторизация через
-                                              Telegram
-                                            </AlertDialogTitle>
-                                            <AlertDialogDescription>
-                                              Для уведомлений о доступных местах
-                                              и подтверждения бронирования
-                                              необходимо войти через Telegram.
-                                              Это позволит нам своевременно
-                                              информировать вас о статусе вашего
-                                              маршрута.
-                                            </AlertDialogDescription>
-                                          </AlertDialogHeader>
-                                          <AlertDialogFooter>
-                                            <AlertDialogCancel
-                                              onClick={e => {
-                                                e.preventDefault();
-                                                setTelegramAuthOpen(false);
-                                                form.setValue(
-                                                  `phones.${index}.telegram`,
-                                                  false,
-                                                );
-                                              }}
-                                            >
-                                              Отмена
-                                            </AlertDialogCancel>
-                                            <AlertDialogAction
-                                              className='[&_svg]:size-5'
-                                              disabled={
-                                                isTelegramPending ||
+                                      {index === 0 && (
+                                        <AlertDialog
+                                          open={telegramAuthOpen}
+                                          onOpenChange={setTelegramAuthOpen}
+                                        >
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>
+                                                Требуется авторизация через
+                                                Telegram
+                                              </AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                Для уведомлений о доступных
+                                                местах и подтверждения
+                                                бронирования необходимо войти
+                                                через Telegram. Это позволит нам
+                                                своевременно информировать вас о
+                                                статусе вашего маршрута.
+                                              </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel
+                                                onClick={e => {
+                                                  e.preventDefault();
+                                                  setTelegramAuthOpen(false);
+                                                  form.setValue(
+                                                    `phones.${index}.telegram`,
+                                                    false,
+                                                  );
+                                                }}
+                                              >
+                                                Отмена
+                                              </AlertDialogCancel>
+                                              <AlertDialogAction
+                                                className='[&_svg]:size-5'
+                                                disabled={
+                                                  isTelegramPending ||
+                                                  isTelegramAuthPending ||
+                                                  isUserPending
+                                                }
+                                                onClick={e => {
+                                                  e.preventDefault();
+                                                  openTelegramPopup();
+                                                  form.setValue(
+                                                    `phones.${index}.telegram`,
+                                                    true,
+                                                  );
+                                                }}
+                                              >
+                                                {isTelegramPending ||
                                                 isTelegramAuthPending ||
-                                                isUserPending
-                                              }
-                                              onClick={e => {
-                                                e.preventDefault();
-                                                openTelegramPopup();
-                                                form.setValue(
-                                                  `phones.${index}.telegram`,
-                                                  true,
-                                                );
-                                              }}
-                                            >
-                                              {isTelegramPending ||
-                                              isTelegramAuthPending ||
-                                              isUserPending ? (
-                                                <>
-                                                  <SonnerSpinner />
-                                                  Ожидаем ответ от Telegram
-                                                </>
-                                              ) : (
-                                                <>
-                                                  <Icons.telegram className='size-4 fill-background' />
-                                                  Войти через Telegram
-                                                </>
-                                              )}
-                                            </AlertDialogAction>
-                                          </AlertDialogFooter>
-                                        </AlertDialogContent>
-                                      </AlertDialog>
+                                                isUserPending ? (
+                                                  <>
+                                                    <SonnerSpinner />
+                                                    Ожидаем ответ от Telegram
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <Icons.telegram className='size-4 fill-background' />
+                                                    Войти через Telegram
+                                                  </>
+                                                )}
+                                              </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                      )}
 
                                       <div className='flex flex-col items-center'>
                                         <FormItem className='flex flex-row items-start space-x-3 space-y-0 px-1'>
