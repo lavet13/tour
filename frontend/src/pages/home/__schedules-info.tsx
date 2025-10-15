@@ -127,9 +127,8 @@ const SchedulesInfo: FC = () => {
   };
 
   useEffect(() => {
-    form.setValue(`phones.0.telegram`, !!data?.me?.telegram?.telegramId, {
-      shouldValidate: true,
-    });
+    form.setValue(`phones.0.telegram`, !!data?.me?.telegram?.telegramId);
+    // eslint-disable-next-line -- annoying
   }, [data?.me?.telegram?.telegramId]);
 
   const [telegramAuthOpen, setTelegramAuthOpen] = useState(false);

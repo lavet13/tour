@@ -7,6 +7,7 @@ import {
   getInlineKeyboardForBookings,
   bookingMessage,
   noAvailabilityBookingMessage,
+  detailsBookingMessage,
 } from '@/services/grammy/api/bookings/formatters';
 import { CallbackQueryMiddleware } from 'grammy';
 import { CustomContext } from '../..';
@@ -171,9 +172,11 @@ export const handleNotificationClient: CallbackQueryMiddleware<
 
     const MANAGER_PHONE = '+79493180304';
 
+    const bookingDetails = detailsBookingMessage(booking);
+
     await ctx.api.sendMessage(
       booking.telegramId!.toString(),
-      `С вами хочет связаться менеджер по поводу вашей заявки.\n\nНапишите по этому номеру в телеграме или позвоните: ${MANAGER_PHONE}`,
+      `С вами хочет связаться менеджер по поводу вашей заявки.\n\n${bookingDetails}\n\nНапишите по этому номеру в телеграме или позвоните: ${MANAGER_PHONE}`,
       { parse_mode: 'HTML' },
     );
 

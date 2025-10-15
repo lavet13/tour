@@ -145,6 +145,48 @@ export const noAvailabilityBookingMessage = (
   return message;
 };
 
+export const detailsBookingMessage = (
+  updatedBooking: Prisma.BookingGetPayload<{
+    include: {
+      route: {
+        include: {
+          departureCity: {
+            select: {
+              name: true;
+            };
+          };
+          arrivalCity: {
+            select: {
+              name: true;
+            };
+          };
+        };
+      };
+    };
+  }>,
+) => {
+  let routeName = '';
+  const isForward = updatedBooking.direction === 'FORWARD';
+  const isBackward = updatedBooking.direction === 'BACKWARD';
+
+  if (isForward) {
+    routeName += `${updatedBooking.route?.departureCity.name} → ${updatedBooking.route?.arrivalCity.name}`;
+  }
+
+  if (isBackward) {
+    routeName += `${updatedBooking.route?.arrivalCity.name} → ${updatedBooking.route?.departureCity.name}`;
+  }
+
+  let message = '';
+
+  message += `🚌 <b>Маршрут:</b> ${routeName}\n`;
+  message += `💰 <b>Цена:</b> ${updatedBooking.route?.price} ₽\n`;
+  message += `📅 <b>Дата поездки:</b> ${formatRussianDate(updatedBooking.travelDate)}\n`;
+  message += `🪑 <b>Мест:</b> ${updatedBooking.seatsCount}\n\n`;
+
+  return message;
+};
+
 export const confirmedBookingMessage = (
   updatedBooking: Prisma.BookingGetPayload<{
     include: {
