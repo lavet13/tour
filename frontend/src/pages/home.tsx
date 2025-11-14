@@ -242,8 +242,11 @@ export default function HomePage() {
     }
   };
 
-  const handleSpecific = (activeStep: number) => {
-    setActiveStep(activeStep);
+  const handleSpecific = async (activeStep: number) => {
+    const isStepValid = await form.trigger(undefined, { shouldFocus: true });
+    if (isStepValid) {
+      setActiveStep(activeStep);
+    }
   };
 
   const handleBack = () => {
