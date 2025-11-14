@@ -106,8 +106,7 @@ export default function HomePage() {
   const { refetch: refetchUser, data, isPending: isUserPending } = useGetMe();
   const { me: user } = data || {};
 
-  const { isSubmitting, isSubmitSuccessful } =
-    form.formState;
+  const { isSubmitting, isSubmitSuccessful } = form.formState;
 
   const location = useLocation();
 
@@ -401,7 +400,16 @@ export default function HomePage() {
                         <Button
                           type='button'
                           className='w-full xs:w-[100px]'
-                          onClick={handleNext}
+                          onClick={() => {
+                            if (
+                              activeStep === 2 &&
+                              data?.me?.telegram?.telegramId
+                            ) {
+                              handleSpecific(4);
+                            }
+
+                            handleNext();
+                          }}
                         >
                           Далее
                         </Button>
