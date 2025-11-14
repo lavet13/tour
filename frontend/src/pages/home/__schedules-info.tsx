@@ -35,33 +35,20 @@ import { useAtom } from 'jotai';
 import { activeStepAtom, containerRefAtom } from '@/lib/atoms/ui';
 import { isPossiblePhoneNumber } from 'react-phone-number-input/input';
 import { PhoneInput } from '@/components/phone-input';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-
 type Route = GetRouteByIdsQuery['routeByIds'];
 type ScheduleItem = Omit<
   GetSchedulesByIdsQuery['schedulesByIds'][number],
   '__typename'
 >;
 
-import { useTelegramLogin } from '@telegram-login-ultimate/react';
-import { toast } from 'sonner';
 import { useAuthenticateTelegramLogin, useGetMe } from '@/features/auth';
-import { Icons } from '@/components/icons';
 
 const SchedulesInfo: FC = () => {
   // Search Params syncronization
   const [searchParams, setSearchParams] = useSearchParams();
   const departureCityId = searchParams.get('departureCityId')!;
   const arrivalCityId = searchParams.get('arrivalCityId')!;
+
   const { mutateAsync: authenticate, isPending: isTelegramAuthPending } =
     useAuthenticateTelegramLogin();
   const { refetch: refetchUser, data, isPending: isUserPending } = useGetMe();
@@ -80,7 +67,6 @@ const SchedulesInfo: FC = () => {
   });
 
   const route: Route = routeData?.routeByIds || null;
-  console.log({ route });
 
   const {
     data: schedulesData,
@@ -94,13 +80,11 @@ const SchedulesInfo: FC = () => {
       placeholderData: keepPreviousData,
     },
   });
-  console.log({ schedulesIsFetching });
 
   // Обновим функцию сортировки расписаний, чтобы правильно обрабатывать строковые значения enum
   const schedules = useMemo(() => {
     return schedulesData?.schedulesByIds ?? [];
   }, [schedulesData]);
-  console.log({ schedules });
 
   const form = useFormContext<DefaultValues>();
 
@@ -125,42 +109,6 @@ const SchedulesInfo: FC = () => {
       });
     }
   };
-
-  useEffect(() => {
-    form.setValue(`phones.0.telegram`, !!data?.me?.telegram?.telegramId);
-    // eslint-disable-next-line -- annoying
-  }, [data?.me?.telegram?.telegramId]);
-
-  const [telegramAuthOpen, setTelegramAuthOpen] = useState(false);
-  const [openTelegramPopup, { isPending: isTelegramPending }] =
-    useTelegramLogin({
-      botId: import.meta.env.VITE_TELEGRAM_BOT_ID,
-      onSuccess: async user => {
-        // The auth_date should be a Unix timestamp (number of seconds since epoch)
-        await authenticate({
-          input: {
-            id: user.id,
-            first_name: user.first_name,
-            last_name: user.last_name,
-            username: user.username,
-            photo_url: user.photo_url,
-            auth_date: user.auth_date * 1000, // Keep as Unix timestamp
-            hash: user.hash,
-          },
-        });
-        await refetchUser();
-        setTelegramAuthOpen(false);
-        toast.success(
-          'Успешный вход через Telegram, бот уведомит вас об бронировании',
-        );
-      },
-      onFail: () => {
-        setTelegramAuthOpen(false);
-        toast.error(
-          'Не удалось войти через Telegram. Попробуйте еще раз. У вас получится!',
-        );
-      },
-    });
 
   return (
     <>
@@ -351,115 +299,25 @@ const SchedulesInfo: FC = () => {
                               <FormField
                                 control={form.control}
                                 name={`phones.${index}.telegram`}
-                                rules={{
-                                  required:
-                                    index === 0
-                                      ? 'Требуется Telegram'
-                                      : undefined,
-                                }}
                                 render={({
                                   field: { value, onChange, ...field },
                                 }) => {
                                   return (
-                                    <>
-                                      {index === 0 && (
-                                        <AlertDialog
-                                          open={telegramAuthOpen}
-                                          onOpenChange={setTelegramAuthOpen}
-                                        >
-                                          <AlertDialogContent>
-                                            <AlertDialogHeader>
-                                              <AlertDialogTitle>
-                                                Требуется авторизация через
-                                                Telegram
-                                              </AlertDialogTitle>
-                                              <AlertDialogDescription>
-                                                Для уведомлений о доступных
-                                                местах и подтверждения
-                                                бронирования необходимо войти
-                                                через Telegram. Это позволит нам
-                                                своевременно информировать вас о
-                                                статусе вашего маршрута.
-                                              </AlertDialogDescription>
-                                            </AlertDialogHeader>
-                                            <AlertDialogFooter>
-                                              <AlertDialogCancel
-                                                onClick={e => {
-                                                  e.preventDefault();
-                                                  setTelegramAuthOpen(false);
-                                                  form.setValue(
-                                                    `phones.${index}.telegram`,
-                                                    false,
-                                                  );
-                                                }}
-                                              >
-                                                Отмена
-                                              </AlertDialogCancel>
-                                              <AlertDialogAction
-                                                className='[&_svg]:size-5'
-                                                disabled={
-                                                  isTelegramPending ||
-                                                  isTelegramAuthPending ||
-                                                  isUserPending
-                                                }
-                                                onClick={e => {
-                                                  e.preventDefault();
-                                                  openTelegramPopup();
-                                                  form.setValue(
-                                                    `phones.${index}.telegram`,
-                                                    true,
-                                                  );
-                                                }}
-                                              >
-                                                {isTelegramPending ||
-                                                isTelegramAuthPending ||
-                                                isUserPending ? (
-                                                  <>
-                                                    <SonnerSpinner />
-                                                    Ожидаем ответ от Telegram
-                                                  </>
-                                                ) : (
-                                                  <>
-                                                    <Icons.telegram className='size-4 fill-background' />
-                                                    Войти через Telegram
-                                                  </>
-                                                )}
-                                              </AlertDialogAction>
-                                            </AlertDialogFooter>
-                                          </AlertDialogContent>
-                                        </AlertDialog>
-                                      )}
-
-                                      <div className='flex flex-col items-center'>
-                                        <FormItem className='flex flex-row items-start space-x-3 space-y-0 px-1'>
-                                          <FormControl>
-                                            <Checkbox
-                                              checked={value}
-                                              disabled={
-                                                data?.me?.telegram
-                                                  ?.telegramId && index === 0
-                                              }
-                                              onCheckedChange={checked => {
-                                                onChange(checked);
-                                                if (
-                                                  checked === true &&
-                                                  !data?.me?.telegram
-                                                    ?.telegramId &&
-                                                  index === 0
-                                                ) {
-                                                  setTelegramAuthOpen(true);
-                                                }
-                                              }}
-                                              {...field}
-                                            />
-                                          </FormControl>
-                                          <div className='space-y-1 leading-none'>
-                                            <FormLabel>Telegram</FormLabel>
-                                          </div>
-                                        </FormItem>
-                                        <FormMessage />
-                                      </div>
-                                    </>
+                                    <div className='flex flex-col items-center'>
+                                      <FormItem className='flex flex-row items-start space-x-3 space-y-0 px-1'>
+                                        <FormControl>
+                                          <Checkbox
+                                            checked={value}
+                                            onCheckedChange={onChange}
+                                            {...field}
+                                          />
+                                        </FormControl>
+                                        <div className='space-y-1 leading-none'>
+                                          <FormLabel>Telegram</FormLabel>
+                                        </div>
+                                      </FormItem>
+                                      <FormMessage />
+                                    </div>
                                   );
                                 }}
                               />
@@ -471,18 +329,20 @@ const SchedulesInfo: FC = () => {
                                   field: { value, onChange, ...field },
                                 }) => {
                                   return (
-                                    <FormItem className='flex flex-row items-start space-x-3 space-y-0 px-1'>
-                                      <FormControl>
-                                        <Checkbox
-                                          checked={value}
-                                          onCheckedChange={onChange}
-                                          {...field}
-                                        />
-                                      </FormControl>
-                                      <div className='space-y-1 leading-none'>
-                                        <FormLabel>Whatsapp</FormLabel>
-                                      </div>
-                                    </FormItem>
+                                    <div className='flex flex-col items-center'>
+                                      <FormItem className='flex flex-row items-start space-x-3 space-y-0 px-1'>
+                                        <FormControl>
+                                          <Checkbox
+                                            checked={value}
+                                            onCheckedChange={onChange}
+                                            {...field}
+                                          />
+                                        </FormControl>
+                                        <div className='space-y-1 leading-none'>
+                                          <FormLabel>Whatsapp</FormLabel>
+                                        </div>
+                                      </FormItem>
+                                    </div>
                                   );
                                 }}
                               />

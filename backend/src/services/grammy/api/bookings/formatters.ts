@@ -26,11 +26,16 @@ export const bookingMessage = async (
     };
   }>,
 ): Promise<string> => {
-  const telegramUser = await prisma.telegramUser.findUnique({
-    where: {
-      telegramId: booking.telegramId ?? undefined,
-    },
-  });
+  let telegramUser = null;
+
+  if (booking.telegramId) {
+    telegramUser = await prisma.telegramUser.findUnique({
+      where: {
+        telegramId: booking.telegramId,
+      },
+    });
+  }
+
   const isForward = booking.direction === 'FORWARD';
   const isBackward = booking.direction === 'BACKWARD';
 

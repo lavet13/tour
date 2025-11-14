@@ -23,8 +23,13 @@ import BookingResult from '@/pages/home/__booking-result';
 import DepartureArrivalCitiesInfo from '@/pages/home/__departure-arrival-cities-info';
 import SchedulesInfo from '@/pages/home/__schedules-info';
 import { useIsFirstRender } from '@/hooks/use-is-first-render';
-import { useGetMe } from '@/features/auth';
+import { useAuthenticateTelegramLogin, useGetMe } from '@/features/auth';
 import { createdBookingAtom } from '@/lib/atoms/booking';
+import { useTelegramLogin } from '@telegram-login-ultimate/react';
+import NotificationForTelegram from './home/__notification-for-telegram';
+import { Icons } from '@/components/icons';
+import ConfirmInfo from './home/__confirm-info';
+import { SonnerSpinner } from '@/components/sonner-spinner';
 
 export type DefaultValues = {
   firstName: string;
@@ -53,6 +58,10 @@ function getStepContent(step: number) {
     case 2:
       return <SchedulesInfo />;
     case 3:
+      return <NotificationForTelegram />;
+    case 4:
+      return <ConfirmInfo />;
+    case 5:
       return <BookingResult />;
     default:
       return 'Unknown step';
@@ -72,6 +81,8 @@ export default function HomePage() {
   useEffect(() => {
     setContainerRef(containerRef);
     return () => setContainerRef(null);
+
+    // eslint-disable-next-line
   }, []);
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -90,12 +101,13 @@ export default function HomePage() {
     },
   });
 
-  const { data } = useGetMe();
+  const { mutateAsync: authenticate, isPending: isTelegramAuthPending } =
+    useAuthenticateTelegramLogin();
+  const { refetch: refetchUser, data, isPending: isUserPending } = useGetMe();
   const { me: user } = data || {};
 
-  const { isSubmitting, isSubmitSuccessful, dirtyFields, errors } =
+  const { isSubmitting, isSubmitSuccessful } =
     form.formState;
-  const values = form.getValues();
 
   const location = useLocation();
 
@@ -114,6 +126,33 @@ export default function HomePage() {
       form.reset();
     }
   }, [isSubmitSuccessful, activeStep]);
+
+  const [openTelegramPopup, { isPending: isTelegramPending }] =
+    useTelegramLogin({
+      botId: import.meta.env.VITE_TELEGRAM_BOT_ID,
+      onSuccess: async user => {
+        // The auth_date should be a Unix timestamp (number of seconds since epoch)
+        await authenticate({
+          input: {
+            id: user.id,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            username: user.username,
+            photo_url: user.photo_url,
+            auth_date: user.auth_date * 1000, // Keep as Unix timestamp
+            hash: user.hash,
+          },
+        });
+        await refetchUser();
+        toast.success(
+          'Успешный вход через Telegram, бот уведомит вас об бронировании, спасибо!',
+        );
+        setActiveStep(4);
+      },
+      onFail: () => {
+        toast.error('Не удалось войти через Telegram.');
+      },
+    });
 
   const { mutateAsync: createBooking, data: receivedBooking } =
     useCreateBooking();
@@ -154,7 +193,7 @@ export default function HomePage() {
 
       setCreatedBooking(receivedBooking || createdBooking);
 
-      setActiveStep(3);
+      setActiveStep(5);
     } catch (error) {
       console.error(error);
       if (isGraphQLRequestError(error)) {
@@ -182,6 +221,8 @@ export default function HomePage() {
         behavior: 'smooth',
       });
     }
+
+    // eslint-disable-next-line
   }, [activeStep]);
 
   const handleComplete = () => {
@@ -200,6 +241,10 @@ export default function HomePage() {
     if (isStepValid) {
       setActiveStep(prevActiveStep => prevActiveStep + 1);
     }
+  };
+
+  const handleSpecific = (activeStep: number) => {
+    setActiveStep(activeStep);
   };
 
   const handleBack = () => {
@@ -256,12 +301,20 @@ export default function HomePage() {
               >
                 <div className='max-w-4xl mx-auto border bg-background rounded-2xl relative overflow-hidden z-10'>
                   <div className='absolute inset-0 z-0'>
-                    <Meteors number={5} />
+                    <Meteors
+                      tailStyles={cn(activeStep === 3 && 'from-sky-500')}
+                      className={cn(
+                        activeStep === 3 &&
+                          'bg-sky-500 shadow-[0_0_0_1px_#00a8ff10]',
+                      )}
+                      key={activeStep}
+                      number={5}
+                    />
                   </div>
                   <div className='relative z-10 pt-5'>
                     {getStepContent(activeStep)}
-                    <div className='flex flex-col-reverse xs:flex-row gap-2 px-4 p-5 md:p-12 md:pb-6 md:pt-3 justify-center'>
-                      {activeStep !== 3 && (
+                    <div className='flex flex-col-reverse flex-wrap-reverse xs:flex-row gap-2 px-4 p-5 md:p-12 md:pb-6 md:pt-3 justify-center'>
+                      {activeStep !== 4 && activeStep !== 5 && (
                         <Button
                           type='button'
                           className='w-full xs:w-[100px]'
@@ -272,23 +325,70 @@ export default function HomePage() {
                           Назад
                         </Button>
                       )}
-                      {activeStep === 2 ? (
-                        <Button
-                          className='px-8'
-                          type='submit'
-                          onClick={form.handleSubmit(onSubmit)}
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <Loader2 className='animate-spin' />
-                              Принимаем заявку
-                            </>
-                          ) : (
-                            <>Заказать билет</>
-                          )}
-                        </Button>
-                      ) : activeStep === 3 ? (
+                      {activeStep === 3 && !data?.me?.telegram?.telegramId ? (
+                        <div className='flex items-stretch flex-col xs:flex-row gap-2'>
+                          <Button
+                            className='bg-sky-500 text-white leading-6 gap-2 hover:bg-sky-600 active:bg-sky-700'
+                            onClick={e => {
+                              e.preventDefault();
+                              openTelegramPopup();
+                            }}
+                            disabled={
+                              isTelegramPending ||
+                              isTelegramAuthPending ||
+                              isUserPending
+                            }
+                          >
+                            {isTelegramPending ||
+                            isTelegramAuthPending ||
+                            isUserPending ? (
+                              <>
+                                <SonnerSpinner />
+                                Ожидаем ответ от Telegram
+                              </>
+                            ) : (
+                              <>
+                                <Icons.telegram className='fill-white' />
+                                Подключить уведомление к Telegram
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            type='button'
+                            variant='ghost'
+                            className='text-muted-foreground'
+                            onClick={handleNext}
+                          >
+                            Пропустить
+                          </Button>
+                        </div>
+                      ) : activeStep === 4 ? (
+                        <>
+                          <Button
+                            type='button'
+                            className='w-full xs:max-w-[180px]'
+                            variant='secondary'
+                            onClick={() => handleSpecific(1)}
+                          >
+                            Вернуться на главную
+                          </Button>
+                          <Button
+                            className='px-8'
+                            type='submit'
+                            onClick={form.handleSubmit(onSubmit)}
+                            disabled={isSubmitting}
+                          >
+                            {isSubmitting ? (
+                              <>
+                                <Loader2 className='animate-spin' />
+                                Оформляем заявку
+                              </>
+                            ) : (
+                              <>Заказать билет</>
+                            )}
+                          </Button>
+                        </>
+                      ) : activeStep === 5 ? (
                         <Button
                           type='button'
                           className='w-auto xs:w-fit px-12'

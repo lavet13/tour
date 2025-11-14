@@ -14,11 +14,9 @@ import { Link } from 'react-router-dom';
 import { NumericFormat } from 'react-number-format';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { Separator } from '@/components/ui/separator';
 
 const BookingResult: FC = () => {
   const [receivedBooking] = useAtom(createdBookingAtom);
-  console.log({ receivedBooking });
   const { createBooking } = receivedBooking || {};
   const {
     route,
@@ -27,9 +25,6 @@ const BookingResult: FC = () => {
     direction,
     seatsCount,
     travelDate,
-    phoneNumber,
-    telegram,
-    status,
   } = createBooking || {};
 
   let routeName = '';
@@ -137,7 +132,7 @@ const BookingResult: FC = () => {
       </div>
       <div className='px-4 p-5 md:py-6 md:p-12 flex flex-col items-center border-t border-dashed'>
         <p className='text-foreground text-xl font-bold text-center mb-2'>
-          Ваши данные:
+          Ваши данные
         </p>
         <div className='flex flex-col gap-2 container max-w-[300px]'>
           {bookingDetails.map(detail => {
