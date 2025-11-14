@@ -405,7 +405,7 @@ export default function HomePage() {
                               activeStep === 2 &&
                               data?.me?.telegram?.telegramId
                             ) {
-                              handleSpecific(4);
+                              return handleSpecific(4);
                             }
 
                             handleNext();

@@ -140,13 +140,13 @@ const Header: FC = () => {
                 >
                   <DropdownMenuLabel>Мой аккаунт</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to='/submittions'>
-                      <BookOpen className='size-4' />
-                      Мои заявки
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
+                  {/* <DropdownMenuItem asChild> */}
+                  {/*   <Link to='/submittions'> */}
+                  {/*     <BookOpen className='size-4' /> */}
+                  {/*     Мои заявки */}
+                  {/*   </Link> */}
+                  {/* </DropdownMenuItem> */}
+                  {/* <DropdownMenuSeparator /> */}
                   {isAdminOrManager && (
                     <>
                       <DropdownMenuItem asChild>
