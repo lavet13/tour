@@ -56,17 +56,20 @@ export const bookingMessage = async (
   content += `<b>📞 Основные контакты</b>\n`;
   content += `├ <b><em>Телефон</em></b>\n<a>${booking.phoneNumber}</a>\n`;
 
-  if (booking.telegram) {
-    const separator = booking.whatsapp ? `├` : `└`;
+  const separator = booking.whatsapp ? `├` : `└`;
 
-    if (telegramUser?.username) {
+  if (telegramUser) {
+    if (telegramUser.username) {
       // Direct link available
       content += `${separator} <b><em>Telegram</em></b>\n<a href="https://t.me/${telegramUser.username}">перейти к чату</a>${booking.whatsapp ? `\n` : `\n\n`}`;
-    } else if (telegramUser?.telegramId) {
+    } else if (telegramUser.telegramId) {
       // No username - show phone number as fallback contact
       content += `${separator} <b><em>Telegram</em></b>\n${booking.phoneNumber} (нет @username)${booking.whatsapp ? `\n` : `\n\n`}`;
     }
+  } else if (booking.telegram) {
+    content += `${separator} <b><em>Telegram</em></b>\n<a href="https://t.me/${booking.phoneNumber}">перейти к чату</a>${booking.whatsapp ? `\n` : `\n\n`}`;
   }
+
   if (booking.whatsapp) {
     content += `└ <b><em>Whatsapp</em></b>\n<a href="https://wa.me/${booking.phoneNumber}">перейти к чату</a>\n\n`;
   }
